@@ -13,6 +13,7 @@ import { MEDIA_BUCKET } from '@/lib/storage';
 import { Constants } from '@/lib/supabase/database.types';
 import { createClient } from '@/lib/supabase/server';
 import { formDataStrings, zCheckbox, zDateKey, zInt, zMoney, zOptionalText, zOptionalUuid, zText, zTime } from '@/lib/validation';
+import { bankColumns, bankFieldsSchema } from '@/features/payments/lib/bank-form';
 
 /** Làm mới trang công khai sau khi đổi dữ liệu chi nhánh/sân/giá. */
 function revalidatePublic(slug?: string | null) {
@@ -93,8 +94,11 @@ const branchUpdateSchema = branchCreateSchema
 
 export async function updateBranchAction(branchId: string, _prev: FormState, formData: FormData): Promise<FormState> {
   await requireOwner();
-  const parsed = branchUpdateSchema.safeParse(Object.fromEntries(formData));
+  const raw = Object.fromEntries(formData);
+  const parsed = branchUpdateSchema.safeParse(raw);
   if (!parsed.success) return formZodError(parsed.error);
+  const bank = bankFieldsSchema.safeParse(raw);
+  if (!bank.success) return formZodError(bank.error);
   const v = parsed.data;
   const embed = parseMapEmbed(v.map_embed);
   if (!embed.ok) return formError(embed.error, { map_embed: embed.error });
@@ -127,6 +131,7 @@ export async function updateBranchAction(branchId: string, _prev: FormState, for
       description: v.description ?? null,
       parking_info: v.parking_info ?? null,
       house_rules: v.house_rules ?? null,
+      ...bankColumns(bank.data),
     })
     .eq('id', branchId)
     .select('slug')

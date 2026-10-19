@@ -26,7 +26,7 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
   return (
     <>
       <PageHeader title="Nhật ký thay đổi" description="Ghi tự động bởi database cho dữ liệu quan trọng; không ai sửa hay xóa được." />
-      <Form action="/admin/audit" className="mb-4 flex flex-wrap items-center gap-2">
+      <Form data-nav-progress action="/admin/audit" className="mb-4 flex flex-wrap items-center gap-2">
         <label htmlFor="table" className="sr-only">
           Loại dữ liệu
         </label>

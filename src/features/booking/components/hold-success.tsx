@@ -1,10 +1,13 @@
 'use client';
 
-import { BadgeCheck } from 'lucide-react';
+import { BadgeCheck, CircleCheck } from 'lucide-react';
 import Link from 'next/link';
+import { useEffect, useRef, useState } from 'react';
 
 import { buttonClass } from '@/components/ui/button';
 import { Countdown } from '@/components/ui/interactive';
+import { DepositQr } from '@/features/payments/components/deposit-qr';
+import { type BankAccount } from '@/features/payments/lib/transfer';
 import { formatDate, formatPhone, formatTime, formatVnd } from '@/lib/format';
 
 import { type BookingSummary } from '../schemas';
@@ -18,24 +21,45 @@ interface HoldSuccessProps {
   hotline: string | null;
   /** Đơn đã gắn vào tài khoản thành viên đang đăng nhập. */
   savedToAccount?: boolean;
+  /** Tài khoản nhận cọc (SePay) — có thì hiện mã QR chuyển khoản và tự xác nhận. */
+  bank: BankAccount | null;
+  phone: string;
   onBookAnother: () => void;
 }
 
 export function HoldSuccess({
-  booking,
+  booking: initialBooking,
   branchName,
   courtName,
   tz,
   paymentInstructions,
   hotline,
   savedToAccount = false,
+  bank,
+  phone,
   onBookAnother,
 }: HoldSuccessProps) {
+  const [booking, setBooking] = useState(initialBooking);
+  const ref = useRef<HTMLElement>(null);
+  // Điện thoại: khung xác nhận thay cho lưới giờ — cuộn tới đầu khung để khách thấy mã đơn và mã QR.
+  useEffect(() => {
+    const el = ref.current;
+    if (el && el.getBoundingClientRect().top < 0) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, []);
+  const confirmed = booking.status === 'confirmed';
+  const showQr = bank !== null && booking.total_amount > 0;
   return (
-    <section className="animate-fade overflow-hidden rounded-panel border border-ink" aria-labelledby="hold-title">
+    <section ref={ref} className="animate-fade scroll-mt-20 overflow-hidden rounded-panel border border-ink" aria-labelledby="hold-title">
       <div className="bg-court px-5 py-6 sm:px-8">
-        <p id="hold-title" className="text-sm">
-          Đã giữ sân. Mã đơn của bạn
+        <p id="hold-title" className="flex items-center gap-2 text-sm">
+          {confirmed ? (
+            <>
+              <CircleCheck className="size-4" aria-hidden />
+              Đã nhận cọc — đơn đã được xác nhận. Mã đơn của bạn
+            </>
+          ) : (
+            'Đã giữ sân. Mã đơn của bạn'
+          )}
         </p>
         <p className="font-display text-5xl tracking-wide tabular sm:text-6xl">{booking.code}</p>
       </div>
@@ -65,14 +89,20 @@ export function HoldSuccess({
           )}
         </dl>
         <div className="flex flex-col gap-4">
-          {booking.hold_expires_at && (
+          {booking.hold_expires_at && !confirmed && (
             <div className="rounded-control bg-shuttle-soft p-4 text-shuttle-deep">
-              <p className="text-sm">Thời gian giữ chỗ còn lại</p>
+              <p className="text-sm">{showQr ? 'Chuyển khoản cọc trong' : 'Thời gian giữ chỗ còn lại'}</p>
               <Countdown until={booking.hold_expires_at} className="font-display text-4xl" expiredLabel="Đã hết thời gian giữ" />
             </div>
           )}
           <div className="text-sm leading-relaxed">
-            {paymentInstructions ? (
+            {showQr ? (
+              <p>
+                {confirmed
+                  ? 'Sân đã được giữ chắc chắn. Phần còn lại thanh toán tại quầy hoặc chuyển khoản bằng mã bên dưới.'
+                  : 'Quét mã QR bên dưới để chuyển cọc. Tiền về là đơn tự được xác nhận, không cần chờ nhân viên gọi.'}
+              </p>
+            ) : paymentInstructions ? (
               <p className="whitespace-pre-line">{paymentInstructions}</p>
             ) : (
               <p>Chi nhánh sẽ gọi xác nhận trong thời gian giữ chỗ. Bạn có thể đặt cọc tại quầy hoặc theo hướng dẫn của nhân viên.</p>
@@ -115,6 +145,17 @@ export function HoldSuccess({
           </div>
         </div>
       </div>
+      {showQr && (
+        <div className="border-t border-line p-4 sm:p-8">
+          <DepositQr
+            booking={booking}
+            phone={phone}
+            account={bank}
+            onUpdate={setBooking}
+            statusHref={savedToAccount ? `/account/bookings/${booking.code}` : `/booking/lookup?code=${booking.code}`}
+          />
+        </div>
+      )}
     </section>
   );
 }

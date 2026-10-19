@@ -4,6 +4,7 @@ import {
   CalendarDays,
   Clock,
   IdCard,
+  Landmark,
   LayoutDashboard,
   Package,
   QrCode,
@@ -13,10 +14,10 @@ import {
   Settings,
   ShoppingCart,
   Tag,
+  type LucideIcon,
   User,
   Users,
   Wallet,
-  type LucideIcon,
 } from 'lucide-react';
 
 import { type NavIcon } from '../nav';
@@ -38,5 +39,6 @@ export const NAV_ICONS: Record<NavIcon, LucideIcon> = {
   settings: Settings,
   me: User,
   receipt: Receipt,
+  bank: Landmark,
   scan: ScanQrCode,
 };

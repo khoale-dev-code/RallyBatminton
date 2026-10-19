@@ -17,6 +17,13 @@ export function TiltCard({ children, className }: { children: ReactNode; classNa
 
 export function Countdown({ until, className, expiredLabel = 'Đã hết hạn' }: { until: string; className?: string; expiredLabel?: string }) {
   const seconds = useCountdown(until);
+  if (seconds === null) {
+    return (
+      <span className={cn('tabular', className)} aria-hidden>
+        --:--
+      </span>
+    );
+  }
   if (seconds <= 0) return <span className={className}>{expiredLabel}</span>;
   const mm = Math.floor(seconds / 60)
     .toString()

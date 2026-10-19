@@ -11,3 +11,15 @@ export function getTurnstileSecret(): string | null {
   const secret = process.env.TURNSTILE_SECRET_KEY;
   return secret && secret.length > 0 ? secret : null;
 }
+
+/**
+ * Xác thực webhook SePay (đặt ở SePay > Webhooks > Bảo mật):
+ *  - SEPAY_WEBHOOK_SECRET: chọn HMAC-SHA256 (khuyên dùng),
+ *  - SEPAY_WEBHOOK_API_KEY: chọn API Key (header "Authorization: Apikey …").
+ * Không có cả hai → webhook từ chối mọi yêu cầu.
+ */
+export function getSepayWebhookAuth(): { secret: string | null; apiKey: string | null } {
+  const secret = process.env.SEPAY_WEBHOOK_SECRET?.trim();
+  const apiKey = process.env.SEPAY_WEBHOOK_API_KEY?.trim();
+  return { secret: secret ? secret : null, apiKey: apiKey ? apiKey : null };
+}

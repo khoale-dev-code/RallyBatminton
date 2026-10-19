@@ -47,7 +47,7 @@ export default async function InventoryPage({ searchParams }: { searchParams: Pr
           { href: href({ kind: 'rental' }), label: 'Đồ cho thuê', active: kind === 'rental' },
         ]}
       />
-      <Form action="/admin/inventory" className="mb-4 flex flex-wrap items-center gap-2">
+      <Form data-nav-progress action="/admin/inventory" className="mb-4 flex flex-wrap items-center gap-2">
         {kind && <input type="hidden" name="kind" value={kind} />}
         <label htmlFor="q" className="sr-only">
           Tìm mặt hàng

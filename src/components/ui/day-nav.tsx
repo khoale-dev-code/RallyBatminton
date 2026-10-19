@@ -50,7 +50,7 @@ export function DayNav({ basePath, dateKey }: { basePath: string; dateKey: strin
       currentHref={basePath}
       currentLabel="Hôm nay"
     >
-      <Form action={basePath} className="flex min-w-0 flex-1 items-center gap-2 sm:flex-none">
+      <Form data-nav-progress action={basePath} className="flex min-w-0 flex-1 items-center gap-2 sm:flex-none">
         <label htmlFor="day-nav-date" className="sr-only">
           Chọn ngày
         </label>

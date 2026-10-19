@@ -17,7 +17,8 @@ export type NavIcon =
   | 'settings'
   | 'me'
   | 'receipt'
-  | 'scan';
+  | 'scan'
+  | 'bank';
 
 export interface NavItem {
   href: string;
@@ -50,6 +51,7 @@ export function buildNav(ctx: StaffContext): NavGroup[] {
         { href: '/admin', label: 'Tổng quan', icon: 'dashboard' as const },
         ...(can('booking.view') ? [{ href: '/admin/bookings', label: 'Lịch đặt sân', icon: 'calendar' as const }] : []),
         ...(can('booking.view') ? [{ href: '/admin/customers', label: 'Khách hàng', icon: 'users' as const }] : []),
+        ...(can('payment.record') ? [{ href: '/admin/bank', label: 'Giao dịch ngân hàng', icon: 'bank' as const }] : []),
         ...(can('sale.record') ? [{ href: '/admin/pos', label: 'Bán hàng', icon: 'cart' as const }] : []),
         ...(can('sale.record') ? [{ href: '/admin/sales', label: 'Đơn bán', icon: 'receipt' as const }] : []),
         ...(can('rental.operate') ? [{ href: '/admin/rentals', label: 'Cho thuê', icon: 'package' as const }] : []),

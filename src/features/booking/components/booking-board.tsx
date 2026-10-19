@@ -4,6 +4,7 @@ import { useSearchParams } from 'next/navigation';
 import { useMemo, useRef, useState, useTransition } from 'react';
 
 import { useInView } from '@/hooks/use-in-view';
+import { type BankAccount } from '@/features/payments/lib/transfer';
 import { formatVnd } from '@/lib/format';
 import { addDays, isDateKey, zonedToUtc } from '@/lib/time';
 
@@ -48,9 +49,11 @@ interface BookingBoardProps {
   turnstileSiteKey: string;
   paymentInstructions: string | null;
   hotline: string | null;
+  /** Tài khoản nhận cọc (SePay); null = chưa cài, dùng hướng dẫn chữ. */
+  bank: BankAccount | null;
 }
 
-export function BookingBoard({ branch, courts, priceRules, turnstileSiteKey, paymentInstructions, hotline }: BookingBoardProps) {
+export function BookingBoard({ branch, courts, priceRules, turnstileSiteKey, paymentInstructions, hotline, bank }: BookingBoardProps) {
   const tz = branch.timezone;
   const today = useToday(tz);
   const minute = useMinuteClock();
@@ -62,6 +65,7 @@ export function BookingBoard({ branch, courts, priceRules, turnstileSiteKey, pay
   const [courtId, setCourtId] = useState<string | null>(bookableCourts[0]?.id ?? null);
   const [selection, setSelection] = useState<Selection | null>(null);
   const [result, setResult] = useState<BookingSummary | null>(null);
+  const [resultPhone, setResultPhone] = useState('');
   const [savedToAccount, setSavedToAccount] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<string, string>>>({});
@@ -151,6 +155,7 @@ export function BookingBoard({ branch, courts, priceRules, turnstileSiteKey, pay
         const res = await createGuestHoldAction({ ...values, courtId: selection.courtId, startsAt, endsAt, idempotencyKey });
         if (res.ok) {
           setResult(res.booking);
+          setResultPhone(values.phone);
           setSavedToAccount(res.savedToAccount);
           rememberBooking({
             code: res.booking.code,
@@ -185,6 +190,8 @@ export function BookingBoard({ branch, courts, priceRules, turnstileSiteKey, pay
         tz={tz}
         paymentInstructions={paymentInstructions}
         hotline={hotline}
+        bank={bank}
+        phone={resultPhone}
         savedToAccount={savedToAccount}
         onBookAnother={() => setResult(null)}
       />

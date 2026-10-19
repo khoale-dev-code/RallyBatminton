@@ -96,6 +96,10 @@ export interface BranchDetail {
     | 'parking_info'
     | 'house_rules'
     | 'cover_image_path'
+    | 'bank_code'
+    | 'bank_account_no'
+    | 'bank_account_name'
+    | 'transfer_memo_prefix'
   >;
   courts: CourtPublic[];
   amenities: Array<{ code: string; label: string; icon: string | null }>;
@@ -115,7 +119,7 @@ const fetchBranchDetail = unstable_cache(
     if (error) throw new Error(error.message);
     if (!branch) return null;
 
-    const [courtsRes, amenitiesRes, rulesRes] = await Promise.all([
+    const [courtsRes, amenitiesRes, rulesRes, bankRes] = await Promise.all([
       supabase
         .from('courts')
         .select(
@@ -130,7 +134,20 @@ const fetchBranchDetail = unstable_cache(
         .select('id, court_id, label, days_mask, starts_at, ends_at, price_per_hour, priority, valid_from, valid_until, created_at')
         .eq('branch_id', branch.id)
         .order('starts_at'),
+      // Tài khoản nhận cọc riêng: đọc tách riêng để database chưa chạy SQL mới vẫn đặt sân được.
+      supabase
+        .from('branches')
+        .select('bank_code, bank_account_no, bank_account_name, transfer_memo_prefix')
+        .eq('id', branch.id)
+        .maybeSingle(),
     ]);
+    if (bankRes.error) console.error('[branches] Chưa đọc được tài khoản nhận cọc (đã chạy 15_sepay_deposit.sql?):', bankRes.error.message);
+    const bank = {
+      bank_code: bankRes.data?.bank_code ?? null,
+      bank_account_no: bankRes.data?.bank_account_no ?? null,
+      bank_account_name: bankRes.data?.bank_account_name ?? null,
+      transfer_memo_prefix: bankRes.data?.transfer_memo_prefix ?? null,
+    };
 
     const courts: CourtPublic[] = (courtsRes.data ?? []).map((c) => ({
       id: c.id,
@@ -150,13 +167,16 @@ const fetchBranchDetail = unstable_cache(
       .map((a) => ({ code: a.code, label: a.label, icon: a.icon }));
 
     if (courtsRes.error || rulesRes.error) throw new Error('branch_detail_failed');
-    return { branch, courts, amenities, priceRules: rulesRes.data ?? [] };
+    return { branch: { ...branch, ...bank }, courts, amenities, priceRules: rulesRes.data ?? [] };
   },
-  ['branch-detail'],
+  ['branch-detail', 'v4'],
   { tags: [PUBLIC_TAGS.branches], revalidate: PUBLIC_REVALIDATE.branches },
 );
 
 export const getBranchDetail = cache(async (slug: string): Promise<BranchDetail | null> => {
   if (!isSupabaseConfigured()) return null;
-  return fetchBranchDetail(slug).catch(() => null);
+  return fetchBranchDetail(slug).catch((err: unknown) => {
+    console.error('[branches] Không tải được chi nhánh', slug, err instanceof Error ? err.message : err);
+    return null;
+  });
 });

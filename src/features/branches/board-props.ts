@@ -1,4 +1,5 @@
 import { type BrandInfo } from '@/features/brand/queries';
+import { resolveBankAccount } from '@/features/payments/lib/transfer';
 import { publicEnv } from '@/lib/env';
 
 import { type BranchDetail } from './queries';
@@ -25,5 +26,6 @@ export function bookingBoardProps(detail: BranchDetail, brand: BrandInfo) {
     turnstileSiteKey: publicEnv.turnstileSiteKey,
     paymentInstructions: brand.paymentInstructions,
     hotline: branch.phone ?? brand.hotline,
+    bank: resolveBankAccount(branch, brand.bank),
   };
 }

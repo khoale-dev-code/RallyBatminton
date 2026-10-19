@@ -112,6 +112,97 @@ export type Database = {
         Relationships: [
         ]
       }
+      bank_transactions: {
+        Row: {
+          id: string
+          provider: string
+          provider_txn_id: string
+          gateway: string | null
+          account_number: string | null
+          transfer_type: string
+          amount: number
+          content: string | null
+          payment_code: string | null
+          reference_code: string | null
+          transaction_at: string
+          status: string
+          status_note: string | null
+          branch_id: string | null
+          booking_id: string | null
+          payment_id: string | null
+          raw: Json
+          resolved_by: string | null
+          resolved_at: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          provider?: string
+          provider_txn_id: string
+          gateway?: string | null
+          account_number?: string | null
+          transfer_type: string
+          amount: number
+          content?: string | null
+          payment_code?: string | null
+          reference_code?: string | null
+          transaction_at?: string
+          status: string
+          status_note?: string | null
+          branch_id?: string | null
+          booking_id?: string | null
+          payment_id?: string | null
+          raw?: Json
+          resolved_by?: string | null
+          resolved_at?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          provider?: string
+          provider_txn_id?: string
+          gateway?: string | null
+          account_number?: string | null
+          transfer_type?: string
+          amount?: number
+          content?: string | null
+          payment_code?: string | null
+          reference_code?: string | null
+          transaction_at?: string
+          status?: string
+          status_note?: string | null
+          branch_id?: string | null
+          booking_id?: string | null
+          payment_id?: string | null
+          raw?: Json
+          resolved_by?: string | null
+          resolved_at?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_transactions_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bank_transactions_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bank_transactions_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "payments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bookings: {
         Row: {
           id: string
@@ -313,6 +404,10 @@ export type Database = {
           created_at: string
           updated_at: string
           deleted_at: string | null
+          bank_code: string | null
+          bank_account_no: string | null
+          bank_account_name: string | null
+          transfer_memo_prefix: string | null
         }
         Insert: {
           id?: string
@@ -348,6 +443,10 @@ export type Database = {
           created_at?: string
           updated_at?: string
           deleted_at?: string | null
+          bank_code?: string | null
+          bank_account_no?: string | null
+          bank_account_name?: string | null
+          transfer_memo_prefix?: string | null
         }
         Update: {
           id?: string
@@ -383,6 +482,10 @@ export type Database = {
           created_at?: string
           updated_at?: string
           deleted_at?: string | null
+          bank_code?: string | null
+          bank_account_no?: string | null
+          bank_account_name?: string | null
+          transfer_memo_prefix?: string | null
         }
         Relationships: [
         ]
@@ -402,6 +505,11 @@ export type Database = {
           tax_method: string
           default_vat_rate: number
           tax_code: string | null
+          bank_code: string | null
+          bank_account_no: string | null
+          bank_account_name: string | null
+          transfer_auto_confirm: boolean
+          transfer_memo_prefix: string | null
         }
         Insert: {
           id?: boolean
@@ -417,6 +525,11 @@ export type Database = {
           tax_method?: string
           default_vat_rate?: number
           tax_code?: string | null
+          bank_code?: string | null
+          bank_account_no?: string | null
+          bank_account_name?: string | null
+          transfer_auto_confirm?: boolean
+          transfer_memo_prefix?: string | null
         }
         Update: {
           id?: boolean
@@ -432,6 +545,11 @@ export type Database = {
           tax_method?: string
           default_vat_rate?: number
           tax_code?: string | null
+          bank_code?: string | null
+          bank_account_no?: string | null
+          bank_account_name?: string | null
+          transfer_auto_confirm?: boolean
+          transfer_memo_prefix?: string | null
         }
         Relationships: [
         ]
@@ -2425,6 +2543,33 @@ export type Database = {
           active_court_count: number
           min_price_per_hour: number
         }[]
+      }
+      admin_dashboard: {
+        Args: {
+          p_branch_id?: string
+          p_days?: number
+        }
+        Returns: Json
+      }
+      dismiss_bank_transaction: {
+        Args: {
+          p_note: string
+          p_txn_id: string
+        }
+        Returns: Json
+      }
+      match_bank_transaction: {
+        Args: {
+          p_booking_code: string
+          p_txn_id: string
+        }
+        Returns: Json
+      }
+      record_sepay_transaction: {
+        Args: {
+          p_payload: Json
+        }
+        Returns: Json
       }
       lookup_guest_booking: {
         Args: {

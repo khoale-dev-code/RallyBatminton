@@ -7,6 +7,7 @@ import { invalidatePublic } from '@/lib/public-cache';
 import { requireOwner } from '@/lib/auth/guards';
 import { formDbError, formSuccess, formZodError, type FormState } from '@/lib/form-state';
 import { createClient } from '@/lib/supabase/server';
+import { bankColumns, bankFieldsSchema } from '@/features/payments/lib/bank-form';
 import { formDataToObject, zOptionalText, zText } from '@/lib/validation';
 
 const zOptionalUrl = () =>
@@ -81,4 +82,25 @@ export async function updateTaxSettingsAction(_prev: FormState, formData: FormDa
   revalidatePath('/admin', 'layout');
   invalidatePublic('brand');
   return formSuccess('Đã lưu cài đặt thuế. Đơn bán mới sẽ tính theo cài đặt này; đơn cũ giữ nguyên.');
+}
+
+/** Tài khoản nhận cọc chuyển khoản (SePay) + tự xác nhận đơn khi đủ cọc. */
+export async function updateBankSettingsAction(_prev: FormState, formData: FormData): Promise<FormState> {
+  await requireOwner();
+  const raw = formDataToObject(formData);
+  const parsed = bankFieldsSchema.safeParse(raw);
+  if (!parsed.success) return formZodError(parsed.error);
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from('brand_settings')
+    .update({ ...bankColumns(parsed.data), transfer_auto_confirm: formData.get('transfer_auto_confirm') === 'on' })
+    .eq('id', true);
+  if (error) return formDbError(error);
+  revalidatePath('/admin', 'layout');
+  invalidatePublic('brand');
+  return formSuccess(
+    parsed.data.bank_code
+      ? 'Đã lưu tài khoản nhận cọc. Khách sẽ thấy mã QR chuyển khoản ngay sau khi giữ sân.'
+      : 'Đã tắt chuyển khoản qua mã QR (khách đặt cọc theo hướng dẫn / tại quầy).',
+  );
 }

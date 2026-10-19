@@ -1,7 +1,13 @@
-import { ActionForm, SelectField, SubmitButton, TextareaField, TextField } from '@/components/ui/form';
+import { CheckCircle2, CircleAlert, Webhook } from 'lucide-react';
+
+import { ActionForm, CheckboxField, SelectField, SubmitButton, TextareaField, TextField } from '@/components/ui/form';
 import { PageHeader, Panel } from '@/components/ui/primitives';
-import { updateBrandAction, updateTaxSettingsAction } from '@/features/settings/actions';
+import { BankFields } from '@/features/payments/components/bank-fields';
+import { updateBankSettingsAction, updateBrandAction, updateTaxSettingsAction } from '@/features/settings/actions';
 import { requireOwner } from '@/lib/auth/guards';
+import { publicEnv } from '@/lib/env';
+import { getSepayWebhookAuth } from '@/lib/env.server';
+import { formatDateTime } from '@/lib/format';
 import { createClient } from '@/lib/supabase/server';
 import { formatPercent, TAX_INDUSTRIES, TAX_METHODS, VAT_PRESETS } from '@/lib/tax';
 
@@ -10,7 +16,13 @@ export const metadata = { title: 'Cài đặt thương hiệu' };
 export default async function SettingsPage() {
   await requireOwner();
   const supabase = await createClient();
-  const { data: brand } = await supabase.from('brand_settings').select('*').maybeSingle();
+  const [{ data: brand }, { data: lastTxn }] = await Promise.all([
+    supabase.from('brand_settings').select('*').maybeSingle(),
+    supabase.from('bank_transactions').select('created_at').order('created_at', { ascending: false }).limit(1).maybeSingle(),
+  ]);
+  const sepay = getSepayWebhookAuth();
+  const webhookReady = Boolean(sepay.secret ?? sepay.apiKey);
+  const webhookUrl = `${publicEnv.siteUrl.replace(/\/$/, '')}/api/webhooks/sepay`;
   return (
     <>
       <PageHeader
@@ -59,6 +71,57 @@ export default async function SettingsPage() {
             <SubmitButton pendingLabel="Đang lưu…">Lưu cài đặt</SubmitButton>
           </ActionForm>
         </Panel>
+        <div id="chuyen-khoan" className="scroll-mt-20 xl:col-span-2">
+          <Panel
+            title="Nhận cọc chuyển khoản (SePay)"
+            description="Khách thấy mã VietQR ngay sau khi giữ sân. Tiền về tài khoản → SePay báo về website → đơn tự xác nhận, không cần nhân viên kiểm tra."
+          >
+            <div className="grid gap-6 lg:grid-cols-2">
+              <ActionForm action={updateBankSettingsAction}>
+                <BankFields defaults={brand} emptyHint="Để trống cả hai ô để tắt mã QR chuyển khoản." />
+                <CheckboxField
+                  name="transfer_auto_confirm"
+                  label="Tự xác nhận đơn khi nhận đủ tiền cọc"
+                  hint="Tắt nếu muốn nhân viên tự bấm xác nhận (tiền vẫn được ghi vào đơn)."
+                  defaultChecked={brand?.transfer_auto_confirm ?? true}
+                />
+                <SubmitButton pendingLabel="Đang lưu…">Lưu tài khoản nhận cọc</SubmitButton>
+              </ActionForm>
+              <div className="flex flex-col gap-3 rounded-control bg-hall/60 p-4 text-sm">
+                <p className="flex items-center gap-2 font-medium">
+                  <Webhook className="size-4" aria-hidden />
+                  Kết nối SePay (làm một lần)
+                </p>
+                <ol className="ml-4 flex list-decimal flex-col gap-1.5 text-muted">
+                  <li>Đăng ký SePay, liên kết đúng tài khoản ngân hàng ở bên trái.</li>
+                  <li>
+                    <span className="text-ink">Công ty → Cấu hình chung → Cấu trúc mã thanh toán</span>: tiền tố{' '}
+                    <strong className="text-ink">RB</strong>, hậu tố 8–8 ký tự, kiểu <strong className="text-ink">Số và chữ</strong>.
+                  </li>
+                  <li>
+                    <span className="text-ink">Webhooks → Thêm</span>: sự kiện Tiền vào, URL:
+                    <code className="mt-1 block rounded bg-paper px-2 py-1 break-all text-ink">{webhookUrl}</code>
+                  </li>
+                  <li>
+                    Bảo mật: chọn <strong className="text-ink">HMAC-SHA256</strong> (dán khóa vào biến <code>SEPAY_WEBHOOK_SECRET</code>)
+                    hoặc <strong className="text-ink">API Key</strong> (biến <code>SEPAY_WEBHOOK_API_KEY</code>) trên máy chủ / Vercel.
+                  </li>
+                </ol>
+                <p className={webhookReady ? 'flex items-center gap-2 text-court-deep' : 'flex items-center gap-2 text-shuttle-deep'}>
+                  {webhookReady ? (
+                    <CheckCircle2 className="size-4 shrink-0" aria-hidden />
+                  ) : (
+                    <CircleAlert className="size-4 shrink-0" aria-hidden />
+                  )}
+                  {webhookReady ? 'Máy chủ đã có khóa bảo mật webhook.' : 'Máy chủ chưa có khóa webhook — SePay gửi sẽ bị từ chối.'}
+                </p>
+                <p className="text-muted">
+                  {lastTxn ? `Giao dịch gần nhất nhận lúc ${formatDateTime(lastTxn.created_at)}.` : 'Chưa nhận giao dịch nào từ SePay.'}
+                </p>
+              </div>
+            </div>
+          </Panel>
+        </div>
         <div id="thue" className="scroll-mt-20">
           <Panel
             title="Thuế"

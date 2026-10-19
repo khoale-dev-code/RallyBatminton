@@ -131,6 +131,14 @@ with checks as (
          and not has_function_privilege('anon', 'public.reveal_guest_booking(uuid,text,text,text)', 'execute'),
          'RPC tra theo SĐT + xác nhận họ tên; chỉ máy chủ gọi được'
   union all
+  select 22, 'Đã chạy 15_sepay_deposit.sql (cọc chuyển khoản SePay, tổng quan)',
+         to_regclass('public.bank_transactions') is not null
+         and to_regprocedure('public.record_sepay_transaction(jsonb)') is not null
+         and to_regprocedure('public.admin_dashboard(uuid,integer)') is not null
+         and not has_function_privilege('anon', 'public.record_sepay_transaction(jsonb)', 'execute')
+         and not has_function_privilege('authenticated', 'public.record_sepay_transaction(jsonb)', 'execute'),
+         'bank_transactions + webhook RPC chỉ máy chủ gọi được + admin_dashboard'
+  union all
   select 12, 'pg_cron (tùy chọn)',
          true,
          case when exists (select 1 from pg_extension where extname = 'pg_cron')

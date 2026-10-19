@@ -1,10 +1,13 @@
 'use client';
 
 import { ArrowLeft, Info, Search, Smartphone, Ticket } from 'lucide-react';
-import { startTransition, useActionState, useEffect, useRef, useState, type ReactNode } from 'react';
+import { startTransition, useActionState, useEffect, useEffectEvent, useRef, useState, type ReactNode } from 'react';
 
 import { buttonClass } from '@/components/ui/button';
+import { DepositQr } from '@/features/payments/components/deposit-qr';
+import { accountForBranch, type BankAccounts } from '@/features/payments/lib/transfer';
 import { cn } from '@/lib/cn';
+import { formatVnd } from '@/lib/format';
 
 import {
   cancelGuestBookingAction,
@@ -15,7 +18,8 @@ import {
   type PhoneLookupState,
   type RevealState,
 } from '../actions';
-import { rememberBooking, type RecentBooking } from '../lib/recent-bookings';
+import { loadRecentBookings, rememberBooking, type RecentBooking } from '../lib/recent-bookings';
+import { type BookingSummary } from '../schemas';
 
 import { BookingTicket } from './booking-ticket';
 import { LookupHelp } from './lookup-help';
@@ -41,9 +45,10 @@ interface LookupPanelProps {
   hotline: string | null;
   intro: ReactNode;
   turnstileSiteKey: string;
+  banks: BankAccounts;
 }
 
-export function LookupPanel({ defaultCode, hotline, intro, turnstileSiteKey }: LookupPanelProps) {
+export function LookupPanel({ defaultCode, hotline, intro, turnstileSiteKey, banks }: LookupPanelProps) {
   const [mode, setMode] = useState<Mode>(defaultCode ? 'code' : 'phone');
   const [lookup, lookupAction, looking] = useActionState(lookupBookingAction, initial);
   const [phoneSearch, phoneAction, searching] = useActionState(lookupByPhoneAction, initialPhone);
@@ -54,6 +59,8 @@ export function LookupPanel({ defaultCode, hotline, intro, turnstileSiteKey }: L
   // Bấm "Các đơn của số này" / "Tìm số khác": ẩn vé / danh sách đã xem (theo dấu thời gian kết quả).
   const [hiddenTicketAt, setHiddenTicketAt] = useState(0);
   const [hiddenListAt, setHiddenListAt] = useState(0);
+  // Đơn được cập nhật tại chỗ (tiền chuyển khoản vừa về) — theo mã đơn.
+  const [liveUpdates, setLiveUpdates] = useState<Record<string, BookingSummary>>({});
   const codeRef = useRef<HTMLInputElement>(null);
   const phoneRef = useRef<HTMLInputElement>(null);
   const phoneOnlyRef = useRef<HTMLInputElement>(null);
@@ -71,7 +78,11 @@ export function LookupPanel({ defaultCode, hotline, intro, turnstileSiteKey }: L
 
   // Kết quả hủy chỉ áp vào đúng đơn đang xem (tránh hiện đơn cũ sau khi tra đơn khác).
   const sameBooking = Boolean(cancel.booking && ticketBooking && cancel.booking.code === ticketBooking.code);
-  const booking = sameBooking ? (cancel.booking ?? null) : ticketBooking;
+  const baseBooking = sameBooking ? (cancel.booking ?? null) : ticketBooking;
+  const booking = baseBooking ? (liveUpdates[baseBooking.code] ?? baseBooking) : null;
+  const account = booking ? accountForBranch(banks, booking.branch_id) : null;
+  const owesMoney = booking !== null && booking.paid_amount < booking.total_amount;
+  const showPayment = booking !== null && account !== null && owesMoney && ['held', 'confirmed', 'checked_in'].includes(booking.status);
   const phone = (sameBooking ? cancel.phone : ticketSource.phone) ?? '';
   const bookingCode = booking?.code ?? null;
   const resultKey = `${bookingCode ?? ''}|${showList ? listAt : 0}`;
@@ -107,6 +118,21 @@ export function LookupPanel({ defaultCode, hotline, intro, turnstileSiteKey }: L
     data.set('phone', b.phone);
     startTransition(() => lookupAction(data));
   };
+
+  // Mở từ nút "Xem trạng thái đơn" (?code=…) trên đúng thiết bị đã đặt → tự tra luôn, khách không phải gõ SĐT.
+  const autoOpen = useEffectEvent(() => {
+    if (!defaultCode) return;
+    const saved = loadRecentBookings().find((b) => b.code === defaultCode.toUpperCase());
+    if (!saved) return;
+    if (phoneRef.current) phoneRef.current.value = saved.phone;
+    const data = new FormData();
+    data.set('code', saved.code);
+    data.set('phone', saved.phone);
+    startTransition(() => lookupAction(data));
+  });
+  useEffect(() => {
+    autoOpen();
+  }, []);
 
   const focusInput = (input: HTMLInputElement | null) => {
     if (!input) return;
@@ -338,6 +364,38 @@ export function LookupPanel({ defaultCode, hotline, intro, turnstileSiteKey }: L
               cancelError={sameBooking && cancel.status === 'error' ? (cancel.message ?? null) : null}
               cancelled={sameBooking && cancel.status === 'success'}
               onLookupAnother={lookupAnother}
+              payment={
+                showPayment && account ? (
+                  booking.status === 'held' || booking.paid_amount < booking.deposit_amount ? (
+                    <DepositQr
+                      key={booking.code}
+                      booking={booking}
+                      phone={phone}
+                      account={account}
+                      statusHref={null}
+                      onUpdate={(next) => setLiveUpdates((all) => ({ ...all, [next.code]: next }))}
+                    />
+                  ) : (
+                    <details className="group rounded-panel border border-line bg-paper">
+                      <summary className="flex min-h-12 cursor-pointer items-center justify-between gap-3 px-4 font-medium">
+                        Chuyển khoản phần còn lại ({formatVnd(booking.total_amount - booking.paid_amount)})
+                        <span className="text-sm text-muted group-open:hidden">Mở mã QR</span>
+                      </summary>
+                      <div className="border-t border-line p-3 sm:p-4">
+                        <DepositQr
+                          key={booking.code}
+                          booking={booking}
+                          phone={phone}
+                          account={account}
+                          statusHref={null}
+                          collapseRemaining={false}
+                          onUpdate={(next) => setLiveUpdates((all) => ({ ...all, [next.code]: next }))}
+                        />
+                      </div>
+                    </details>
+                  )
+                ) : undefined
+              }
               extraAction={
                 phoneSearch.items && listAt > 0 ? (
                   <button type="button" onClick={backToList} className={buttonClass('outline', 'md')}>

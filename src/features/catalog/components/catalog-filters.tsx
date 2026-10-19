@@ -30,7 +30,11 @@ export function CatalogFilters({ basePath, categories, branches, current }: Cata
     );
   return (
     <div className="mb-6 flex flex-col gap-4 sm:mb-8">
-      <Form action={basePath} className="grid grid-cols-[minmax(0,1fr)_auto] gap-2 sm:grid-cols-[minmax(0,1fr)_14rem_auto] sm:gap-3">
+      <Form
+        data-nav-progress
+        action={basePath}
+        className="grid grid-cols-[minmax(0,1fr)_auto] gap-2 sm:grid-cols-[minmax(0,1fr)_14rem_auto] sm:gap-3"
+      >
         {current.category && <input type="hidden" name="category" value={current.category} />}
         <label htmlFor="catalog-q" className="sr-only">
           Tìm theo tên

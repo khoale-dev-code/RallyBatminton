@@ -24,7 +24,7 @@ export const PAYMENT_METHOD: Record<Enums<'payment_method'>, string> = {
   bank_transfer: 'Chuyển khoản',
   card: 'Thẻ',
   e_wallet: 'Ví điện tử',
-  gateway: 'Cổng thanh toán',
+  gateway: 'Chuyển khoản tự động (SePay)',
 };
 
 export const MANUAL_PAYMENT_METHODS = ['cash', 'bank_transfer', 'card', 'e_wallet'] as const satisfies ReadonlyArray<

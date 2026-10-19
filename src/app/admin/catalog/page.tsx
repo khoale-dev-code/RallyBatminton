@@ -68,7 +68,7 @@ export default async function ProductManagerPage({ searchParams }: { searchParam
           { href: tabHref('rental'), label: 'Đồ cho thuê', active: kind === 'rental' },
         ]}
       />
-      <Form action="/admin/catalog" className="mb-3 grid grid-cols-2 gap-2 md:grid-cols-[minmax(0,1fr)_11rem_10rem_auto]">
+      <Form data-nav-progress action="/admin/catalog" className="mb-3 grid grid-cols-2 gap-2 md:grid-cols-[minmax(0,1fr)_11rem_10rem_auto]">
         <input type="hidden" name="kind" value={kind} />
         <div className="relative col-span-2 md:col-span-1">
           <label htmlFor="q" className="sr-only">

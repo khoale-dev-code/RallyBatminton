@@ -89,7 +89,7 @@ export default async function CustomersPage({ searchParams }: { searchParams: Pr
         </div>
       )}
 
-      <Form action="/admin/customers" className="mb-4 flex flex-col gap-2 sm:flex-row">
+      <Form data-nav-progress action="/admin/customers" className="mb-4 flex flex-col gap-2 sm:flex-row">
         {tab === 'members' && <input type="hidden" name="tab" value="members" />}
         {tab === 'members' && filter !== 'all' && <input type="hidden" name="filter" value={filter} />}
         <label htmlFor="q" className="sr-only">

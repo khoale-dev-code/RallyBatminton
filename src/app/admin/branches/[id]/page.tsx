@@ -14,6 +14,7 @@ import {
   updateBranchAction,
 } from '@/features/admin-branches/actions';
 import { BranchTabs } from '@/features/admin-branches/components/branch-tabs';
+import { BankFields } from '@/features/payments/components/bank-fields';
 import { getBranchForEdit } from '@/features/admin-branches/queries';
 import { requireOwner } from '@/lib/auth/guards';
 import { BRANCH_STATUS } from '@/lib/labels';
@@ -138,6 +139,16 @@ export default async function BranchEditPage({ params }: { params: Promise<{ id:
                 />
                 <TextField name="deposit_percent" label="Tỉ lệ cọc (%)" type="number" min={0} max={100} defaultValue={b.deposit_percent} />
               </div>
+
+              <details className="rounded-control border border-line px-4 py-2" open={Boolean(b.bank_code)}>
+                <summary className="min-h-10 cursor-pointer py-2 font-medium">Tài khoản nhận cọc riêng (không bắt buộc)</summary>
+                <div className="flex flex-col gap-4 pt-2 pb-3">
+                  <p className="text-sm text-muted">
+                    Để trống thì khách chuyển cọc vào tài khoản ở Cài đặt thương hiệu. Tài khoản riêng cũng phải được liên kết với SePay.
+                  </p>
+                  <BankFields defaults={b} emptyHint="Trống = dùng tài khoản thương hiệu." />
+                </div>
+              </details>
 
               <h3 className="mt-2 text-lg">Chính sách hủy</h3>
               <div className="grid gap-4 sm:grid-cols-3">

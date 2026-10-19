@@ -5,6 +5,7 @@ import { SetupNotice } from '@/components/layout/setup-notice';
 import { PageHeader } from '@/components/ui/primitives';
 import { getBrandInfo } from '@/features/brand/queries';
 import { LookupPanel } from '@/features/booking/components/lookup-panel';
+import { getBankAccounts } from '@/features/payments/queries';
 import { isSupabaseConfigured, publicEnv } from '@/lib/env';
 
 export const metadata: Metadata = { title: 'Tra cứu đơn', robots: { index: false } };
@@ -55,13 +56,14 @@ export default async function LookupPage({ searchParams }: { searchParams: Promi
       </div>
     );
   }
-  const brand = await getBrandInfo();
+  const [brand, banks] = await Promise.all([getBrandInfo(), getBankAccounts()]);
   return (
     <LookupPanel
       defaultCode={typeof code === 'string' ? code.slice(0, 20) : ''}
       hotline={brand.hotline}
       intro={<LookupIntro />}
       turnstileSiteKey={publicEnv.turnstileSiteKey}
+      banks={banks}
     />
   );
 }

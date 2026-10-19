@@ -52,6 +52,7 @@ Vào **Supabase Dashboard → SQL Editor**, mở từng file trong `supabase/sql
 | 13 | `12_branch_map.sql` | Có | Bản đồ Google nhúng cho từng chi nhánh (trang Giới thiệu `/about`). Dán mã iframe ở *Quản trị → Chi nhánh*; để trống thì tự hiện bản đồ theo địa chỉ. Chạy sau 11 |
 | 14 | `13_performance.sql` | Nên chạy | Tăng tốc: chỉ mục tìm kiếm khách/thành viên/sản phẩm (pg_trgm), nhật ký, bảng lương; danh sách thành viên chỉ tính số đơn cho trang đang xem. Không đổi dữ liệu. Chạy sau 12 |
 | 15 | `14_guest_phone_lookup.sql` | Có | Khách vãng lai quên mã đơn: tra bằng số điện thoại ở `/booking/lookup` (đơn hôm nay, sắp tới, lịch sử 6 tháng). Mã đơn che bớt; nhập đúng họ tên người đặt mới xem đầy đủ / tự hủy. Giới hạn số lần thử. Chạy sau 13 |
+| 16 | `15_sepay_deposit.sql` | Có | Đặt cọc chuyển khoản qua SePay: mã VietQR sau khi giữ sân, tiền về là đơn tự xác nhận; trang *Giao dịch ngân hàng*; Tổng quan dòng tiền mới. Cần cấu hình SePay (mục 15). Chạy sau 14 |
 
 **Đã cài Rally từ trước?** Chỉ cần chạy thêm `05_product_details.sql`, `06_product_tax.sql` rồi `07_units_options.sql` (không mất dữ liệu).
 
@@ -243,4 +244,23 @@ Trang `/booking/lookup` có 2 tab: **Số điện thoại** (mặc định) và 
 - Nhập số điện thoại đã dùng khi đặt (có xác minh chống bot Turnstile) → danh sách đơn chia **Hôm nay / Sắp tới / Lịch sử đặt sân** (6 tháng gần nhất, tối đa 40 đơn; gồm cả đơn đặt tại quầy theo số đó). Chỉ gồm đơn khách vãng lai — đơn đặt khi đăng nhập thành viên xem trong tài khoản (trang có nhắc số đơn đó).
 - Danh sách chỉ để xem: mã đơn che giữa (`RB-W7••••9T`), người đặt chỉ hiện tên gọi. Bấm **Xem chi tiết** và nhập đúng họ tên người đặt (có dấu hay không dấu đều được) → hiện vé đầy đủ: mã đơn, thanh toán, chỉ đường, tự hủy. Nhờ vậy người chỉ biết số điện thoại của bạn không hủy được đơn của bạn.
 - Giới hạn: mỗi số 10 lần tìm / giờ, mỗi thiết bị (IP băm) 30 lần / giờ; nhập sai họ tên tối đa 5 lần / giờ cho mỗi đơn. Hàm database chỉ máy chủ gọi được (service role).
+
+## 15. Đặt cọc chuyển khoản tự động (SePay, `15_sepay_deposit.sql`)
+
+**Khách:** giữ sân xong thấy ngay mã VietQR (số tiền cọc + nội dung = mã đơn không gạch, ví dụ `RB7K3M9Q2T`), có nút lưu ảnh QR và sao chép từng dòng; chọn được "Cọc" hoặc "Trả hết". Trang tự hỏi lại vài giây một lần — tiền về là hiện "Đã nhận cọc — đơn đã được xác nhận". Mã QR cũng có ở trang Tra cứu đơn và trang đơn của thành viên khi còn thiếu tiền.
+
+**Hệ thống:** SePay báo giao dịch về `/api/webhooks/sepay` → kiểm tra chữ ký → ghi `bank_transactions` (chống trùng theo id SePay) → tìm mã đơn trong nội dung → ghi `payments` (hình thức *Chuyển khoản tự động (SePay)*) → đủ cọc thì xác nhận đơn. Giữ chỗ vừa hết hạn mà sân còn trống thì tự mở lại. Không khớp / đơn đã hủy / giờ đã có người khác / chuyển dư → vào **Quản trị → Giao dịch ngân hàng** để nhân viên gán tay vào đơn hoặc ghi cách đã xử lý.
+
+**Cài đặt (một lần):**
+
+1. Chạy `15_sepay_deposit.sql`.
+2. *Quản trị → Cài đặt thương hiệu → Nhận cọc chuyển khoản*: nhập ngân hàng (tên viết tắt VietQR, ví dụ `MBBank`), số tài khoản, chủ tài khoản. Nếu SePay yêu cầu chữ bắt buộc trong nội dung (VietinBank cá nhân: `SEVQR`, để trống sẽ tự điền) thì nội dung khách chuyển thành `SEVQR RB7K3M9Q2T`. Chi nhánh dùng tài khoản riêng thì nhập ở *Chi nhánh → Tài khoản nhận cọc riêng*.
+3. Trên [SePay](https://my.sepay.vn): liên kết tài khoản ngân hàng đó.
+   - *Công ty → Cấu hình chung → Cấu trúc mã thanh toán*: tiền tố `RB`, hậu tố 8–8, kiểu **Số và chữ**.
+   - *Webhooks → Thêm*: sự kiện **Tiền vào**, URL `https://<tên miền>/api/webhooks/sepay`, bảo mật **HMAC-SHA256** (khuyên dùng) hoặc **API Key**.
+4. Thêm biến môi trường trên Vercel / `.env.local` (không có `NEXT_PUBLIC_`): `SEPAY_WEBHOOK_SECRET=<Secret Key HMAC>` hoặc `SEPAY_WEBHOOK_API_KEY=<API key>`. Chưa có khóa thì webhook từ chối mọi yêu cầu (an toàn mặc định).
+5. Nên đặt *Giữ chỗ (phút)* của chi nhánh khoảng 15 để khách kịp chuyển.
+6. Thử: dùng chế độ giả lập giao dịch của SePay (hoặc chuyển 2.000đ với nội dung là mã một đơn thử) — đơn chuyển sang "Đã xác nhận", giao dịch hiện ở *Giao dịch ngân hàng*.
+
+**Tổng quan (`/admin`)** — một lần gọi database (`admin_dashboard`), hiện theo quyền người xem: thực thu hôm nay / theo kỳ (7–30–90 ngày, so với kỳ trước), tiền còn phải thu, đơn chờ cọc, biểu đồ dòng tiền theo ngày (sân / bán hàng / cho thuê), tỷ trọng theo nguồn và hình thức, việc cần xử lý (chờ cọc, giao dịch chưa khớp, thuê quá hạn, hết hàng, ca chưa chấm công), lịch sân hôm nay, giao dịch gần đây và tóm tắt các mảng khác. Chủ sân xem gộp mọi chi nhánh hoặc từng chi nhánh.
 

@@ -47,11 +47,11 @@ export function NavProgress() {
       // Phòng khi trang không đổi URL (lỗi mạng, chuyển hướng về chính nó) — tự ẩn sau 12 giây.
       timers.current.push(window.setTimeout(() => setPhase('idle'), 12000));
     };
-    // Ô lọc / tìm kiếm (form GET) cũng là chuyển trang.
+    // Ô lọc / tìm kiếm chuyển trang (next/form, đánh dấu data-nav-progress) cũng hiện thanh tiến trình.
     const onSubmit = (event: SubmitEvent) => {
-      if (event.defaultPrevented || !(event.target instanceof HTMLFormElement)) return;
+      if (!(event.target instanceof HTMLFormElement)) return;
       const form = event.target;
-      if (form.method.toLowerCase() !== 'get') return;
+      if (!form.hasAttribute('data-nav-progress') || form.method.toLowerCase() !== 'get') return;
       const url = new URL(form.action, window.location.href);
       const query = new URLSearchParams();
       for (const [key, value] of new FormData(form, event.submitter)) if (typeof value === 'string') query.append(key, value);

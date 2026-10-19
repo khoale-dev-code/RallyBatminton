@@ -169,3 +169,16 @@ export async function revealGuestBookingAction(_prev: RevealState, formData: For
   if (!booking.success) return { ...formError('Không đọc được thông tin đơn.'), bookingId };
   return { ...formSuccess(''), booking: booking.data, phone: parsed.data.phone, bookingId };
 }
+
+/** Kiểm tra lại đơn (trang chờ chuyển khoản tự hỏi vài giây một lần để biết đã nhận cọc chưa). */
+export async function refreshGuestBookingAction(code: string, phone: string): Promise<BookingSummary | null> {
+  const parsed = lookupSchema.safeParse({ code, phone });
+  if (!parsed.success) return null;
+  const { data, error } = await createSecretClient().rpc('lookup_guest_booking', {
+    p_code: parsed.data.code,
+    p_phone: parsed.data.phone,
+  });
+  if (error) return null;
+  const booking = bookingSummarySchema.safeParse(data);
+  return booking.success ? booking.data : null;
+}
