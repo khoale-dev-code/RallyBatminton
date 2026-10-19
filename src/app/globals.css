@@ -1,0 +1,185 @@
+@import 'tailwindcss';
+
+/* ===========================================================================
+   Rally Badminton — design tokens
+   Ý tưởng: vạch sân cầu lông. Xanh = mặt sân (dùng làm mảng, không làm chữ nhỏ),
+   đỏ = trạng thái cần chú ý (giữ chỗ, đếm ngược, hủy), đen = mực chữ.
+   =========================================================================== */
+@theme {
+  --font-sans: 'Be Vietnam Pro', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: 'Oswald Variable', 'Oswald', 'Arial Narrow', ui-sans-serif, sans-serif;
+
+  --color-ink: #000000;
+  --color-paper: #ffffff;
+  --color-hall: #f3f5f1; /* sàn nhà thi đấu */
+  --color-line: #d9ded6; /* vạch kẻ mảnh */
+  --color-muted: #555b52; /* chữ phụ — tương phản 7:1 trên nền trắng */
+
+  --color-court: #62bb46; /* mặt sân — màu thương hiệu */
+  --color-court-deep: #2e6b1f; /* chữ xanh trên nền trắng (AA) */
+  --color-court-soft: #e8f4e2;
+  --color-court-strong: #2b7f21; /* nền nút chữ trắng (tương phản 5:1) */
+  --color-hall-dark: #0c3322; /* nền nhà thi đấu (hero, chân trang) */
+
+  --color-shuttle: #ed1c24; /* đỏ thương hiệu */
+  --color-shuttle-deep: #b5121a; /* chữ đỏ trên nền trắng (AA) */
+  --color-shuttle-soft: #fdecec;
+
+  --color-amber-soft: #fff4d6;
+  --color-amber-deep: #7a5200;
+
+  --radius-control: 0.5rem;
+  --radius-panel: 1rem;
+
+  --shadow-lift: 0 1px 0 rgb(0 0 0 / 0.04), 0 12px 32px -18px rgb(0 0 0 / 0.35);
+
+  --animate-draw: draw 1.6s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+  --animate-fade: fade 0.35s ease-out both;
+
+  @keyframes draw {
+    from {
+      stroke-dashoffset: var(--dash, 1200);
+    }
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+  @keyframes fade {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+  }
+  body {
+    @apply bg-paper text-ink font-sans antialiased;
+    /* Chặn cuộn ngang do khối .full-bleed (100vw gồm cả thanh cuộn); clip không phá sticky. */
+    overflow-x: clip;
+    font-size: 1rem;
+    line-height: 1.6;
+  }
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-display;
+    font-weight: 500;
+    /* Đủ khoảng cho dấu tiếng Việt chồng (Ẩ, Ỗ, Ữ…) không bị cắt */
+    line-height: 1.2;
+    text-wrap: balance;
+    letter-spacing: 0.005em;
+  }
+  p {
+    text-wrap: pretty;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-ink);
+    outline-offset: 2px;
+  }
+  ::selection {
+    background: var(--color-court);
+    color: var(--color-ink);
+  }
+  input,
+  select,
+  textarea,
+  button {
+    font: inherit;
+  }
+  /* Chạm trên mobile: bỏ nháy xám mặc định, phản hồi bằng trạng thái :active của từng nút. */
+  a,
+  button,
+  summary,
+  label {
+    -webkit-tap-highlight-color: transparent;
+  }
+  img,
+  svg,
+  video {
+    max-width: 100%;
+  }
+}
+
+@layer utilities {
+  /* Vùng cuộn ngang (bảng, lưới lịch) trên mobile: cuộn mượt, không kéo theo trang. */
+  .scroll-x {
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+  .pb-safe {
+    padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+  }
+  /* Khối tràn hết bề ngang màn hình dù nằm trong khung nội dung giới hạn. */
+  .full-bleed {
+    width: 100vw;
+    margin-left: calc(50% - 50vw);
+  }
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+  .scrollbar-none {
+    scrollbar-width: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/*
+ * iOS Safari tự phóng to trang khi ô nhập có cỡ chữ < 16px.
+ * Đặt ngoài @layer để thắng các lớp tiện ích text-sm/text-xs trên thiết bị cảm ứng.
+ */
+@media (pointer: coarse) {
+  input:not([type='checkbox']):not([type='radio']):not([type='range']),
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* In phiếu thanh toán tại quầy (khổ giấy nhiệt 80mm): chỉ in khối #pos-receipt. */
+@media print {
+  @page {
+    margin: 4mm;
+  }
+  body * {
+    visibility: hidden !important;
+  }
+  #pos-receipt,
+  #pos-receipt * {
+    visibility: visible !important;
+  }
+  #pos-receipt {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 72mm;
+    border: 0 !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    color: #000;
+    font-size: 11pt;
+  }
+}

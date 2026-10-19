@@ -1,0 +1,2676 @@
+// Tự sinh từ schema Rally (supabase/sql/00 + 01). KHÔNG sửa tay.
+// Tạo lại sau khi đổi schema:  npx supabase gen types typescript --project-id <id> --schema public > src/lib/supabase/database.types.ts
+
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
+
+export type Database = {
+  __InternalSupabase: {
+    PostgrestVersion: "12.2"
+  }
+  public: {
+    Tables: {
+      amenities: {
+        Row: {
+          code: string
+          label: string
+          icon: string | null
+          sort_order: number
+        }
+        Insert: {
+          code: string
+          label: string
+          icon?: string | null
+          sort_order?: number
+        }
+        Update: {
+          code?: string
+          label?: string
+          icon?: string | null
+          sort_order?: number
+        }
+        Relationships: [
+        ]
+      }
+      attendance_qr_tokens: {
+        Row: {
+          token_hash: string
+          branch_id: string
+          expires_at: string
+          created_by: string
+          created_at: string
+        }
+        Insert: {
+          token_hash: string
+          branch_id: string
+          expires_at: string
+          created_by: string
+          created_at?: string
+        }
+        Update: {
+          token_hash?: string
+          branch_id?: string
+          expires_at?: string
+          created_by?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendance_qr_tokens_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      audit_events: {
+        Row: {
+          id: number
+          occurred_at: string
+          actor_id: string | null
+          actor_role: string | null
+          branch_id: string | null
+          table_name: string
+          record_id: string
+          action: string
+          reason: string | null
+          old_data: Json | null
+          new_data: Json | null
+        }
+        Insert: {
+          id?: never
+          occurred_at?: string
+          actor_id?: string | null
+          actor_role?: string | null
+          branch_id?: string | null
+          table_name: string
+          record_id: string
+          action: string
+          reason?: string | null
+          old_data?: Json | null
+          new_data?: Json | null
+        }
+        Update: {
+          id?: never
+          occurred_at?: string
+          actor_id?: string | null
+          actor_role?: string | null
+          branch_id?: string | null
+          table_name?: string
+          record_id?: string
+          action?: string
+          reason?: string | null
+          old_data?: Json | null
+          new_data?: Json | null
+        }
+        Relationships: [
+        ]
+      }
+      bookings: {
+        Row: {
+          id: string
+          code: string
+          branch_id: string
+          court_id: string
+          kind: Database["public"]["Enums"]["booking_kind"]
+          source: Database["public"]["Enums"]["booking_source"]
+          status: Database["public"]["Enums"]["booking_status"]
+          during: string
+          customer_id: string | null
+          contact_name: string | null
+          hold_expires_at: string | null
+          subtotal_amount: number
+          discount_amount: number
+          total_amount: number | null
+          deposit_amount: number
+          price_snapshot: Json
+          member_user_id: string | null
+          refund_entitlement: number | null
+          recurring_series_id: string | null
+          customer_note: string | null
+          internal_note: string | null
+          status_reason: string | null
+          idempotency_key: string | null
+          created_by: string | null
+          confirmed_at: string | null
+          confirmed_by: string | null
+          checked_in_at: string | null
+          checked_in_by: string | null
+          completed_at: string | null
+          cancelled_at: string | null
+          cancelled_by: string | null
+          status_changed_at: string
+          created_at: string
+          updated_at: string
+          deleted_at: string | null
+        }
+        Insert: {
+          id?: string
+          code?: string
+          branch_id: string
+          court_id: string
+          kind?: Database["public"]["Enums"]["booking_kind"]
+          source: Database["public"]["Enums"]["booking_source"]
+          status?: Database["public"]["Enums"]["booking_status"]
+          during: string
+          customer_id?: string | null
+          contact_name?: string | null
+          hold_expires_at?: string | null
+          subtotal_amount?: number
+          discount_amount?: number
+          total_amount?: never
+          deposit_amount?: number
+          price_snapshot?: Json
+          member_user_id?: string | null
+          refund_entitlement?: number | null
+          recurring_series_id?: string | null
+          customer_note?: string | null
+          internal_note?: string | null
+          status_reason?: string | null
+          idempotency_key?: string | null
+          created_by?: string | null
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+          checked_in_at?: string | null
+          checked_in_by?: string | null
+          completed_at?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          status_changed_at?: string
+          created_at?: string
+          updated_at?: string
+          deleted_at?: string | null
+        }
+        Update: {
+          id?: string
+          code?: string
+          branch_id?: string
+          court_id?: string
+          kind?: Database["public"]["Enums"]["booking_kind"]
+          source?: Database["public"]["Enums"]["booking_source"]
+          status?: Database["public"]["Enums"]["booking_status"]
+          during?: string
+          customer_id?: string | null
+          contact_name?: string | null
+          hold_expires_at?: string | null
+          subtotal_amount?: number
+          discount_amount?: number
+          total_amount?: never
+          deposit_amount?: number
+          price_snapshot?: Json
+          member_user_id?: string | null
+          refund_entitlement?: number | null
+          recurring_series_id?: string | null
+          customer_note?: string | null
+          internal_note?: string | null
+          status_reason?: string | null
+          idempotency_key?: string | null
+          created_by?: string | null
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+          checked_in_at?: string | null
+          checked_in_by?: string | null
+          completed_at?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          status_changed_at?: string
+          created_at?: string
+          updated_at?: string
+          deleted_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookings_court_fk"
+            columns: ["court_id", "branch_id"]
+            isOneToOne: false
+            referencedRelation: "courts"
+            referencedColumns: ["id", "branch_id"]
+          },
+          {
+            foreignKeyName: "bookings_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_recurring_series_id_fkey"
+            columns: ["recurring_series_id"]
+            isOneToOne: false
+            referencedRelation: "recurring_series"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      branch_amenities: {
+        Row: {
+          branch_id: string
+          amenity_code: string
+        }
+        Insert: {
+          branch_id: string
+          amenity_code: string
+        }
+        Update: {
+          branch_id?: string
+          amenity_code?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "branch_amenities_amenity_code_fkey"
+            columns: ["amenity_code"]
+            isOneToOne: false
+            referencedRelation: "amenities"
+            referencedColumns: ["code"]
+          },
+          {
+            foreignKeyName: "branch_amenities_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      branches: {
+        Row: {
+          id: string
+          slug: string
+          name: string
+          address_line: string
+          ward: string | null
+          district: string | null
+          city: string
+          phone: string | null
+          latitude: number | null
+          longitude: number | null
+          map_url: string | null
+          map_embed_url: string | null
+          timezone: string
+          opens_at: string
+          closes_at: string
+          slot_minutes: number
+          hold_minutes: number
+          min_booking_minutes: number
+          max_booking_minutes: number
+          booking_window_days: number
+          deposit_percent: number
+          free_cancel_hours: number
+          partial_refund_hours: number
+          partial_refund_percent: number
+          description: string | null
+          parking_info: string | null
+          house_rules: string | null
+          cover_image_path: string | null
+          status: Database["public"]["Enums"]["branch_status"]
+          published_at: string | null
+          created_at: string
+          updated_at: string
+          deleted_at: string | null
+        }
+        Insert: {
+          id?: string
+          slug: string
+          name: string
+          address_line?: string
+          ward?: string | null
+          district?: string | null
+          city?: string
+          phone?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          map_url?: string | null
+          map_embed_url?: string | null
+          timezone?: string
+          opens_at?: string
+          closes_at?: string
+          slot_minutes?: number
+          hold_minutes?: number
+          min_booking_minutes?: number
+          max_booking_minutes?: number
+          booking_window_days?: number
+          deposit_percent?: number
+          free_cancel_hours?: number
+          partial_refund_hours?: number
+          partial_refund_percent?: number
+          description?: string | null
+          parking_info?: string | null
+          house_rules?: string | null
+          cover_image_path?: string | null
+          status?: Database["public"]["Enums"]["branch_status"]
+          published_at?: string | null
+          created_at?: string
+          updated_at?: string
+          deleted_at?: string | null
+        }
+        Update: {
+          id?: string
+          slug?: string
+          name?: string
+          address_line?: string
+          ward?: string | null
+          district?: string | null
+          city?: string
+          phone?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          map_url?: string | null
+          map_embed_url?: string | null
+          timezone?: string
+          opens_at?: string
+          closes_at?: string
+          slot_minutes?: number
+          hold_minutes?: number
+          min_booking_minutes?: number
+          max_booking_minutes?: number
+          booking_window_days?: number
+          deposit_percent?: number
+          free_cancel_hours?: number
+          partial_refund_hours?: number
+          partial_refund_percent?: number
+          description?: string | null
+          parking_info?: string | null
+          house_rules?: string | null
+          cover_image_path?: string | null
+          status?: Database["public"]["Enums"]["branch_status"]
+          published_at?: string | null
+          created_at?: string
+          updated_at?: string
+          deleted_at?: string | null
+        }
+        Relationships: [
+        ]
+      }
+      brand_settings: {
+        Row: {
+          id: boolean
+          name: string
+          hotline: string | null
+          email: string | null
+          website_url: string | null
+          facebook_url: string | null
+          zalo_url: string | null
+          updated_at: string
+          payment_instructions: string | null
+          address_line: string | null
+          tax_method: string
+          default_vat_rate: number
+          tax_code: string | null
+        }
+        Insert: {
+          id?: boolean
+          name: string
+          hotline?: string | null
+          email?: string | null
+          website_url?: string | null
+          facebook_url?: string | null
+          zalo_url?: string | null
+          updated_at?: string
+          payment_instructions?: string | null
+          address_line?: string | null
+          tax_method?: string
+          default_vat_rate?: number
+          tax_code?: string | null
+        }
+        Update: {
+          id?: boolean
+          name?: string
+          hotline?: string | null
+          email?: string | null
+          website_url?: string | null
+          facebook_url?: string | null
+          zalo_url?: string | null
+          updated_at?: string
+          payment_instructions?: string | null
+          address_line?: string | null
+          tax_method?: string
+          default_vat_rate?: number
+          tax_code?: string | null
+        }
+        Relationships: [
+        ]
+      }
+      bundle_components: {
+        Row: {
+          bundle_product_id: string
+          component_variant_id: string
+          quantity: number
+        }
+        Insert: {
+          bundle_product_id: string
+          component_variant_id: string
+          quantity: number
+        }
+        Update: {
+          bundle_product_id?: string
+          component_variant_id?: string
+          quantity?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bundle_components_bundle_product_id_fkey"
+            columns: ["bundle_product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bundle_components_component_variant_id_fkey"
+            columns: ["component_variant_id"]
+            isOneToOne: false
+            referencedRelation: "product_variants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      court_photos: {
+        Row: {
+          id: string
+          court_id: string
+          storage_path: string
+          alt_text: string | null
+          sort_order: number
+          is_cover: boolean
+          created_by: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          court_id: string
+          storage_path: string
+          alt_text?: string | null
+          sort_order?: number
+          is_cover?: boolean
+          created_by?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          court_id?: string
+          storage_path?: string
+          alt_text?: string | null
+          sort_order?: number
+          is_cover?: boolean
+          created_by?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "court_photos_court_id_fkey"
+            columns: ["court_id"]
+            isOneToOne: false
+            referencedRelation: "courts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      court_surfaces: {
+        Row: {
+          code: string
+          label: string
+          sort_order: number
+        }
+        Insert: {
+          code: string
+          label: string
+          sort_order?: number
+        }
+        Update: {
+          code?: string
+          label?: string
+          sort_order?: number
+        }
+        Relationships: [
+        ]
+      }
+      courts: {
+        Row: {
+          id: string
+          branch_id: string
+          name: string
+          surface_code: string | null
+          is_indoor: boolean
+          status: Database["public"]["Enums"]["court_status"]
+          sort_order: number
+          description: string | null
+          created_at: string
+          updated_at: string
+          deleted_at: string | null
+        }
+        Insert: {
+          id?: string
+          branch_id: string
+          name: string
+          surface_code?: string | null
+          is_indoor?: boolean
+          status?: Database["public"]["Enums"]["court_status"]
+          sort_order?: number
+          description?: string | null
+          created_at?: string
+          updated_at?: string
+          deleted_at?: string | null
+        }
+        Update: {
+          id?: string
+          branch_id?: string
+          name?: string
+          surface_code?: string | null
+          is_indoor?: boolean
+          status?: Database["public"]["Enums"]["court_status"]
+          sort_order?: number
+          description?: string | null
+          created_at?: string
+          updated_at?: string
+          deleted_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "courts_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "courts_surface_code_fkey"
+            columns: ["surface_code"]
+            isOneToOne: false
+            referencedRelation: "court_surfaces"
+            referencedColumns: ["code"]
+          },
+        ]
+      }
+      customers: {
+        Row: {
+          id: string
+          phone: string
+          full_name: string
+          email: string | null
+          auth_user_id: string | null
+          staff_note: string | null
+          marketing_opt_in: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          phone: string
+          full_name: string
+          email?: string | null
+          auth_user_id?: string | null
+          staff_note?: string | null
+          marketing_opt_in?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          phone?: string
+          full_name?: string
+          email?: string | null
+          auth_user_id?: string | null
+          staff_note?: string | null
+          marketing_opt_in?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+        ]
+      }
+      member_profiles: {
+        Row: {
+          user_id: string
+          full_name: string
+          phone: string | null
+          login_kind: Database["public"]["Enums"]["member_login_kind"]
+          points: number
+          lifetime_points: number
+          tier: Database["public"]["Enums"]["member_tier"]
+          is_locked: boolean
+          must_change_password: boolean
+          marketing_opt_in: boolean
+          staff_note: string | null
+          last_seen_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          user_id: string
+          full_name: string
+          phone?: string | null
+          login_kind: Database["public"]["Enums"]["member_login_kind"]
+          points?: number
+          lifetime_points?: number
+          tier?: Database["public"]["Enums"]["member_tier"]
+          is_locked?: boolean
+          must_change_password?: boolean
+          marketing_opt_in?: boolean
+          staff_note?: string | null
+          last_seen_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          user_id?: string
+          full_name?: string
+          phone?: string | null
+          login_kind?: Database["public"]["Enums"]["member_login_kind"]
+          points?: number
+          lifetime_points?: number
+          tier?: Database["public"]["Enums"]["member_tier"]
+          is_locked?: boolean
+          must_change_password?: boolean
+          marketing_opt_in?: boolean
+          staff_note?: string | null
+          last_seen_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+        ]
+      }
+      member_point_ledger: {
+        Row: {
+          id: number
+          user_id: string
+          kind: string
+          delta: number
+          reason: string
+          booking_id: string | null
+          created_by: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: never
+          user_id: string
+          kind: string
+          delta: number
+          reason: string
+          booking_id?: string | null
+          created_by?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: never
+          user_id?: string
+          kind?: string
+          delta?: number
+          reason?: string
+          booking_id?: string | null
+          created_by?: string | null
+          created_at?: string
+        }
+        Relationships: [
+        ]
+      }
+      employee_pay_rates: {
+        Row: {
+          id: string
+          employee_id: string
+          pay_type: Database["public"]["Enums"]["pay_type"]
+          hourly_rate: number | null
+          daily_rate: number | null
+          standard_day_minutes: number
+          effective_from: string
+          note: string | null
+          created_by: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          employee_id: string
+          pay_type: Database["public"]["Enums"]["pay_type"]
+          hourly_rate?: number | null
+          daily_rate?: number | null
+          standard_day_minutes?: number
+          effective_from: string
+          note?: string | null
+          created_by?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          employee_id?: string
+          pay_type?: Database["public"]["Enums"]["pay_type"]
+          hourly_rate?: number | null
+          daily_rate?: number | null
+          standard_day_minutes?: number
+          effective_from?: string
+          note?: string | null
+          created_by?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_pay_rates_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employees: {
+        Row: {
+          id: string
+          code: string
+          full_name: string
+          phone: string | null
+          email: string | null
+          home_branch_id: string
+          employment_type: Database["public"]["Enums"]["employment_type"]
+          status: Database["public"]["Enums"]["employee_status"]
+          hired_on: string | null
+          terminated_on: string | null
+          notes: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          code: string
+          full_name: string
+          phone?: string | null
+          email?: string | null
+          home_branch_id: string
+          employment_type?: Database["public"]["Enums"]["employment_type"]
+          status?: Database["public"]["Enums"]["employee_status"]
+          hired_on?: string | null
+          terminated_on?: string | null
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          code?: string
+          full_name?: string
+          phone?: string | null
+          email?: string | null
+          home_branch_id?: string
+          employment_type?: Database["public"]["Enums"]["employment_type"]
+          status?: Database["public"]["Enums"]["employee_status"]
+          hired_on?: string | null
+          terminated_on?: string | null
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employees_home_branch_id_fkey"
+            columns: ["home_branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inventory_levels: {
+        Row: {
+          branch_id: string
+          variant_id: string
+          on_hand: number
+          reorder_level: number
+          is_listed: boolean
+          updated_at: string
+        }
+        Insert: {
+          branch_id: string
+          variant_id: string
+          on_hand?: number
+          reorder_level?: number
+          is_listed?: boolean
+          updated_at?: string
+        }
+        Update: {
+          branch_id?: string
+          variant_id?: string
+          on_hand?: number
+          reorder_level?: number
+          is_listed?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_levels_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_levels_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "product_variants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payments: {
+        Row: {
+          id: string
+          branch_id: string
+          booking_id: string | null
+          sale_id: string | null
+          rental_id: string | null
+          kind: Database["public"]["Enums"]["payment_kind"]
+          method: Database["public"]["Enums"]["payment_method"]
+          status: Database["public"]["Enums"]["payment_status"]
+          amount: number
+          reference: string | null
+          provider: string | null
+          provider_txn_id: string | null
+          provider_payload: Json | null
+          idempotency_key: string
+          note: string | null
+          received_at: string
+          recorded_by: string | null
+          voided_at: string | null
+          voided_by: string | null
+          void_reason: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          branch_id: string
+          booking_id?: string | null
+          sale_id?: string | null
+          rental_id?: string | null
+          kind?: Database["public"]["Enums"]["payment_kind"]
+          method: Database["public"]["Enums"]["payment_method"]
+          status?: Database["public"]["Enums"]["payment_status"]
+          amount: number
+          reference?: string | null
+          provider?: string | null
+          provider_txn_id?: string | null
+          provider_payload?: Json | null
+          idempotency_key: string
+          note?: string | null
+          received_at?: string
+          recorded_by?: string | null
+          voided_at?: string | null
+          voided_by?: string | null
+          void_reason?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          branch_id?: string
+          booking_id?: string | null
+          sale_id?: string | null
+          rental_id?: string | null
+          kind?: Database["public"]["Enums"]["payment_kind"]
+          method?: Database["public"]["Enums"]["payment_method"]
+          status?: Database["public"]["Enums"]["payment_status"]
+          amount?: number
+          reference?: string | null
+          provider?: string | null
+          provider_txn_id?: string | null
+          provider_payload?: Json | null
+          idempotency_key?: string
+          note?: string | null
+          received_at?: string
+          recorded_by?: string | null
+          voided_at?: string | null
+          voided_by?: string | null
+          void_reason?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_rental_id_fkey"
+            columns: ["rental_id"]
+            isOneToOne: false
+            referencedRelation: "rentals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_sale_id_fkey"
+            columns: ["sale_id"]
+            isOneToOne: false
+            referencedRelation: "sales"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payroll_adjustments: {
+        Row: {
+          id: string
+          employee_id: string
+          month: string
+          amount: number
+          reason: string
+          created_by: string | null
+          created_at: string
+          voided_at: string | null
+          voided_by: string | null
+        }
+        Insert: {
+          id?: string
+          employee_id: string
+          month: string
+          amount: number
+          reason: string
+          created_by?: string | null
+          created_at?: string
+          voided_at?: string | null
+          voided_by?: string | null
+        }
+        Update: {
+          id?: string
+          employee_id?: string
+          month?: string
+          amount?: number
+          reason?: string
+          created_by?: string | null
+          created_at?: string
+          voided_at?: string | null
+          voided_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payroll_adjustments_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payroll_lines: {
+        Row: {
+          period_id: string
+          employee_id: string
+          employee_code: string
+          employee_name: string
+          branch_id: string
+          shifts_count: number
+          paid_minutes: number
+          base_pay: number
+          adjustments_total: number
+          net_pay: number | null
+        }
+        Insert: {
+          period_id: string
+          employee_id: string
+          employee_code: string
+          employee_name: string
+          branch_id: string
+          shifts_count: number
+          paid_minutes: number
+          base_pay: number
+          adjustments_total: number
+          net_pay?: never
+        }
+        Update: {
+          period_id?: string
+          employee_id?: string
+          employee_code?: string
+          employee_name?: string
+          branch_id?: string
+          shifts_count?: number
+          paid_minutes?: number
+          base_pay?: number
+          adjustments_total?: number
+          net_pay?: never
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payroll_lines_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payroll_lines_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payroll_lines_period_id_fkey"
+            columns: ["period_id"]
+            isOneToOne: false
+            referencedRelation: "payroll_periods"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payroll_periods: {
+        Row: {
+          id: string
+          month: string
+          closed_at: string
+          closed_by: string
+          note: string | null
+        }
+        Insert: {
+          id?: string
+          month: string
+          closed_at?: string
+          closed_by: string
+          note?: string | null
+        }
+        Update: {
+          id?: string
+          month?: string
+          closed_at?: string
+          closed_by?: string
+          note?: string | null
+        }
+        Relationships: [
+        ]
+      }
+      price_rules: {
+        Row: {
+          id: string
+          branch_id: string
+          court_id: string | null
+          label: string | null
+          days_mask: number
+          starts_at: string
+          ends_at: string
+          price_per_hour: number
+          priority: number
+          valid_from: string | null
+          valid_until: string | null
+          is_active: boolean
+          created_by: string | null
+          created_at: string
+          updated_at: string
+          deleted_at: string | null
+        }
+        Insert: {
+          id?: string
+          branch_id: string
+          court_id?: string | null
+          label?: string | null
+          days_mask: number
+          starts_at: string
+          ends_at: string
+          price_per_hour: number
+          priority?: number
+          valid_from?: string | null
+          valid_until?: string | null
+          is_active?: boolean
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+          deleted_at?: string | null
+        }
+        Update: {
+          id?: string
+          branch_id?: string
+          court_id?: string | null
+          label?: string | null
+          days_mask?: number
+          starts_at?: string
+          ends_at?: string
+          price_per_hour?: number
+          priority?: number
+          valid_from?: string | null
+          valid_until?: string | null
+          is_active?: boolean
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+          deleted_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "price_rules_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "price_rules_court_fk"
+            columns: ["court_id", "branch_id"]
+            isOneToOne: false
+            referencedRelation: "courts"
+            referencedColumns: ["id", "branch_id"]
+          },
+        ]
+      }
+      product_categories: {
+        Row: {
+          id: string
+          slug: string
+          name: string
+          sort_order: number
+          is_active: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          slug: string
+          name: string
+          sort_order?: number
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          slug?: string
+          name?: string
+          sort_order?: number
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+        ]
+      }
+      product_photos: {
+        Row: {
+          id: string
+          product_id: string
+          storage_path: string
+          alt_text: string | null
+          sort_order: number
+          is_cover: boolean
+          created_by: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          product_id: string
+          storage_path: string
+          alt_text?: string | null
+          sort_order?: number
+          is_cover?: boolean
+          created_by?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          product_id?: string
+          storage_path?: string
+          alt_text?: string | null
+          sort_order?: number
+          is_cover?: boolean
+          created_by?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_photos_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_units: {
+        Row: {
+          id: string
+          product_id: string
+          name: string
+          conversion: number
+          price: number | null
+          barcode: string | null
+          sort_order: number
+          created_at: string
+          updated_at: string
+          deleted_at: string | null
+        }
+        Insert: {
+          id?: string
+          product_id: string
+          name: string
+          conversion: number
+          price?: number | null
+          barcode?: string | null
+          sort_order?: number
+          created_at?: string
+          updated_at?: string
+          deleted_at?: string | null
+        }
+        Update: {
+          id?: string
+          product_id?: string
+          name?: string
+          conversion?: number
+          price?: number | null
+          barcode?: string | null
+          sort_order?: number
+          created_at?: string
+          updated_at?: string
+          deleted_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_units_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_variants: {
+        Row: {
+          id: string
+          product_id: string
+          sku: string
+          size_label: string | null
+          color_label: string | null
+          price_override: number | null
+          is_default: boolean
+          is_active: boolean
+          sort_order: number
+          created_at: string
+          updated_at: string
+          deleted_at: string | null
+          cost_price: number | null
+          barcode: string | null
+        }
+        Insert: {
+          id?: string
+          product_id: string
+          sku: string
+          size_label?: string | null
+          color_label?: string | null
+          price_override?: number | null
+          is_default?: boolean
+          is_active?: boolean
+          sort_order?: number
+          created_at?: string
+          updated_at?: string
+          deleted_at?: string | null
+          cost_price?: number | null
+          barcode?: string | null
+        }
+        Update: {
+          id?: string
+          product_id?: string
+          sku?: string
+          size_label?: string | null
+          color_label?: string | null
+          price_override?: number | null
+          is_default?: boolean
+          is_active?: boolean
+          sort_order?: number
+          created_at?: string
+          updated_at?: string
+          deleted_at?: string | null
+          cost_price?: number | null
+          barcode?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_variants_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      products: {
+        Row: {
+          id: string
+          kind: Database["public"]["Enums"]["product_kind"]
+          category_id: string | null
+          name: string
+          slug: string | null
+          description: string | null
+          brand_name: string | null
+          base_price: number | null
+          compare_at_price: number | null
+          is_bundle: boolean
+          is_active: boolean
+          created_by: string | null
+          created_at: string
+          updated_at: string
+          deleted_at: string | null
+          excerpt: string | null
+          unit_label: string | null
+          tags: string[]
+          seo_title: string | null
+          seo_description: string | null
+          show_on_website: boolean
+          show_on_pos: boolean
+          invoice_name: string | null
+          taxable: boolean
+          tax_industry: string | null
+          vat_use_default: boolean
+          vat_rate: number | null
+          option1_name: string | null
+          option2_name: string | null
+        }
+        Insert: {
+          id?: string
+          kind: Database["public"]["Enums"]["product_kind"]
+          category_id?: string | null
+          name: string
+          slug?: string | null
+          description?: string | null
+          brand_name?: string | null
+          base_price?: number | null
+          compare_at_price?: number | null
+          is_bundle?: boolean
+          is_active?: boolean
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+          deleted_at?: string | null
+          excerpt?: string | null
+          unit_label?: string | null
+          tags?: string[]
+          seo_title?: string | null
+          seo_description?: string | null
+          show_on_website?: boolean
+          show_on_pos?: boolean
+          invoice_name?: string | null
+          taxable?: boolean
+          tax_industry?: string | null
+          vat_use_default?: boolean
+          vat_rate?: number | null
+          option1_name?: string | null
+          option2_name?: string | null
+        }
+        Update: {
+          id?: string
+          kind?: Database["public"]["Enums"]["product_kind"]
+          category_id?: string | null
+          name?: string
+          slug?: string | null
+          description?: string | null
+          brand_name?: string | null
+          base_price?: number | null
+          compare_at_price?: number | null
+          is_bundle?: boolean
+          is_active?: boolean
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+          deleted_at?: string | null
+          excerpt?: string | null
+          unit_label?: string | null
+          tags?: string[]
+          seo_title?: string | null
+          seo_description?: string | null
+          show_on_website?: boolean
+          show_on_pos?: boolean
+          invoice_name?: string | null
+          taxable?: boolean
+          tax_industry?: string | null
+          vat_use_default?: boolean
+          vat_rate?: number | null
+          option1_name?: string | null
+          option2_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "products_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "product_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      recurring_series: {
+        Row: {
+          id: string
+          branch_id: string
+          court_id: string
+          customer_id: string
+          iso_dow: number
+          starts_at: string
+          ends_at: string
+          valid_from: string
+          valid_until: string
+          status: Database["public"]["Enums"]["recurring_status"]
+          note: string | null
+          created_by: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          branch_id: string
+          court_id: string
+          customer_id: string
+          iso_dow: number
+          starts_at: string
+          ends_at: string
+          valid_from: string
+          valid_until: string
+          status?: Database["public"]["Enums"]["recurring_status"]
+          note?: string | null
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          branch_id?: string
+          court_id?: string
+          customer_id?: string
+          iso_dow?: number
+          starts_at?: string
+          ends_at?: string
+          valid_from?: string
+          valid_until?: string
+          status?: Database["public"]["Enums"]["recurring_status"]
+          note?: string | null
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recurring_court_fk"
+            columns: ["court_id", "branch_id"]
+            isOneToOne: false
+            referencedRelation: "courts"
+            referencedColumns: ["id", "branch_id"]
+          },
+          {
+            foreignKeyName: "recurring_series_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rental_lines: {
+        Row: {
+          id: string
+          rental_id: string
+          variant_id: string
+          quantity: number
+          returned_quantity: number
+          damaged_quantity: number
+          lost_quantity: number
+        }
+        Insert: {
+          id?: string
+          rental_id: string
+          variant_id: string
+          quantity: number
+          returned_quantity?: number
+          damaged_quantity?: number
+          lost_quantity?: number
+        }
+        Update: {
+          id?: string
+          rental_id?: string
+          variant_id?: string
+          quantity?: number
+          returned_quantity?: number
+          damaged_quantity?: number
+          lost_quantity?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rental_lines_rental_id_fkey"
+            columns: ["rental_id"]
+            isOneToOne: false
+            referencedRelation: "rentals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rental_lines_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "product_variants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rental_rates: {
+        Row: {
+          id: string
+          product_id: string
+          label: string
+          duration_minutes: number
+          price: number
+          is_active: boolean
+          usage: Database["public"]["Enums"]["rental_usage"]
+          billing: Database["public"]["Enums"]["rental_billing"]
+          grace_minutes: number
+          overtime_block_minutes: number
+          overtime_block_price: number | null
+          overtime_cap: number | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          product_id: string
+          label: string
+          duration_minutes: number
+          price: number
+          is_active?: boolean
+          usage?: Database["public"]["Enums"]["rental_usage"]
+          billing?: Database["public"]["Enums"]["rental_billing"]
+          grace_minutes?: number
+          overtime_block_minutes?: number
+          overtime_block_price?: number | null
+          overtime_cap?: number | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          product_id?: string
+          label?: string
+          duration_minutes?: number
+          price?: number
+          is_active?: boolean
+          usage?: Database["public"]["Enums"]["rental_usage"]
+          billing?: Database["public"]["Enums"]["rental_billing"]
+          grace_minutes?: number
+          overtime_block_minutes?: number
+          overtime_block_price?: number | null
+          overtime_cap?: number | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rental_rates_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rentals: {
+        Row: {
+          id: string
+          code: string
+          branch_id: string
+          customer_id: string
+          product_id: string
+          rate_label: string
+          duration_minutes: number
+          unit_price: number
+          quantity: number
+          rental_fee: number | null
+          late_fee: number
+          damage_fee: number
+          status: Database["public"]["Enums"]["rental_status"]
+          starts_at: string
+          due_at: string
+          returned_at: string | null
+          note: string | null
+          idempotency_key: string | null
+          created_by: string | null
+          returned_by: string | null
+          created_at: string
+          usage: Database["public"]["Enums"]["rental_usage"]
+          billing: Database["public"]["Enums"]["rental_billing"]
+          booking_id: string | null
+          collateral: string | null
+          grace_minutes: number
+          overtime_block_minutes: number
+          overtime_block_price: number
+          overtime_cap: number | null
+          late_minutes: number | null
+          late_fee_auto: number
+          late_fee_reason: string | null
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          code?: string
+          branch_id: string
+          customer_id: string
+          product_id: string
+          rate_label: string
+          duration_minutes: number
+          unit_price: number
+          quantity: number
+          rental_fee?: never
+          late_fee?: number
+          damage_fee?: number
+          status?: Database["public"]["Enums"]["rental_status"]
+          starts_at?: string
+          due_at: string
+          returned_at?: string | null
+          note?: string | null
+          idempotency_key?: string | null
+          created_by?: string | null
+          returned_by?: string | null
+          created_at?: string
+          usage?: Database["public"]["Enums"]["rental_usage"]
+          billing?: Database["public"]["Enums"]["rental_billing"]
+          booking_id?: string | null
+          collateral?: string | null
+          grace_minutes?: number
+          overtime_block_minutes?: number
+          overtime_block_price?: number
+          overtime_cap?: number | null
+          late_minutes?: number | null
+          late_fee_auto?: number
+          late_fee_reason?: string | null
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          code?: string
+          branch_id?: string
+          customer_id?: string
+          product_id?: string
+          rate_label?: string
+          duration_minutes?: number
+          unit_price?: number
+          quantity?: number
+          rental_fee?: never
+          late_fee?: number
+          damage_fee?: number
+          status?: Database["public"]["Enums"]["rental_status"]
+          starts_at?: string
+          due_at?: string
+          returned_at?: string | null
+          note?: string | null
+          idempotency_key?: string | null
+          created_by?: string | null
+          returned_by?: string | null
+          created_at?: string
+          usage?: Database["public"]["Enums"]["rental_usage"]
+          billing?: Database["public"]["Enums"]["rental_billing"]
+          booking_id?: string | null
+          collateral?: string | null
+          grace_minutes?: number
+          overtime_block_minutes?: number
+          overtime_block_price?: number
+          overtime_cap?: number | null
+          late_minutes?: number | null
+          late_fee_auto?: number
+          late_fee_reason?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rentals_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rentals_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rentals_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rentals_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sale_lines: {
+        Row: {
+          id: string
+          sale_id: string
+          variant_id: string
+          product_name: string
+          variant_label: string | null
+          quantity: number
+          unit_price: number
+          line_total: number | null
+          tax_method: string | null
+          vat_rate: number | null
+          vat_amount: number
+          pit_rate: number | null
+          pit_amount: number
+          unit_id: string | null
+          unit_name: string | null
+          unit_conversion: number
+        }
+        Insert: {
+          id?: string
+          sale_id: string
+          variant_id: string
+          product_name: string
+          variant_label?: string | null
+          quantity: number
+          unit_price: number
+          line_total?: never
+          tax_method?: string | null
+          vat_rate?: number | null
+          vat_amount?: number
+          pit_rate?: number | null
+          pit_amount?: number
+          unit_id?: string | null
+          unit_name?: string | null
+          unit_conversion?: number
+        }
+        Update: {
+          id?: string
+          sale_id?: string
+          variant_id?: string
+          product_name?: string
+          variant_label?: string | null
+          quantity?: number
+          unit_price?: number
+          line_total?: never
+          tax_method?: string | null
+          vat_rate?: number | null
+          vat_amount?: number
+          pit_rate?: number | null
+          pit_amount?: number
+          unit_id?: string | null
+          unit_name?: string | null
+          unit_conversion?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sale_lines_sale_id_fkey"
+            columns: ["sale_id"]
+            isOneToOne: false
+            referencedRelation: "sales"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sale_lines_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "product_units"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sale_lines_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "product_variants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sales: {
+        Row: {
+          id: string
+          code: string
+          branch_id: string
+          customer_id: string | null
+          status: Database["public"]["Enums"]["sale_status"]
+          subtotal_amount: number
+          discount_amount: number
+          total_amount: number | null
+          note: string | null
+          idempotency_key: string | null
+          sold_by: string | null
+          sold_at: string
+          voided_at: string | null
+          voided_by: string | null
+          void_reason: string | null
+        }
+        Insert: {
+          id?: string
+          code?: string
+          branch_id: string
+          customer_id?: string | null
+          status?: Database["public"]["Enums"]["sale_status"]
+          subtotal_amount: number
+          discount_amount?: number
+          total_amount?: never
+          note?: string | null
+          idempotency_key?: string | null
+          sold_by?: string | null
+          sold_at?: string
+          voided_at?: string | null
+          voided_by?: string | null
+          void_reason?: string | null
+        }
+        Update: {
+          id?: string
+          code?: string
+          branch_id?: string
+          customer_id?: string | null
+          status?: Database["public"]["Enums"]["sale_status"]
+          subtotal_amount?: number
+          discount_amount?: number
+          total_amount?: never
+          note?: string | null
+          idempotency_key?: string | null
+          sold_by?: string | null
+          sold_at?: string
+          voided_at?: string | null
+          voided_by?: string | null
+          void_reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shifts: {
+        Row: {
+          id: string
+          employee_id: string
+          branch_id: string
+          work_date: string
+          scheduled_start: string
+          scheduled_end: string
+          scheduled_range: string | null
+          break_minutes: number
+          status: Database["public"]["Enums"]["attendance_status"]
+          checked_in_at: string | null
+          checked_out_at: string | null
+          actual_break_minutes: number
+          paid_minutes: number | null
+          note: string | null
+          created_by: string | null
+          created_at: string
+          updated_at: string
+          deleted_at: string | null
+        }
+        Insert: {
+          id?: string
+          employee_id: string
+          branch_id: string
+          work_date: string
+          scheduled_start: string
+          scheduled_end: string
+          scheduled_range?: never
+          break_minutes?: number
+          status?: Database["public"]["Enums"]["attendance_status"]
+          checked_in_at?: string | null
+          checked_out_at?: string | null
+          actual_break_minutes?: number
+          paid_minutes?: never
+          note?: string | null
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+          deleted_at?: string | null
+        }
+        Update: {
+          id?: string
+          employee_id?: string
+          branch_id?: string
+          work_date?: string
+          scheduled_start?: string
+          scheduled_end?: string
+          scheduled_range?: never
+          break_minutes?: number
+          status?: Database["public"]["Enums"]["attendance_status"]
+          checked_in_at?: string | null
+          checked_out_at?: string | null
+          actual_break_minutes?: number
+          paid_minutes?: never
+          note?: string | null
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+          deleted_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shifts_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shifts_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      staff_accounts: {
+        Row: {
+          user_id: string
+          role: Database["public"]["Enums"]["app_role"]
+          employee_id: string | null
+          display_name: string
+          login_phone: string | null
+          is_active: boolean
+          must_change_password: boolean
+          created_by: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          user_id: string
+          role?: Database["public"]["Enums"]["app_role"]
+          employee_id?: string | null
+          display_name: string
+          login_phone?: string | null
+          is_active?: boolean
+          must_change_password?: boolean
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          user_id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          employee_id?: string | null
+          display_name?: string
+          login_phone?: string | null
+          is_active?: boolean
+          must_change_password?: boolean
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_accounts_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: true
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      staff_branch_permissions: {
+        Row: {
+          user_id: string
+          branch_id: string
+          permission: Database["public"]["Enums"]["app_permission"]
+          granted_by: string | null
+          granted_at: string
+        }
+        Insert: {
+          user_id: string
+          branch_id: string
+          permission: Database["public"]["Enums"]["app_permission"]
+          granted_by?: string | null
+          granted_at?: string
+        }
+        Update: {
+          user_id?: string
+          branch_id?: string
+          permission?: Database["public"]["Enums"]["app_permission"]
+          granted_by?: string | null
+          granted_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_branch_permissions_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_branch_permissions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "staff_accounts"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      stock_movements: {
+        Row: {
+          id: number
+          branch_id: string
+          variant_id: string
+          quantity_delta: number
+          balance_after: number
+          reason: Database["public"]["Enums"]["stock_reason"]
+          sale_line_id: string | null
+          rental_line_id: string | null
+          note: string | null
+          created_by: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: never
+          branch_id: string
+          variant_id: string
+          quantity_delta: number
+          balance_after?: number
+          reason: Database["public"]["Enums"]["stock_reason"]
+          sale_line_id?: string | null
+          rental_line_id?: string | null
+          note?: string | null
+          created_by?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: never
+          branch_id?: string
+          variant_id?: string
+          quantity_delta?: number
+          balance_after?: number
+          reason?: Database["public"]["Enums"]["stock_reason"]
+          sale_line_id?: string | null
+          rental_line_id?: string | null
+          note?: string | null
+          created_by?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_movements_level_fk"
+            columns: ["branch_id", "variant_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_levels"
+            referencedColumns: ["branch_id", "variant_id"]
+          },
+          {
+            foreignKeyName: "stock_movements_rental_line_id_fkey"
+            columns: ["rental_line_id"]
+            isOneToOne: false
+            referencedRelation: "rental_lines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_movements_sale_line_id_fkey"
+            columns: ["sale_line_id"]
+            isOneToOne: false
+            referencedRelation: "sale_lines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+    }
+    Views: {
+      booking_balances: {
+        Row: {
+          booking_id: string | null
+          branch_id: string | null
+          total_amount: number | null
+          deposit_amount: number | null
+          paid_amount: number | null
+          refunded_amount: number | null
+          balance_due: number | null
+        }
+        Relationships: [
+        ]
+      }
+    }
+    Functions: {
+      service_register_member: {
+        Args: {
+          p_user_id: string
+          p_full_name: string
+          p_phone: string | null
+          p_login_kind: Database["public"]["Enums"]["member_login_kind"]
+        }
+        Returns: Json
+      }
+      service_member_phone_taken: {
+        Args: { p_phone: string }
+        Returns: boolean
+      }
+      resolve_member_login: {
+        Args: { p_login: string }
+        Returns: string | null
+      }
+      service_attach_member_booking: {
+        Args: { p_booking_id: string; p_user_id: string }
+        Returns: boolean
+      }
+      service_set_member_password_flag: {
+        Args: { p_user_id: string; p_must_change: boolean }
+        Returns: undefined
+      }
+      ensure_member_profile: {
+        Args: never
+        Returns: Json
+      }
+      my_member_profile: {
+        Args: never
+        Returns: Json
+      }
+      update_my_member_profile: {
+        Args: { p_full_name: string; p_phone: string | null; p_marketing_opt_in?: boolean }
+        Returns: Json
+      }
+      my_member_bookings: {
+        Args: { p_limit?: number }
+        Returns: Json
+      }
+      my_member_booking: {
+        Args: { p_code: string }
+        Returns: Json
+      }
+      member_claim_booking: {
+        Args: { p_code: string; p_phone: string }
+        Returns: Json
+      }
+      member_cancel_booking: {
+        Args: { p_code: string }
+        Returns: Json
+      }
+      admin_list_members: {
+        Args: { p_query?: string | null; p_filter?: string; p_limit?: number; p_offset?: number }
+        Returns: Json
+      }
+      admin_get_member: {
+        Args: { p_user_id: string }
+        Returns: Json
+      }
+      admin_update_member: {
+        Args: { p_user_id: string; p_full_name: string; p_phone: string | null; p_staff_note?: string | null }
+        Returns: Json
+      }
+      admin_adjust_member_points: {
+        Args: { p_user_id: string; p_delta: number; p_reason: string }
+        Returns: Json
+      }
+      admin_set_member_locked: {
+        Args: { p_user_id: string; p_locked: boolean }
+        Returns: Json
+      }
+      adjust_stock: {
+        Args: {
+          p_branch_id: string
+          p_variant_id: string
+          p_quantity_delta: number
+          p_reason: Database["public"]["Enums"]["stock_reason"]
+          p_note: string
+        }
+        Returns: Json
+      }
+      branch_publish_checklist: {
+        Args: {
+          p_branch_id: string
+        }
+        Returns: string[]
+      }
+      cancel_booking: {
+        Args: {
+          p_booking_id: string
+          p_reason: string
+          p_waive_policy?: boolean
+        }
+        Returns: Json
+      }
+      cancel_guest_booking: {
+        Args: {
+          p_code: string
+          p_phone: string
+          p_reason?: string
+        }
+        Returns: Json
+      }
+      check_in_booking: {
+        Args: {
+          p_booking_id: string
+        }
+        Returns: Json
+      }
+      checkout_rental: {
+        Args: {
+          p_branch_id: string
+          p_product_id: string
+          p_rate_id: string
+          p_quantity: number
+          p_customer_phone: string
+          p_customer_name: string
+          p_variant_id?: string
+          p_collect_payment?: boolean
+          p_payment_method?: Database["public"]["Enums"]["payment_method"]
+          p_payment_reference?: string
+          p_note?: string
+          p_idempotency_key?: string
+          p_booking_id?: string
+          p_collateral?: string
+        }
+        Returns: Json
+      }
+      close_payroll_month: {
+        Args: {
+          p_month: string
+        }
+        Returns: string
+      }
+      complete_finished_bookings: {
+        Args: never
+        Returns: number
+      }
+      confirm_booking: {
+        Args: {
+          p_booking_id: string
+        }
+        Returns: Json
+      }
+      create_counter_booking: {
+        Args: {
+          p_court_id: string
+          p_starts_at: string
+          p_ends_at: string
+          p_phone: string
+          p_contact_name: string
+          p_internal_note?: string
+          p_discount_amount?: number
+          p_hold_only?: boolean
+          p_idempotency_key?: string
+        }
+        Returns: Json
+      }
+      create_court_block: {
+        Args: {
+          p_court_id: string
+          p_starts_at: string
+          p_ends_at: string
+          p_reason: string
+        }
+        Returns: Json
+      }
+      create_guest_booking_hold: {
+        Args: {
+          p_court_id: string
+          p_starts_at: string
+          p_ends_at: string
+          p_contact_name: string
+          p_phone: string
+          p_customer_note?: string
+          p_idempotency_key?: string
+        }
+        Returns: Json
+      }
+      create_product: {
+        Args: {
+          p_kind: Database["public"]["Enums"]["product_kind"]
+          p_name: string
+          p_sku: string
+          p_category_id?: string
+          p_base_price?: number
+          p_description?: string
+          p_brand_name?: string
+          p_is_bundle?: boolean
+        }
+        Returns: string
+      }
+      create_product_full: {
+        Args: {
+          p: Json
+        }
+        Returns: string
+      }
+      expire_stale_holds: {
+        Args: never
+        Returns: number
+      }
+      get_branch_busy_slots: {
+        Args: {
+          p_branch_id: string
+          p_from: string
+          p_to: string
+        }
+        Returns: {
+          court_id: string
+          starts_at: string
+          ends_at: string
+        }[]
+      }
+      get_variant_costs: {
+        Args: {
+          p_product_id: string
+        }
+        Returns: {
+          variant_id: string
+          cost_price: number
+        }[]
+      }
+      issue_attendance_qr: {
+        Args: {
+          p_branch_id: string
+          p_token_hash: string
+        }
+        Returns: Json
+      }
+      list_catalog: {
+        Args: {
+          p_kind: Database["public"]["Enums"]["product_kind"]
+          p_category_slug?: string
+          p_branch_id?: string
+          p_search?: string
+          p_limit?: number
+          p_offset?: number
+        }
+        Returns: {
+          id: string
+          name: string
+          slug: string
+          kind: Database["public"]["Enums"]["product_kind"]
+          is_bundle: boolean
+          brand_name: string
+          description: string
+          category_name: string
+          category_slug: string
+          min_price: number
+          max_price: number
+          compare_at_price: number
+          cover_path: string
+          available_quantity: number
+          total_count: number
+        }[]
+      }
+      list_published_branches: {
+        Args: never
+        Returns: {
+          id: string
+          slug: string
+          name: string
+          address_line: string
+          district: string
+          city: string
+          opens_at: string
+          closes_at: string
+          cover_image_path: string
+          active_court_count: number
+          min_price_per_hour: number
+        }[]
+      }
+      lookup_guest_booking: {
+        Args: {
+          p_code: string
+          p_phone: string
+        }
+        Returns: Json
+      }
+      mark_booking_no_show: {
+        Args: {
+          p_booking_id: string
+          p_reason?: string
+        }
+        Returns: Json
+      }
+      my_staff_context: {
+        Args: never
+        Returns: Json
+      }
+      owner_adjust_attendance: {
+        Args: {
+          p_shift_id: string
+          p_status: Database["public"]["Enums"]["attendance_status"]
+          p_reason: string
+          p_checked_in_at?: string
+          p_checked_out_at?: string
+          p_actual_break_minutes?: number
+        }
+        Returns: Json
+      }
+      preview_payroll_month: {
+        Args: {
+          p_month: string
+        }
+        Returns: {
+          employee_id: string
+          employee_code: string
+          employee_name: string
+          shifts_count: number
+          paid_minutes: number
+          base_pay: number
+          adjustments_total: number
+          net_pay: number
+          unresolved_shifts: number
+          missing_rate_shifts: number
+        }[]
+      }
+      quote_booking: {
+        Args: {
+          p_court_id: string
+          p_starts_at: string
+          p_ends_at: string
+        }
+        Returns: Json
+      }
+      record_booking_payment: {
+        Args: {
+          p_booking_id: string
+          p_amount: number
+          p_method: Database["public"]["Enums"]["payment_method"]
+          p_reference?: string
+          p_note?: string
+          p_idempotency_key?: string
+        }
+        Returns: Json
+      }
+      record_booking_refund: {
+        Args: {
+          p_booking_id: string
+          p_amount: number
+          p_method: Database["public"]["Enums"]["payment_method"]
+          p_reason: string
+          p_reference?: string
+          p_idempotency_key?: string
+        }
+        Returns: Json
+      }
+      record_rental_payment: {
+        Args: {
+          p_rental_id: string
+          p_amount: number
+          p_method: Database["public"]["Enums"]["payment_method"]
+          p_reference?: string
+          p_note?: string
+          p_idempotency_key?: string
+        }
+        Returns: Json
+      }
+      record_sale: {
+        Args: {
+          p_branch_id: string
+          p_lines: Json
+          p_payment_method: Database["public"]["Enums"]["payment_method"]
+          p_payment_reference?: string
+          p_discount_amount?: number
+          p_customer_phone?: string
+          p_customer_name?: string
+          p_note?: string
+          p_idempotency_key?: string
+        }
+        Returns: Json
+      }
+      record_stock_count: {
+        Args: {
+          p_branch_id: string
+          p_variant_id: string
+          p_counted_quantity: number
+          p_note: string
+        }
+        Returns: Json
+      }
+      reschedule_booking: {
+        Args: {
+          p_booking_id: string
+          p_court_id: string
+          p_starts_at: string
+          p_ends_at: string
+          p_reason: string
+        }
+        Returns: Json
+      }
+      resolve_staff_login: {
+        Args: {
+          p_login: string
+        }
+        Returns: string
+      }
+      return_rental: {
+        Args: {
+          p_rental_id: string
+          p_lines?: Json
+          p_late_fee?: number
+          p_damage_fee?: number
+          p_note?: string
+          p_late_fee_reason?: string
+        }
+        Returns: Json
+      }
+      rental_overtime_preview: {
+        Args: {
+          p_rental_id: string
+          p_at?: string
+        }
+        Returns: Json
+      }
+      scan_attendance_qr: {
+        Args: {
+          p_token: string
+          p_event: string
+        }
+        Returns: Json
+      }
+      service_mark_password_changed: {
+        Args: {
+          p_user_id: string
+        }
+        Returns: undefined
+      }
+      set_staff_permissions: {
+        Args: {
+          p_user_id: string
+          p_branch_id: string
+          p_permissions: Database["public"]["Enums"]["app_permission"][]
+        }
+        Returns: Database["public"]["Enums"]["app_permission"][]
+      }
+      update_product_full: {
+        Args: {
+          p_id: string
+          p: Json
+        }
+        Returns: undefined
+      }
+      void_payment: {
+        Args: {
+          p_payment_id: string
+          p_reason: string
+        }
+        Returns: Json
+      }
+      void_sale: {
+        Args: {
+          p_sale_id: string
+          p_reason: string
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      app_permission: "booking.view" | "booking.confirm" | "booking.operate" | "payment.record" | "catalog.view" | "catalog.edit" | "inventory.adjust" | "sale.record" | "rental.operate" | "shift.view_branch"
+      app_role: "owner" | "staff"
+      attendance_status: "scheduled" | "present" | "absent" | "leave" | "cancelled"
+      booking_kind: "customer" | "block"
+      booking_source: "online" | "counter" | "recurring" | "system"
+      booking_status: "held" | "confirmed" | "checked_in" | "completed" | "cancelled" | "expired" | "no_show"
+      branch_status: "draft" | "published" | "paused" | "archived"
+      court_status: "active" | "maintenance" | "retired"
+      employee_status: "active" | "inactive"
+      employment_type: "full_time" | "part_time"
+      member_login_kind: "phone" | "email" | "google"
+      member_tier: "member" | "silver" | "gold" | "diamond"
+      pay_type: "hourly" | "daily"
+      payment_kind: "charge" | "refund"
+      payment_method: "cash" | "bank_transfer" | "card" | "e_wallet" | "gateway"
+      payment_status: "pending" | "succeeded" | "failed" | "voided"
+      product_kind: "sale" | "rental"
+      recurring_status: "active" | "ended" | "cancelled"
+      rental_billing: "duration" | "session"
+      rental_status: "out" | "returned" | "voided"
+      rental_usage: "on_site" | "take_out"
+      sale_status: "completed" | "voided"
+      stock_reason: "opening" | "purchase" | "sale" | "sale_void" | "rental_out" | "rental_return" | "adjustment" | "damage" | "loss" | "count_correction"
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
+}
+
+type PublicSchema = Database["public"]
+
+export type Tables<T extends keyof PublicSchema["Tables"]> = PublicSchema["Tables"][T]["Row"]
+export type TablesInsert<T extends keyof PublicSchema["Tables"]> = PublicSchema["Tables"][T]["Insert"]
+export type TablesUpdate<T extends keyof PublicSchema["Tables"]> = PublicSchema["Tables"][T]["Update"]
+export type Views<T extends keyof PublicSchema["Views"]> = PublicSchema["Views"][T]["Row"]
+export type Enums<T extends keyof PublicSchema["Enums"]> = PublicSchema["Enums"][T]
+export type RpcArgs<T extends keyof PublicSchema["Functions"]> = PublicSchema["Functions"][T]["Args"]
+export type RpcReturns<T extends keyof PublicSchema["Functions"]> = PublicSchema["Functions"][T]["Returns"]
+
+export const Constants = {
+  public: {
+    Enums: {
+      app_permission: ["booking.view", "booking.confirm", "booking.operate", "payment.record", "catalog.view", "catalog.edit", "inventory.adjust", "sale.record", "rental.operate", "shift.view_branch"],
+      app_role: ["owner", "staff"],
+      attendance_status: ["scheduled", "present", "absent", "leave", "cancelled"],
+      booking_kind: ["customer", "block"],
+      booking_source: ["online", "counter", "recurring", "system"],
+      booking_status: ["held", "confirmed", "checked_in", "completed", "cancelled", "expired", "no_show"],
+      branch_status: ["draft", "published", "paused", "archived"],
+      court_status: ["active", "maintenance", "retired"],
+      employee_status: ["active", "inactive"],
+      employment_type: ["full_time", "part_time"],
+      member_login_kind: ["phone", "email", "google"],
+      member_tier: ["member", "silver", "gold", "diamond"],
+      pay_type: ["hourly", "daily"],
+      payment_kind: ["charge", "refund"],
+      payment_method: ["cash", "bank_transfer", "card", "e_wallet", "gateway"],
+      payment_status: ["pending", "succeeded", "failed", "voided"],
+      product_kind: ["sale", "rental"],
+      recurring_status: ["active", "ended", "cancelled"],
+      rental_billing: ["duration", "session"],
+      rental_status: ["out", "returned", "voided"],
+      rental_usage: ["on_site", "take_out"],
+      sale_status: ["completed", "voided"],
+      stock_reason: ["opening", "purchase", "sale", "sale_void", "rental_out", "rental_return", "adjustment", "damage", "loss", "count_correction"],
+    },
+  },
+} as const

@@ -1,0 +1,42 @@
+import {
+  Boxes,
+  Building,
+  CalendarDays,
+  Clock,
+  IdCard,
+  LayoutDashboard,
+  Package,
+  QrCode,
+  Receipt,
+  ScanQrCode,
+  ScrollText,
+  Settings,
+  ShoppingCart,
+  Tag,
+  User,
+  Users,
+  Wallet,
+  type LucideIcon,
+} from 'lucide-react';
+
+import { type NavIcon } from '../nav';
+
+export const NAV_ICONS: Record<NavIcon, LucideIcon> = {
+  dashboard: LayoutDashboard,
+  calendar: CalendarDays,
+  users: Users,
+  cart: ShoppingCart,
+  package: Package,
+  boxes: Boxes,
+  tag: Tag,
+  clock: Clock,
+  qr: QrCode,
+  building: Building,
+  id: IdCard,
+  wallet: Wallet,
+  log: ScrollText,
+  settings: Settings,
+  me: User,
+  receipt: Receipt,
+  scan: ScanQrCode,
+};
