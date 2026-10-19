@@ -139,6 +139,15 @@ with checks as (
          and not has_function_privilege('authenticated', 'public.record_sepay_transaction(jsonb)', 'execute'),
          'bank_transactions + webhook RPC chỉ máy chủ gọi được + admin_dashboard'
   union all
+  select 23, 'Đã chạy 16_alerts_reconcile.sql (email cảnh báo, đối soát SePay)',
+         to_regclass('public.notification_settings') is not null
+         and to_regclass('public.reconcile_runs') is not null
+         and exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'bank_transactions' and column_name = 'alerted_at')
+         and to_regprocedure('public.service_pending_alerts(integer)') is not null
+         and not has_function_privilege('authenticated', 'public.service_pending_alerts(integer)', 'execute')
+         and not has_function_privilege('anon', 'public.service_reconcile_start(text)', 'execute'),
+         'notification_settings (chỉ chủ sân) + reconcile_runs + hàm chỉ máy chủ gọi được'
+  union all
   select 12, 'pg_cron (tùy chọn)',
          true,
          case when exists (select 1 from pg_extension where extname = 'pg_cron')

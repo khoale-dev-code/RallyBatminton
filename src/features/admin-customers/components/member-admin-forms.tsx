@@ -4,6 +4,7 @@ import { KeyRound, Lock, LockOpen, Minus, Plus } from 'lucide-react';
 import { useActionState, useState } from 'react';
 
 import { buttonClass } from '@/components/ui/button';
+import { useActionToast } from '@/components/ui/toast';
 import { ActionForm, SubmitButton, TextField, TextareaField } from '@/components/ui/form';
 import { cn } from '@/lib/cn';
 import { formatPhone } from '@/lib/format';
@@ -97,6 +98,7 @@ export function AdjustPointsForm({ userId }: { userId: string }) {
 
 export function MemberLockButton({ userId, locked }: { userId: string; locked: boolean }) {
   const [state, action, pending] = useActionState(setMemberLockedAction.bind(null, userId, !locked), initialFormState);
+  useActionToast(state);
   return (
     <form
       action={action}
@@ -109,11 +111,6 @@ export function MemberLockButton({ userId, locked }: { userId: string; locked: b
         {locked ? <LockOpen className="size-4" aria-hidden /> : <Lock className="size-4" aria-hidden />}
         {pending ? 'Đang lưu…' : locked ? 'Mở khóa tài khoản' : 'Khóa tài khoản'}
       </button>
-      {state.message && (
-        <p role="status" className={cn('text-sm', state.status === 'error' ? 'text-shuttle-deep' : 'text-court-deep')}>
-          {state.message}
-        </p>
-      )}
     </form>
   );
 }
@@ -122,6 +119,7 @@ const initialTemp: TempPasswordState = { status: 'idle' };
 
 export function TempPasswordButton({ userId }: { userId: string }) {
   const [state, action, pending] = useActionState(resetMemberPasswordAction.bind(null, userId), initialTemp);
+  useActionToast(state);
   return (
     <form
       action={action}

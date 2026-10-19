@@ -53,6 +53,8 @@ Vào **Supabase Dashboard → SQL Editor**, mở từng file trong `supabase/sql
 | 14 | `13_performance.sql` | Nên chạy | Tăng tốc: chỉ mục tìm kiếm khách/thành viên/sản phẩm (pg_trgm), nhật ký, bảng lương; danh sách thành viên chỉ tính số đơn cho trang đang xem. Không đổi dữ liệu. Chạy sau 12 |
 | 15 | `14_guest_phone_lookup.sql` | Có | Khách vãng lai quên mã đơn: tra bằng số điện thoại ở `/booking/lookup` (đơn hôm nay, sắp tới, lịch sử 6 tháng). Mã đơn che bớt; nhập đúng họ tên người đặt mới xem đầy đủ / tự hủy. Giới hạn số lần thử. Chạy sau 13 |
 | 16 | `15_sepay_deposit.sql` | Có | Đặt cọc chuyển khoản qua SePay: mã VietQR sau khi giữ sân, tiền về là đơn tự xác nhận; trang *Giao dịch ngân hàng*; Tổng quan dòng tiền mới. Cần cấu hình SePay (mục 15). Chạy sau 14 |
+| 17 | `16_alerts_reconcile.sql` | Nên chạy | Email báo chủ sân khi có giao dịch cần xử lý; đối soát dự phòng với SePay (ghi bù giao dịch webhook bị lọt). Xem mục 16. Chạy sau 15 |
+| 18 | `17_reconcile_cron_optional.sql` | Không | Lịch đối soát mỗi 15 phút bằng Supabase Cron (cần tạo 2 secret trong Vault trước — xem đầu file). Chạy sau 16 |
 
 **Đã cài Rally từ trước?** Chỉ cần chạy thêm `05_product_details.sql`, `06_product_tax.sql` rồi `07_units_options.sql` (không mất dữ liệu).
 
@@ -89,6 +91,10 @@ Sao chép `.env.example` thành `.env.local`, điền theo **Project Settings �
 | `SUPABASE_SECRET_KEY` | Secret key (`sb_secret_…`) hoặc service_role key. **Chỉ nằm trên máy chủ.** |
 | `NEXT_PUBLIC_SITE_URL` | Địa chỉ website; dùng để tạo mã QR chấm công |
 | `NEXT_PUBLIC_TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY` | Cloudflare Turnstile chống spam form giữ sân. File mẫu dùng khóa thử nghiệm của Cloudflare; thay khóa thật khi chạy chính thức |
+| `SEPAY_WEBHOOK_SECRET` / `SEPAY_WEBHOOK_API_KEY` | Khóa bảo mật webhook SePay (mục 15) |
+| `SEPAY_API_TOKEN` | API Token ở SePay → API Access, để đối soát dự phòng (mục 16) |
+| `RESEND_API_KEY`, `ALERT_EMAIL_FROM` | Gửi email cảnh báo cho chủ sân qua Resend (mục 16) |
+| `CRON_SECRET` | Khóa bảo vệ đường dẫn chạy định kỳ `/api/cron/sepay-reconcile` |
 
 Lưu ý về khóa bí mật:
 
@@ -264,3 +270,26 @@ Trang `/booking/lookup` có 2 tab: **Số điện thoại** (mặc định) và 
 
 **Tổng quan (`/admin`)** — một lần gọi database (`admin_dashboard`), hiện theo quyền người xem: thực thu hôm nay / theo kỳ (7–30–90 ngày, so với kỳ trước), tiền còn phải thu, đơn chờ cọc, biểu đồ dòng tiền theo ngày (sân / bán hàng / cho thuê), tỷ trọng theo nguồn và hình thức, việc cần xử lý (chờ cọc, giao dịch chưa khớp, thuê quá hạn, hết hàng, ca chưa chấm công), lịch sân hôm nay, giao dịch gần đây và tóm tắt các mảng khác. Chủ sân xem gộp mọi chi nhánh hoặc từng chi nhánh.
 
+## 16. Báo chủ sân qua email & đối soát dự phòng (`16_alerts_reconcile.sql`)
+
+**Email ngay khi có giao dịch cần xử lý.** Khi tiền vào mà hệ thống không tự xác nhận được đơn — giữ chỗ hết hạn và giờ đã có người khác đặt, đơn đã hủy, chuyển thiếu sau khi hết hạn, chuyển dư, nội dung thiếu / sai mã đơn — website gửi email cho chủ sân, ví dụ *"Khách Nguyễn Văn A chuyển 42.000 ₫ nhưng giờ đã có người đặt — cần liên hệ khách"*, kèm số điện thoại (bấm để gọi), sân, giờ chơi, nội dung chuyển khoản và nút mở *Giao dịch ngân hàng*. Nhiều giao dịch cùng lúc gộp một email; mỗi giao dịch chỉ báo một lần (`bank_transactions.alerted_at`). Email gửi sau khi đã trả lời SePay nên không làm chậm webhook; gửi lỗi thì lần đối soát sau gửi lại.
+
+**Đối soát dự phòng.** Website tự hỏi SePay (API v1 `transactions/list`) giao dịch gần đây của mọi tài khoản nhận cọc, ghi bù giao dịch nào webhook bị lọt (website bảo trì, mạng lỗi…) bằng đúng hàm của webhook — giao dịch đã có thì bỏ qua (theo id SePay và mã tham chiếu ngân hàng), nên chạy bao nhiêu lần cũng an toàn. Lấy từ lần đối soát thành công trước (lùi 2 giờ), tối đa 3 ngày. Chủ sân xem lần chạy gần nhất và bấm **Đối soát ngay** ở *Giao dịch ngân hàng*.
+
+**Cài đặt:**
+
+1. Chạy `16_alerts_reconcile.sql`.
+2. **Email (Resend):** đăng ký [resend.com](https://resend.com) → *API Keys → Create* → thêm biến `RESEND_API_KEY`. Chưa xác minh tên miền thì Resend chỉ gửi được tới email đã đăng ký Resend (người gửi mặc định `Rally <onboarding@resend.dev>`); muốn gửi tới email khác thì *Domains → Add domain*, thêm bản ghi DNS, rồi đặt `ALERT_EMAIL_FROM="Rally <thongbao@ten-mien-cua-ban>"`.
+3. *Quản trị → Cài đặt thương hiệu → Báo cho chủ sân qua email*: nhập tối đa 5 email (trống = email tài khoản chủ sân), chọn loại cần báo, bấm **Gửi email thử**.
+4. **Đối soát:** SePay → *API Access* → tạo **API Token** → thêm biến `SEPAY_API_TOKEN`. Thêm `CRON_SECRET` = chuỗi ngẫu nhiên dài (chỉ chữ và số, không có `$`).
+5. Redeploy Vercel. `vercel.json` có sẵn lịch Vercel Cron 1 lần/ngày (gói Hobby chỉ cho 1 lần/ngày) làm lưới an toàn cuối.
+6. **Mỗi 15 phút (khuyên dùng):** trong SQL Editor tạo 2 secret rồi chạy `17_reconcile_cron_optional.sql`:
+
+```sql
+select vault.create_secret('https://ten-mien-cua-ban', 'rally_site_url');
+select vault.create_secret('<giá trị CRON_SECRET>', 'rally_cron_secret');
+```
+
+Kiểm tra lịch: `select * from cron.job where jobname = 'rally-sepay-reconcile';` — kết quả từng lần chạy hiện ở thanh *Đối soát dự phòng* trong *Giao dịch ngân hàng*.
+
+**Thông báo nổi (snackbar):** mọi thao tác ở khu quản trị và nhân viên (tạo / lưu / xóa, bán hàng, cho thuê, nhân sự, đổi chi nhánh…) hiện thông báo nổi góc dưới; lỗi hiện lâu hơn và vẫn đánh dấu ô nhập sai trong form.

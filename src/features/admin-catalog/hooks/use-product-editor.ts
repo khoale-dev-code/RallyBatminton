@@ -24,6 +24,7 @@ import {
   type VariantDraft,
 } from '../lib/product-draft';
 import { payloadErrors, productPayloadSchema, type PayloadErrors } from '../lib/product-payload';
+import { toast } from '@/components/ui/toast';
 
 type Action =
   | { type: 'patch'; patch: Partial<ProductDraft> }
@@ -299,6 +300,7 @@ export function useProductEditor(mode: 'create' | 'edit', initial: ProductDraft,
         mode === 'create' ? await createProductFullAction(check.data) : await updateProductFullAction(productId ?? '', check.data);
       if (!res.ok) {
         failWith(res.fieldErrors ?? {}, res.error);
+        toast.error(res.error);
         return;
       }
       if (mode === 'create') {
@@ -316,11 +318,14 @@ export function useProductEditor(mode: 'create' | 'edit', initial: ProductDraft,
         setProgress(null);
         setSaved(draft);
         setPhotos([]);
+        if (failed.length) toast.error(`Đã tạo sản phẩm, nhưng ${failed.length} ảnh chưa tải lên được.`);
+        else toast.success('Đã tạo sản phẩm.');
         router.push(`/admin/catalog/${res.id}?created=1${failed.length ? `&photo_errors=${failed.length}` : ''}`);
         return;
       }
       setSaved(draft);
       setMessage({ tone: 'success', text: 'Đã lưu sản phẩm.' });
+      toast.success('Đã lưu sản phẩm.');
       router.refresh();
     });
   }

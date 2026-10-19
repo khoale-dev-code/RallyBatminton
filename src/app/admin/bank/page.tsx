@@ -9,12 +9,15 @@ import { dismissBankTransactionAction, matchBankTransactionAction } from '@/feat
 import {
   BANK_FILTERS,
   BANK_PAGE_SIZE,
+  getLastReconcileRun,
   listBankTransactions,
   type BankFilter,
   type BankTransactionRow,
 } from '@/features/payments/admin-queries';
+import { ReconcileBar } from '@/features/payments/components/reconcile-bar';
 import { requireStaff } from '@/lib/auth/guards';
 import { hasPermission, isOwner } from '@/lib/auth/permissions';
+import { getSepayApiConfig } from '@/lib/env.server';
 import { formatDateTime, formatVnd } from '@/lib/format';
 import { type Tone } from '@/lib/labels';
 
@@ -75,7 +78,11 @@ export default async function BankTransactionsPage({ searchParams }: { searchPar
   const params = await searchParams;
   const filter = BANK_FILTERS.find((f) => f === params.tab) ?? 'pending';
   const page = Math.max(1, Number.parseInt(params.page ?? '1', 10) || 1);
-  const { rows, total, summary } = await listBankTransactions(filter, page);
+  const owner = isOwner(ctx);
+  const [{ rows, total, summary }, lastRun] = await Promise.all([
+    listBankTransactions(filter, page),
+    owner ? getLastReconcileRun() : Promise.resolve(null),
+  ]);
   const pages = Math.max(1, Math.ceil(total / BANK_PAGE_SIZE));
 
   return (
@@ -115,6 +122,8 @@ export default async function BankTransactionsPage({ searchParams }: { searchPar
           />
         </Panel>
       </div>
+
+      {owner && <ReconcileBar run={lastRun} tokenReady={Boolean(getSepayApiConfig().token)} />}
 
       <LinkTabs
         label="Lọc giao dịch"

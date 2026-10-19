@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
 
+import { setFlash } from '@/lib/flash';
 import { invalidatePublic } from '@/lib/public-cache';
 import { requireBranchPermission } from '@/lib/auth/guards';
 import { formDbError, formSuccess, formZodError, type FormState } from '@/lib/form-state';
@@ -101,5 +102,6 @@ export async function receiveNewItemAction(_prev: FormState, formData: FormData)
   });
   if (error) return formDbError(error);
   revalidateStock(v.variant_id);
+  await setFlash('Đã ghi nhận tồn kho.');
   redirect(`/admin/inventory/${v.variant_id}`);
 }

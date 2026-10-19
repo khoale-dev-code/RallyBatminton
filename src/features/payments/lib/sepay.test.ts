@@ -76,3 +76,41 @@ describe('chuyển khoản', () => {
     expect(amountsDue(140000, 42000, 140000)).toEqual({ deposit: 0, full: 0 });
   });
 });
+
+import { apiTransactionToPayload, sepayApiTransactionSchema, sepayDateTime } from './sepay-api';
+
+describe('đối soát SePay API', () => {
+  it('đổi giao dịch API sang dạng webhook', () => {
+    const t = sepayApiTransactionSchema.parse({
+      id: '92704',
+      bank_brand_name: 'VietinBank',
+      account_number: '101874131015',
+      transaction_date: '2026-10-19 15:55:00',
+      amount_out: '0.00',
+      amount_in: '42000.00',
+      accumulated: '1042000.00',
+      transaction_content: 'SEVQR RBEX3BKN9K',
+      reference_number: 'FT2629',
+      code: null,
+      sub_account: null,
+    });
+    expect(apiTransactionToPayload(t)).toMatchObject({
+      id: 92704,
+      transferType: 'in',
+      transferAmount: 42000,
+      content: 'SEVQR RBEX3BKN9K',
+      referenceCode: 'FT2629',
+      transactionDate: '2026-10-19 15:55:00',
+      accountNumber: '101874131015',
+    });
+  });
+
+  it('bỏ qua tiền ra', () => {
+    const t = sepayApiTransactionSchema.parse({ id: 1, transaction_date: '2026-10-19 10:00:00', amount_in: '0.00', amount_out: '5000.00' });
+    expect(apiTransactionToPayload(t)).toBeNull();
+  });
+
+  it('giờ Việt Nam đúng định dạng SePay', () => {
+    expect(sepayDateTime(new Date('2026-10-19T08:55:07Z'))).toBe('2026-10-19 15:55:07');
+  });
+});

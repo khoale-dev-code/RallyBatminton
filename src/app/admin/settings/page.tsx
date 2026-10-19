@@ -2,11 +2,12 @@ import { CheckCircle2, CircleAlert, Webhook } from 'lucide-react';
 
 import { ActionForm, CheckboxField, SelectField, SubmitButton, TextareaField, TextField } from '@/components/ui/form';
 import { PageHeader, Panel } from '@/components/ui/primitives';
+import { AlertSettings } from '@/features/payments/components/alert-settings';
 import { BankFields } from '@/features/payments/components/bank-fields';
 import { updateBankSettingsAction, updateBrandAction, updateTaxSettingsAction } from '@/features/settings/actions';
 import { requireOwner } from '@/lib/auth/guards';
 import { publicEnv } from '@/lib/env';
-import { getSepayWebhookAuth } from '@/lib/env.server';
+import { getAlertEmailConfig, getCronSecret, getSepayApiConfig, getSepayWebhookAuth } from '@/lib/env.server';
 import { formatDateTime } from '@/lib/format';
 import { createClient } from '@/lib/supabase/server';
 import { formatPercent, TAX_INDUSTRIES, TAX_METHODS, VAT_PRESETS } from '@/lib/tax';
@@ -16,9 +17,11 @@ export const metadata = { title: 'Cài đặt thương hiệu' };
 export default async function SettingsPage() {
   await requireOwner();
   const supabase = await createClient();
-  const [{ data: brand }, { data: lastTxn }] = await Promise.all([
+  const [{ data: brand }, { data: lastTxn }, { data: notify }, { data: auth }] = await Promise.all([
     supabase.from('brand_settings').select('*').maybeSingle(),
     supabase.from('bank_transactions').select('created_at').order('created_at', { ascending: false }).limit(1).maybeSingle(),
+    supabase.from('notification_settings').select('alert_emails, alert_on_review, alert_on_unmatched').maybeSingle(),
+    supabase.auth.getUser(),
   ]);
   const sepay = getSepayWebhookAuth();
   const webhookReady = Boolean(sepay.secret ?? sepay.apiKey);
@@ -120,6 +123,23 @@ export default async function SettingsPage() {
                 </p>
               </div>
             </div>
+          </Panel>
+        </div>
+        <div id="thong-bao" className="scroll-mt-20 xl:col-span-2">
+          <Panel
+            title="Báo cho chủ sân qua email"
+            description="Khi tiền vào nhưng hệ thống không tự xác nhận được đơn (giờ đã có người đặt, đơn đã hủy, sai nội dung…), chủ sân nhận email ngay để liên hệ khách."
+          >
+            <AlertSettings
+              settings={notify}
+              ownerEmail={auth.user?.email ?? null}
+              siteUrl={publicEnv.siteUrl.replace(/\/$/, '')}
+              env={{
+                resend: Boolean(getAlertEmailConfig().apiKey),
+                sepayToken: Boolean(getSepayApiConfig().token),
+                cron: Boolean(getCronSecret()),
+              }}
+            />
           </Panel>
         </div>
         <div id="thue" className="scroll-mt-20">

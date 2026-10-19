@@ -134,6 +134,7 @@ export type Database = {
           resolved_by: string | null
           resolved_at: string | null
           created_at: string
+          alerted_at: string | null
         }
         Insert: {
           id?: string
@@ -156,6 +157,7 @@ export type Database = {
           resolved_by?: string | null
           resolved_at?: string | null
           created_at?: string
+          alerted_at?: string | null
         }
         Update: {
           id?: string
@@ -178,6 +180,7 @@ export type Database = {
           resolved_by?: string | null
           resolved_at?: string | null
           created_at?: string
+          alerted_at?: string | null
         }
         Relationships: [
           {
@@ -970,6 +973,62 @@ export type Database = {
             referencedRelation: "product_variants"
             referencedColumns: ["id"]
           },
+        ]
+      }
+      notification_settings: {
+        Row: {
+          id: boolean
+          alert_emails: string[]
+          alert_on_review: boolean
+          alert_on_unmatched: boolean
+          updated_at: string
+        }
+        Insert: {
+          id?: boolean
+          alert_emails?: string[]
+          alert_on_review?: boolean
+          alert_on_unmatched?: boolean
+          updated_at?: string
+        }
+        Update: {
+          id?: boolean
+          alert_emails?: string[]
+          alert_on_review?: boolean
+          alert_on_unmatched?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+        ]
+      }
+      reconcile_runs: {
+        Row: {
+          id: string
+          source: string
+          started_at: string
+          finished_at: string | null
+          fetched: number
+          new_count: number
+          error: string | null
+        }
+        Insert: {
+          id?: string
+          source: string
+          started_at?: string
+          finished_at?: string | null
+          fetched?: number
+          new_count?: number
+          error?: string | null
+        }
+        Update: {
+          id?: string
+          source?: string
+          started_at?: string
+          finished_at?: string | null
+          fetched?: number
+          new_count?: number
+          error?: string | null
+        }
+        Relationships: [
         ]
       }
       payments: {
@@ -2564,6 +2623,41 @@ export type Database = {
           p_txn_id: string
         }
         Returns: Json
+      }
+      service_alert_recipients: {
+        Args: never
+        Returns: string[]
+      }
+      service_pending_alerts: {
+        Args: {
+          p_limit?: number
+        }
+        Returns: Json
+      }
+      service_mark_alerted: {
+        Args: {
+          p_ids: string[]
+        }
+        Returns: number
+      }
+      service_bank_accounts: {
+        Args: never
+        Returns: string[]
+      }
+      service_reconcile_start: {
+        Args: {
+          p_source: string
+        }
+        Returns: Json
+      }
+      service_reconcile_finish: {
+        Args: {
+          p_run_id: string
+          p_fetched: number
+          p_new: number
+          p_error?: string | null
+        }
+        Returns: undefined
       }
       record_sepay_transaction: {
         Args: {

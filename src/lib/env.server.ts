@@ -23,3 +23,27 @@ export function getSepayWebhookAuth(): { secret: string | null; apiKey: string |
   const apiKey = process.env.SEPAY_WEBHOOK_API_KEY?.trim();
   return { secret: secret ? secret : null, apiKey: apiKey ? apiKey : null };
 }
+
+function optionalEnv(name: string): string | null {
+  const value = process.env[name]?.trim();
+  return value ? value : null;
+}
+
+/** Email cảnh báo qua Resend (resend.com > API Keys). Không có → không gửi email, chỉ hiện trong admin. */
+export function getAlertEmailConfig(): { apiKey: string | null; from: string; apiBase: string } {
+  return {
+    apiKey: optionalEnv('RESEND_API_KEY'),
+    from: optionalEnv('ALERT_EMAIL_FROM') ?? 'Rally <onboarding@resend.dev>',
+    apiBase: optionalEnv('RESEND_API_BASE') ?? 'https://api.resend.com',
+  };
+}
+
+/** API Token ở SePay > API Access — dùng để đối soát (hỏi danh sách giao dịch gần đây). */
+export function getSepayApiConfig(): { token: string | null; apiBase: string } {
+  return { token: optionalEnv('SEPAY_API_TOKEN'), apiBase: optionalEnv('SEPAY_API_BASE') ?? 'https://my.sepay.vn' };
+}
+
+/** Khóa bảo vệ đường dẫn chạy định kỳ /api/cron/sepay-reconcile (Vercel Cron / Supabase pg_cron). */
+export function getCronSecret(): string | null {
+  return optionalEnv('CRON_SECRET');
+}

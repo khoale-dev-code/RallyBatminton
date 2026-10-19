@@ -5,10 +5,11 @@ import { z } from 'zod';
 
 import { invalidatePublic } from '@/lib/public-cache';
 import { requireOwner } from '@/lib/auth/guards';
-import { formDbError, formSuccess, formZodError, type FormState } from '@/lib/form-state';
+import { formDbError, formError, formSuccess, formZodError, type FormState } from '@/lib/form-state';
 import { createClient } from '@/lib/supabase/server';
+import { sendTestAlert } from '@/features/payments/alerts';
 import { bankColumns, bankFieldsSchema } from '@/features/payments/lib/bank-form';
-import { formDataToObject, zOptionalText, zText } from '@/lib/validation';
+import { formDataToObject, zCheckbox, zOptionalText, zText } from '@/lib/validation';
 
 const zOptionalUrl = () =>
   z.preprocess(
@@ -103,4 +104,45 @@ export async function updateBankSettingsAction(_prev: FormState, formData: FormD
       ? 'Đã lưu tài khoản nhận cọc. Khách sẽ thấy mã QR chuyển khoản ngay sau khi giữ sân.'
       : 'Đã tắt chuyển khoản qua mã QR (khách đặt cọc theo hướng dẫn / tại quầy).',
   );
+}
+
+const notificationSchema = z.object({
+  alert_emails: z
+    .string()
+    .max(500)
+    .transform((v) => [...new Set(v.split(/[\s,;]+/).map((e) => e.trim().toLowerCase()).filter(Boolean))])
+    .superRefine((list, ctx) => {
+      const bad = list.find((e) => !z.email().safeParse(e).success);
+      if (bad) ctx.addIssue({ code: 'custom', message: `Email không hợp lệ: ${bad}` });
+      else if (list.length > 5) ctx.addIssue({ code: 'custom', message: 'Tối đa 5 email' });
+    }),
+  alert_on_review: zCheckbox(),
+  alert_on_unmatched: zCheckbox(),
+});
+
+/** Email nhận cảnh báo giao dịch cần xử lý (trống = email tài khoản chủ sân). */
+export async function updateNotificationSettingsAction(_prev: FormState, formData: FormData): Promise<FormState> {
+  await requireOwner();
+  const parsed = notificationSchema.safeParse({
+    alert_emails: formData.get('alert_emails') ?? '',
+    alert_on_review: formData.get('alert_on_review'),
+    alert_on_unmatched: formData.get('alert_on_unmatched'),
+  });
+  if (!parsed.success) return formZodError(parsed.error);
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from('notification_settings')
+    .update({ ...parsed.data, updated_at: new Date().toISOString() })
+    .eq('id', true);
+  if (error) return formDbError(error, 'Chưa lưu được — đã chạy 16_alerts_reconcile.sql chưa?');
+  revalidatePath('/admin/settings');
+  return formSuccess('Đã lưu cài đặt thông báo.');
+}
+
+/** Gửi một email mẫu để kiểm tra khóa Resend và hộp thư nhận. */
+export async function sendTestAlertAction(_prev: FormState, _formData: FormData): Promise<FormState> {
+  await requireOwner();
+  const result = await sendTestAlert();
+  if (!result.ok) return formError(result.message);
+  return formSuccess(`Đã gửi email thử tới ${result.recipients.join(', ')} — kiểm tra cả thư mục Spam.`);
 }

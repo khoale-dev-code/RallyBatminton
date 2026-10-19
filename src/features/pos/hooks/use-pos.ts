@@ -4,6 +4,8 @@ import { useMemo, useReducer, useRef, useState, useTransition } from 'react';
 
 import { recordSaleAction, type SaleInput } from '../actions';
 import { cartReducer, maxQuantity, summarizeCart, type PosItem } from '../lib/cart';
+import { toast } from '@/components/ui/toast';
+import { formatVnd } from '@/lib/format';
 
 export interface CheckoutDetails {
   paymentMethod: SaleInput['paymentMethod'];
@@ -76,8 +78,10 @@ export function usePos(items: PosItem[]) {
         const res = await recordSaleAction({ lines: payload, idempotencyKey, ...details });
         if (!res.ok) {
           setError(res.error);
+          toast.error(res.error);
           return;
         }
+        toast.success(res.replayed ? `Đơn ${res.code} đã được ghi trước đó.` : `Đã thu ${formatVnd(res.total)} — đơn ${res.code}.`);
         attemptRef.current = null;
         dispatch({ type: 'clear' });
         setReceipt({

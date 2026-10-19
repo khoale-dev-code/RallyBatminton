@@ -1,6 +1,7 @@
-import { NextResponse, type NextRequest } from 'next/server';
+import { after, NextResponse, type NextRequest } from 'next/server';
 import { z } from 'zod';
 
+import { sendPendingAlertsSafely } from '@/features/payments/alerts';
 import { verifySepayRequest } from '@/features/payments/lib/sepay';
 import { errorCode } from '@/lib/errors';
 import { getSepayWebhookAuth } from '@/lib/env.server';
@@ -27,6 +28,8 @@ const payloadSchema = z.looseObject({
   content: z.string().max(1000).nullish(),
   code: z.string().max(100).nullish(),
 });
+
+const resultSchema = z.looseObject({ status: z.string().optional(), replayed: z.boolean().optional() });
 
 const MAX_BODY = 32 * 1024;
 
@@ -86,7 +89,7 @@ export async function POST(request: NextRequest) {
     return reply(400, false, 'invalid payload');
   }
 
-  const { error } = await createSecretClient().rpc('record_sepay_transaction', {
+  const { data, error } = await createSecretClient().rpc('record_sepay_transaction', {
     p_payload: toJson(parsed.data),
   });
   if (error) {
@@ -95,6 +98,11 @@ export async function POST(request: NextRequest) {
     console.error('[sepay] Ghi giao dịch lỗi:', error.message);
     return reply(500, false, 'temporary error');
   }
-  // Giao dịch không khớp đơn vẫn trả thành công: đã lưu vào "Giao dịch ngân hàng" để nhân viên gán tay.
+  // Giao dịch không khớp đơn vẫn trả thành công: đã lưu vào "Giao dịch ngân hàng" để nhân viên gán tay,
+  // đồng thời email cho chủ sân (chạy sau khi đã trả lời SePay, không làm chậm webhook).
+  const outcome = resultSchema.safeParse(data);
+  if (outcome.success && outcome.data.replayed !== true && (outcome.data.status === 'review' || outcome.data.status === 'unmatched')) {
+    after(sendPendingAlertsSafely);
+  }
   return reply(200, true);
 }

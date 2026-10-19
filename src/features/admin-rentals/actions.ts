@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
 
+import { setFlash } from '@/lib/flash';
 import { invalidatePublic } from '@/lib/public-cache';
 import { requireBranchPermission } from '@/lib/auth/guards';
 import { formDbError, formError, formSuccess, formZodError, type FormState } from '@/lib/form-state';
@@ -80,6 +81,7 @@ export async function checkoutRentalAction(_prev: FormState, formData: FormData)
   const res = z.object({ rental_id: z.uuid() }).safeParse(data);
   if (!res.success) return formError('Không đọc được phiếu thuê vừa tạo.');
   revalidateRentals();
+  await setFlash('Đã tạo phiếu thuê.');
   redirect(`/admin/rentals/${res.data.rental_id}`);
 }
 

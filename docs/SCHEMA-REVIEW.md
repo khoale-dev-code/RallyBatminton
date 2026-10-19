@@ -401,3 +401,14 @@ Tồn kho luôn đếm theo đơn vị cơ bản (`products.unit_label`). Kiểm
 - **`match_bank_transaction` / `dismiss_bank_transaction`**: nhân viên gán tay (cần `payment.record` ở chi nhánh của đơn) / đánh dấu đã xử lý (giao dịch chưa khớp chi nhánh: chỉ chủ sân).
 - **`admin_dashboard(p_branch_id, p_days)`**: `null` = tất cả chi nhánh (chỉ chủ sân). Mỗi phần chỉ trả khi người gọi có quyền tương ứng ở chi nhánh đó (`booking.view`, `payment.record`/chủ sân, `sale.record`, `rental.operate`, `catalog.view`, `shift.view_branch`, xem thành viên).
 - **Kiểm tra:** `99_verify_schema.sql` dòng 22.
+
+## 20. Migration `16_alerts_reconcile.sql` — Email cảnh báo & đối soát SePay
+
+- **Bảng `notification_settings`** (một dòng): `alert_emails text[]` (≤ 5, trống = email tài khoản chủ sân), `alert_on_review`, `alert_on_unmatched`. RLS: **chỉ chủ sân** đọc/sửa (khác `brand_settings` đọc công khai).
+- **Cột `bank_transactions.alerted_at`** + chỉ mục một phần cho giao dịch chưa báo; chỉ mục `reference_code`.
+- **Bảng `reconcile_runs`**: nhật ký mỗi lần đối soát (`cron / manual / vercel`, số giao dịch đọc, số ghi bù, lỗi). Chủ sân đọc; tự xóa dòng quá 30 ngày.
+- **`record_sepay_transaction`** thay thế: thêm chống trùng theo `reference_code + amount + transfer_type + account_number` (giao dịch từ API đối soát có thể khác id webhook).
+- **Hàm chỉ service role:** `service_alert_recipients`, `service_pending_alerts(p_limit)` (giao dịch `review`/`unmatched` chưa báo trong 3 ngày + đơn, khách, sân), `service_mark_alerted(ids)`, `service_bank_accounts`, `service_reconcile_start(source)` (trả mốc thời gian bắt đầu), `service_reconcile_finish(...)`.
+- **`17_reconcile_cron_optional.sql`**: `pg_cron` + `pg_net` gọi `POST /api/cron/sepay-reconcile` mỗi 15 phút; URL và khóa đọc từ Supabase Vault (`rally_site_url`, `rally_cron_secret`), không nằm trong file.
+- **Kiểm tra:** `99_verify_schema.sql` dòng 23.
+

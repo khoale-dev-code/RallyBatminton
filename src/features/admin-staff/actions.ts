@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
 
+import { setFlash } from '@/lib/flash';
 import { requireOwner } from '@/lib/auth/guards';
 import { ALL_PERMISSIONS, type AppPermission } from '@/lib/auth/permissions';
 import { formDbError, formError, formSuccess, formZodError, type FormState } from '@/lib/form-state';
@@ -147,10 +148,12 @@ export async function createEmployeeAction(_prev: FormState, formData: FormData)
     });
     if (problem) {
       revalidateStaff();
+      await setFlash('Đã lưu nhân viên nhưng chưa tạo được tài khoản đăng nhập.', 'error');
       redirect(`/admin/staff/${employee.id}?account_error=${problem}`);
     }
   }
   revalidateStaff();
+  await setFlash('Đã thêm nhân viên.');
   redirect(`/admin/staff/${employee.id}`);
 }
 

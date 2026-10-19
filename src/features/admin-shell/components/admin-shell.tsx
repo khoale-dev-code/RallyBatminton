@@ -6,6 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState, useTransition, type ReactNode } from 'react';
 
 import { ShuttleMark, Wordmark } from '@/components/brand/logo';
+import { toast } from '@/components/ui/toast';
 import { signOutAction } from '@/features/auth/actions';
 import { cn } from '@/lib/cn';
 
@@ -101,6 +102,7 @@ export function AdminShell({
           const id = e.target.value;
           startSwitch(async () => {
             await setActiveBranchAction(id);
+            toast.info(`Đang làm việc tại ${branches.find((b) => b.id === id)?.name ?? 'chi nhánh mới'}.`);
             router.refresh();
           });
         }}

@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 import { z } from 'zod';
 
 import { bookingSummarySchema } from '@/features/booking/schemas';
+import { setFlash } from '@/lib/flash';
 import { formDbError, formError, formSuccess, formZodError, type FormState } from '@/lib/form-state';
 import { type Constants } from '@/lib/supabase/database.types';
 import { createClient } from '@/lib/supabase/server';
@@ -197,6 +198,7 @@ export async function createCounterBookingAction(_prev: FormState, formData: For
   const summary = bookingSummarySchema.safeParse(data);
   if (!summary.success) return formError('Đã tạo đơn nhưng không đọc được kết quả. Kiểm tra lịch đặt sân.');
   revalidatePath('/admin/bookings');
+  await setFlash(`Đã tạo đơn ${summary.data.code}.`);
   redirect(`/admin/bookings/${summary.data.booking_id}`);
 }
 

@@ -42,3 +42,17 @@ export async function listBankTransactions(filter: BankFilter, page: number) {
 }
 
 export type BankTransactionRow = Awaited<ReturnType<typeof listBankTransactions>>['rows'][number];
+
+/** Lần đối soát SePay gần nhất (chỉ chủ sân đọc được — RLS). Bảng chưa có (chưa chạy SQL 16) → null. */
+export async function getLastReconcileRun() {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from('reconcile_runs')
+    .select('source, started_at, finished_at, fetched, new_count, error')
+    .order('started_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  return error ? null : data;
+}
+
+export type ReconcileRun = NonNullable<Awaited<ReturnType<typeof getLastReconcileRun>>>;

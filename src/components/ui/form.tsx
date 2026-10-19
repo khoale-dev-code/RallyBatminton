@@ -17,6 +17,8 @@ import {
 import { useFormStatus } from 'react-dom';
 
 import { cn } from '@/lib/cn';
+
+import { toast, useToastEnabled } from './toast';
 import { initialFormState, type FormAction, type FormState } from '@/lib/form-state';
 
 import { buttonClass, type ButtonSize, type ButtonVariant } from './button';
@@ -52,6 +54,7 @@ export function ActionForm({
 }: ActionFormProps) {
   const [state, formAction, isPending] = useActionState(action, initialFormState);
   const formRef = useRef<HTMLFormElement>(null);
+  const toasts = useToastEnabled();
 
   useEffect(() => {
     if (state.status === 'success') {
@@ -60,6 +63,13 @@ export function ActionForm({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- chỉ chạy khi có kết quả mới
   }, [state.nonce]);
+
+  // Trang quản trị: báo kết quả bằng thông báo nổi (snackbar) — mỗi kết quả mới là một đối tượng state mới.
+  useEffect(() => {
+    if (!toasts || hideFeedback || !state.message) return;
+    if (state.status === 'success') toast.success(state.message);
+    else if (state.status === 'error') toast.error(state.message);
+  }, [state, toasts, hideFeedback]);
 
   /**
    * Gửi thủ công thay vì để React tự xử lý thuộc tính action: React 19 tự xóa trắng form sau mỗi
@@ -80,7 +90,7 @@ export function ActionForm({
       <FormPendingContext.Provider value={isPending}>
         <form ref={formRef} action={formAction} onSubmit={handleSubmit} className={cn('flex flex-col gap-4', className)} noValidate>
           {children}
-          {!hideFeedback && <FormFeedback state={state} />}
+          {!hideFeedback && !(toasts && state.status === 'success') && <FormFeedback state={state} />}
         </form>
       </FormPendingContext.Provider>
     </FormStateContext.Provider>

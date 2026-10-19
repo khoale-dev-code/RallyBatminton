@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 import { z } from 'zod';
 
 import { parseMapEmbed } from '@/features/branches/lib/map-embed';
+import { setFlash } from '@/lib/flash';
 import { invalidatePublic } from '@/lib/public-cache';
 import { requireOwner } from '@/lib/auth/guards';
 import { formDbError, formError, formSuccess, formZodError, type FormState } from '@/lib/form-state';
@@ -56,6 +57,7 @@ export async function createBranchAction(_prev: FormState, formData: FormData): 
     .select('id')
     .single();
   if (error) return formDbError(error);
+  await setFlash('Đã tạo chi nhánh. Thêm sân và bảng giá để công bố.');
   redirect(`/admin/branches/${data.id}/courts?created=1`);
 }
 
