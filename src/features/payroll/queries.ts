@@ -17,17 +17,29 @@ export interface PayrollRow {
 
 export async function getPayrollMonth(month: string) {
   const supabase = await createClient();
-  const { data: period } = await supabase.from('payroll_periods').select('id, closed_at, note').eq('month', month).maybeSingle();
+  // Một lượt song song: kỳ lương (kèm dòng lương nếu đã chốt) + các khoản điều chỉnh.
+  const [periodRes, { data: adjustments }] = await Promise.all([
+    supabase
+      .from('payroll_periods')
+      .select(
+        'id, closed_at, note, payroll_lines(employee_id, employee_code, employee_name, shifts_count, paid_minutes, base_pay, adjustments_total, net_pay)',
+      )
+      .eq('month', month)
+      .order('employee_name', { referencedTable: 'payroll_lines' })
+      .maybeSingle(),
+    supabase
+      .from('payroll_adjustments')
+      .select('id, amount, reason, created_at, voided_at, employees(full_name, code)')
+      .eq('month', month)
+      .order('created_at', { ascending: false }),
+  ]);
+  if (periodRes.error) throw periodRes.error;
+  const closedPeriod = periodRes.data;
+  const period = closedPeriod ? { id: closedPeriod.id, closed_at: closedPeriod.closed_at, note: closedPeriod.note } : null;
 
   let rows: PayrollRow[];
-  if (period) {
-    const { data, error } = await supabase
-      .from('payroll_lines')
-      .select('employee_id, employee_code, employee_name, shifts_count, paid_minutes, base_pay, adjustments_total, net_pay')
-      .eq('period_id', period.id)
-      .order('employee_name');
-    if (error) throw error;
-    rows = (data ?? []).map((l) => ({
+  if (closedPeriod) {
+    rows = closedPeriod.payroll_lines.map((l) => ({
       employeeId: l.employee_id,
       code: l.employee_code,
       name: l.employee_name,
@@ -55,12 +67,6 @@ export async function getPayrollMonth(month: string) {
       missingRate: l.missing_rate_shifts,
     }));
   }
-
-  const { data: adjustments } = await supabase
-    .from('payroll_adjustments')
-    .select('id, amount, reason, created_at, voided_at, employees(full_name, code)')
-    .eq('month', month)
-    .order('created_at', { ascending: false });
 
   return {
     period,

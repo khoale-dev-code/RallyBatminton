@@ -1,3 +1,4 @@
+import Form from 'next/form';
 import Link from 'next/link';
 
 import { buttonClass } from '@/components/ui/button';
@@ -46,7 +47,7 @@ export default async function InventoryPage({ searchParams }: { searchParams: Pr
           { href: href({ kind: 'rental' }), label: 'Đồ cho thuê', active: kind === 'rental' },
         ]}
       />
-      <form action="/admin/inventory" className="mb-4 flex flex-wrap items-center gap-2">
+      <Form action="/admin/inventory" className="mb-4 flex flex-wrap items-center gap-2">
         {kind && <input type="hidden" name="kind" value={kind} />}
         <label htmlFor="q" className="sr-only">
           Tìm mặt hàng
@@ -65,7 +66,7 @@ export default async function InventoryPage({ searchParams }: { searchParams: Pr
         <button type="submit" className={buttonClass('outline', 'md', 'ml-auto sm:ml-0')}>
           Lọc
         </button>
-      </form>
+      </Form>
 
       {canAdjust && unstocked.length > 0 && (
         <div className="mb-4">

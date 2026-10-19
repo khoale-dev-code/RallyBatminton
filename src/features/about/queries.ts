@@ -1,9 +1,11 @@
 import 'server-only';
 
+import { unstable_cache } from 'next/cache';
 import { cache } from 'react';
 
 import { mapDirectionsHref, mapEmbedSrc } from '@/features/branches/lib/map-embed';
-import { listPublishedBranches, type QueryResult } from '@/features/branches/queries';
+import { listPublishedBranches, type BranchSummary, type QueryResult } from '@/features/branches/queries';
+import { PUBLIC_REVALIDATE, PUBLIC_TAGS } from '@/lib/public-cache';
 import { createPublicClient } from '@/lib/supabase/public';
 
 export interface AboutBranch {
@@ -39,58 +41,72 @@ function hoursOpen(opensAt: string, closesAt: string): number {
 export const getAboutData = cache(async (): Promise<QueryResult<AboutData>> => {
   const list = await listPublishedBranches();
   if (!list.ok) return list;
-  const ids = list.data.map((b) => b.id);
-  if (ids.length === 0) {
-    return { ok: true, data: { branches: [], amenities: [], totals: { branches: 0, courts: 0, minPrice: null, openHours: 0 } } };
+  try {
+    return { ok: true, data: await fetchAboutData(list.data) };
+  } catch {
+    return { ok: false, reason: 'error' };
   }
-  const supabase = createPublicClient();
-  const [{ data: rows, error }, { data: links }] = await Promise.all([
-    supabase
-      .from('branches')
-      .select('id, address_line, ward, district, city, phone, map_url, map_embed_url, description, parking_info')
-      .in('id', ids),
-    supabase.from('branch_amenities').select('branch_id, amenities(code, label, icon, sort_order)').in('branch_id', ids),
-  ]);
-  if (error) return { ok: false, reason: 'error' };
+});
 
-  const amenityMap = new Map<string, { code: string; label: string; icon: string | null; sort: number; branches: Set<string> }>();
-  const perBranch = new Map<string, string[]>();
-  for (const l of links ?? []) {
-    if (!l.amenities) continue;
-    const a = l.amenities;
-    const entry = amenityMap.get(a.code) ?? { code: a.code, label: a.label, icon: a.icon, sort: a.sort_order, branches: new Set<string>() };
-    entry.branches.add(l.branch_id);
-    amenityMap.set(a.code, entry);
-    perBranch.set(l.branch_id, [...(perBranch.get(l.branch_id) ?? []), a.label]);
-  }
+const fetchAboutData = unstable_cache(
+  async (branchesList: BranchSummary[]): Promise<AboutData> => {
+    const list = { data: branchesList };
+    const ids = list.data.map((b) => b.id);
+    if (ids.length === 0) {
+      return { branches: [], amenities: [], totals: { branches: 0, courts: 0, minPrice: null, openHours: 0 } };
+    }
+    const supabase = createPublicClient();
+    const [{ data: rows, error }, { data: links }] = await Promise.all([
+      supabase
+        .from('branches')
+        .select('id, address_line, ward, district, city, phone, map_url, map_embed_url, description, parking_info')
+        .in('id', ids),
+      supabase.from('branch_amenities').select('branch_id, amenities(code, label, icon, sort_order)').in('branch_id', ids),
+    ]);
+    if (error) throw new Error(error.message);
 
-  const branches: AboutBranch[] = list.data.map((b) => {
-    const row = rows?.find((r) => r.id === b.id);
-    const address = [row?.address_line ?? b.addressLine, row?.ward, row?.district ?? b.district, row?.city ?? b.city]
-      .filter(Boolean)
-      .join(', ');
+    const amenityMap = new Map<string, { code: string; label: string; icon: string | null; sort: number; branches: Set<string> }>();
+    const perBranch = new Map<string, string[]>();
+    for (const l of links ?? []) {
+      if (!l.amenities) continue;
+      const a = l.amenities;
+      const entry = amenityMap.get(a.code) ?? {
+        code: a.code,
+        label: a.label,
+        icon: a.icon,
+        sort: a.sort_order,
+        branches: new Set<string>(),
+      };
+      entry.branches.add(l.branch_id);
+      amenityMap.set(a.code, entry);
+      perBranch.set(l.branch_id, [...(perBranch.get(l.branch_id) ?? []), a.label]);
+    }
+
+    const branches: AboutBranch[] = list.data.map((b) => {
+      const row = rows?.find((r) => r.id === b.id);
+      const address = [row?.address_line ?? b.addressLine, row?.ward, row?.district ?? b.district, row?.city ?? b.city]
+        .filter(Boolean)
+        .join(', ');
+      return {
+        id: b.id,
+        slug: b.slug,
+        name: b.name,
+        address,
+        phone: row?.phone ?? null,
+        opensAt: b.opensAt,
+        closesAt: b.closesAt,
+        courtCount: b.courtCount,
+        minPrice: b.minPrice,
+        description: row?.description ?? null,
+        parkingInfo: row?.parking_info ?? null,
+        coverImagePath: b.coverImagePath,
+        mapSrc: mapEmbedSrc(row?.map_embed_url, `${b.name}, ${address}`),
+        directionsHref: mapDirectionsHref(row?.map_url, `${b.name}, ${address}`),
+        amenities: perBranch.get(b.id) ?? [],
+      };
+    });
+
     return {
-      id: b.id,
-      slug: b.slug,
-      name: b.name,
-      address,
-      phone: row?.phone ?? null,
-      opensAt: b.opensAt,
-      closesAt: b.closesAt,
-      courtCount: b.courtCount,
-      minPrice: b.minPrice,
-      description: row?.description ?? null,
-      parkingInfo: row?.parking_info ?? null,
-      coverImagePath: b.coverImagePath,
-      mapSrc: mapEmbedSrc(row?.map_embed_url, `${b.name}, ${address}`),
-      directionsHref: mapDirectionsHref(row?.map_url, `${b.name}, ${address}`),
-      amenities: perBranch.get(b.id) ?? [],
-    };
-  });
-
-  return {
-    ok: true,
-    data: {
       branches,
       amenities: [...amenityMap.values()]
         .sort((a, b) => a.sort - b.sort)
@@ -101,6 +117,8 @@ export const getAboutData = cache(async (): Promise<QueryResult<AboutData>> => {
         minPrice: branches.reduce<number | null>((m, b) => (b.minPrice !== null && (m === null || b.minPrice < m) ? b.minPrice : m), null),
         openHours: Math.max(0, ...branches.map((b) => hoursOpen(b.opensAt, b.closesAt))),
       },
-    },
-  };
-});
+    };
+  },
+  ['about-data'],
+  { tags: [PUBLIC_TAGS.branches], revalidate: PUBLIC_REVALIDATE.branches },
+);

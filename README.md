@@ -50,6 +50,8 @@ Vào **Supabase Dashboard → SQL Editor**, mở từng file trong `supabase/sql
 | 11 | `10_seed_rental_demo_optional.sql` | Không | Dữ liệu chạy thử cho thuê (cần 04 + 09): gói hết trận / mang về và bảng cho thuê hôm nay (đang thuê, sắp hạn, ân hạn, trễ, đã trả có phụ phí) |
 | 12 | `11_members.sql` | Có | Tài khoản thành viên cho khách (tùy chọn — vẫn đặt sân không cần đăng nhập): đăng ký SĐT/email/Google, đơn của tôi, nhận đơn cũ bằng mã + SĐT, điểm tích lũy & hạng (Bạc 300 · Vàng 1.000 · Kim cương 3.000 điểm; 1 điểm / 10.000đ). Tài khoản khách và nhân sự không trùng nhau. Chạy sau 09 |
 | 13 | `12_branch_map.sql` | Có | Bản đồ Google nhúng cho từng chi nhánh (trang Giới thiệu `/about`). Dán mã iframe ở *Quản trị → Chi nhánh*; để trống thì tự hiện bản đồ theo địa chỉ. Chạy sau 11 |
+| 14 | `13_performance.sql` | Nên chạy | Tăng tốc: chỉ mục tìm kiếm khách/thành viên/sản phẩm (pg_trgm), nhật ký, bảng lương; danh sách thành viên chỉ tính số đơn cho trang đang xem. Không đổi dữ liệu. Chạy sau 12 |
+| 15 | `14_guest_phone_lookup.sql` | Có | Khách vãng lai quên mã đơn: tra bằng số điện thoại ở `/booking/lookup` (đơn hôm nay, sắp tới, lịch sử 6 tháng). Mã đơn che bớt; nhập đúng họ tên người đặt mới xem đầy đủ / tự hủy. Giới hạn số lần thử. Chạy sau 13 |
 
 **Đã cài Rally từ trước?** Chỉ cần chạy thêm `05_product_details.sql`, `06_product_tax.sql` rồi `07_units_options.sql` (không mất dữ liệu).
 
@@ -217,5 +219,28 @@ docs/                  # Phân tích schema
 - *Reset password*: đổi liên kết thành `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=recovery`
 
 Giữ mẫu mặc định vẫn chạy, nhưng khách phải mở liên kết trên đúng trình duyệt đã đăng ký. Email mặc định của Supabase giới hạn rất ít thư mỗi giờ — khi chạy thật nên cấu hình SMTP riêng (*Authentication → Emails → SMTP Settings*).
-#   R a l l y B a t m i n t o n  
- 
+
+## 13. Tốc độ (web và quản trị)
+
+Đã tối ưu sẵn trong code:
+
+- **Trang công khai** (trang chủ, chi nhánh, vật phẩm, cho thuê, giới thiệu) đọc dữ liệu qua bộ nhớ đệm phía máy chủ (`src/lib/public-cache.ts`): gần như không gọi database. Khi chủ sân sửa ở trang quản trị, bộ đệm liên quan được xóa ngay (`invalidatePublic`), nên khách thấy thay đổi tức thì. Lịch trống sân vẫn luôn lấy trực tiếp.
+- **Đăng nhập**: middleware chỉ đọc phiên trong cookie (không gọi mạng mỗi lần chuyển trang); quyền vẫn do RLS của database kiểm tra ở mọi truy vấn.
+- **Trang quản trị**: các truy vấn độc lập chạy song song — mỗi trang chỉ còn ~2 lượt tới database (trước đây 4–6).
+- **Giao diện**: thanh tiến trình xanh ở đỉnh màn hình khi bấm chuyển trang, khung xương (skeleton) giữ bố cục khi đang tải, ô lọc/tìm kiếm ở quản trị và trang vật phẩm chuyển trang không tải lại toàn bộ.
+
+Để chạy thật nhanh khi triển khai:
+
+1. Chạy `13_performance.sql`.
+2. Chọn **region Supabase gần Việt Nam** (Singapore — `ap-southeast-1`) và đặt Vercel Functions cùng vùng (*Project → Settings → Functions → Region*: `sin1`). Mỗi truy vấn đi xa (ví dụ sang Mỹ) tốn thêm ~200 ms.
+3. Bật **JWT Signing Keys** bất đối xứng ở Supabase (*Project Settings → JWT Keys → Migrate*): xác minh đăng nhập ngay trên máy chủ, không cần hỏi lại Supabase.
+4. Chạy bản build (`npm run build && npm start` hoặc Vercel). `npm run dev` biên dịch từng trang lần đầu nên luôn chậm hơn nhiều — không dùng để đánh giá tốc độ.
+
+## 14. Tra cứu đơn bằng số điện thoại (khách vãng lai, `14_guest_phone_lookup.sql`)
+
+Trang `/booking/lookup` có 2 tab: **Số điện thoại** (mặc định) và **Mã đơn**.
+
+- Nhập số điện thoại đã dùng khi đặt (có xác minh chống bot Turnstile) → danh sách đơn chia **Hôm nay / Sắp tới / Lịch sử đặt sân** (6 tháng gần nhất, tối đa 40 đơn; gồm cả đơn đặt tại quầy theo số đó). Chỉ gồm đơn khách vãng lai — đơn đặt khi đăng nhập thành viên xem trong tài khoản (trang có nhắc số đơn đó).
+- Danh sách chỉ để xem: mã đơn che giữa (`RB-W7••••9T`), người đặt chỉ hiện tên gọi. Bấm **Xem chi tiết** và nhập đúng họ tên người đặt (có dấu hay không dấu đều được) → hiện vé đầy đủ: mã đơn, thanh toán, chỉ đường, tự hủy. Nhờ vậy người chỉ biết số điện thoại của bạn không hủy được đơn của bạn.
+- Giới hạn: mỗi số 10 lần tìm / giờ, mỗi thiết bị (IP băm) 30 lần / giờ; nhập sai họ tên tối đa 5 lần / giờ cho mỗi đơn. Hàm database chỉ máy chủ gọi được (service role).
+

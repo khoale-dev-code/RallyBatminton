@@ -375,3 +375,19 @@ Tồn kho luôn đếm theo đơn vị cơ bản (`products.unit_label`). Kiểm
 - Chưa dán mã: trang Giới thiệu dùng bản đồ tìm theo địa chỉ (`google.com/maps?q=…&output=embed`, không cần API key).
 - Quyền: cột thuộc bảng `branches` (đọc công khai khi chi nhánh đã công bố, chỉ chủ sân sửa).
 - **Kiểm tra:** `99_verify_schema.sql` dòng 19.
+
+## 17. Migration `13_performance.sql` — Chỉ mục & tối ưu truy vấn
+
+- **pg_trgm** (schema `extensions`; nếu dự án cũ cài ở schema khác thì dùng đúng schema đó) + chỉ mục GIN trigram cho tìm kiếm `ilike '%…%'`: `customers(phone, full_name)`, `member_profiles(full_name, phone)`, `products(name)` (chỉ sản phẩm chưa xóa).
+- **Danh sách sắp theo thời gian:** `customers(created_at desc)`, `member_profiles(created_at desc)`, `audit_events(occurred_at desc, id desc)` và `(table_name, occurred_at desc, id desc)` cho trang Nhật ký (BRIN cũ không phục vụ `ORDER BY … LIMIT`), `payroll_adjustments(month, created_at desc)`.
+- **`admin_list_members`:** cùng chữ ký, cùng kết quả, cùng kiểm tra quyền; `booking_count` và `customer_id` chỉ tính cho các dòng của trang đang xem thay vì mọi thành viên khớp bộ lọc.
+- Phía ứng dụng (không cần SQL): lịch ngày ở quản trị lấy thanh toán kèm đơn (`payments(...)`) và tính số dư cùng công thức với view `booking_balances`; bảng lương lấy dòng lương lồng trong kỳ lương; nhật ký lấy tên tài khoản song song.
+- Chạy lại an toàn (`if not exists`, `create or replace`), có `analyze` để dùng chỉ mục ngay.
+- **Kiểm tra:** `99_verify_schema.sql` dòng 20.
+
+## 18. Migration `14_guest_phone_lookup.sql` — Tra cứu đơn bằng số điện thoại
+
+- **Bảng mới** `private.guest_lookup_attempts(kind, key, created_at)` — chỉ để giới hạn tần suất (`phone`, `client` = IP đã băm SHA-256, `reveal_fail` = đơn / thiết bị nhập sai tên). Không mở cho anon/authenticated; tự dọn dòng cũ hơn 1 ngày.
+- **`lookup_guest_bookings_by_phone(p_phone, p_client)`** (service role): đơn của khách vãng lai theo SĐT (`member_user_id is null`, nguồn `online`/`counter`, 180 ngày + sắp tới, tối đa 40). Trả mã che (`private.mask_booking_code`), tên gọi, giờ, chi nhánh, sân, tổng tiền, đã trả; kèm số đơn thuộc tài khoản thành viên. 10 lần/giờ mỗi SĐT, 30 lần/giờ mỗi thiết bị.
+- **`reveal_guest_booking(p_booking_id, p_phone, p_name, p_client)`** (service role): so họ tên với `bookings.contact_name` hoặc `customers.full_name` qua `private.fold_vn_name` (bỏ dấu tiếng Việt, hoa/thường, khoảng trắng). Đúng → trả như `lookup_guest_booking` (mã đầy đủ, hủy được). Sai → trả `{"error":"BOOKING_NAME_MISMATCH"}` (không `raise` để dòng nhật ký sai tên không bị hoàn tác); 5 lần sai/giờ mỗi đơn, 15 lần/giờ mỗi thiết bị.
+- **Kiểm tra:** `99_verify_schema.sql` dòng 21.

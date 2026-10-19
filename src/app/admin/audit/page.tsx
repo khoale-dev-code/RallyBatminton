@@ -1,3 +1,4 @@
+import Form from 'next/form';
 import Link from 'next/link';
 
 import { buttonClass } from '@/components/ui/button';
@@ -25,7 +26,7 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
   return (
     <>
       <PageHeader title="Nhật ký thay đổi" description="Ghi tự động bởi database cho dữ liệu quan trọng; không ai sửa hay xóa được." />
-      <form action="/admin/audit" className="mb-4 flex flex-wrap items-center gap-2">
+      <Form action="/admin/audit" className="mb-4 flex flex-wrap items-center gap-2">
         <label htmlFor="table" className="sr-only">
           Loại dữ liệu
         </label>
@@ -40,7 +41,7 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
         <button type="submit" className={buttonClass('outline')}>
           Lọc
         </button>
-      </form>
+      </Form>
       {events.length === 0 ? (
         <EmptyState title="Chưa có thay đổi" />
       ) : (

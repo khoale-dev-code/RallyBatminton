@@ -1,8 +1,10 @@
 import 'server-only';
 
+import { unstable_cache } from 'next/cache';
 import { cache } from 'react';
 
 import { isSupabaseConfigured } from '@/lib/env';
+import { PUBLIC_REVALIDATE, PUBLIC_TAGS } from '@/lib/public-cache';
 import { type Enums } from '@/lib/supabase/database.types';
 import { createPublicClient } from '@/lib/supabase/public';
 
@@ -30,50 +32,76 @@ export interface CatalogFilters {
   page: number;
 }
 
+const fetchCatalog = unstable_cache(
+  async (filters: CatalogFilters): Promise<{ items: CatalogItem[]; total: number }> => {
+    const { data, error } = await createPublicClient().rpc('list_catalog', {
+      p_kind: filters.kind,
+      p_category_slug: filters.category,
+      p_branch_id: filters.branchId,
+      p_search: filters.q,
+      p_limit: CATALOG_PAGE_SIZE,
+      p_offset: (filters.page - 1) * CATALOG_PAGE_SIZE,
+    });
+    if (error) throw new Error(error.message);
+    return {
+      total: Number(data[0]?.total_count ?? 0),
+      items: data.map((r) => ({
+        id: r.id,
+        name: r.name,
+        kind: r.kind,
+        isBundle: r.is_bundle,
+        brandName: r.brand_name,
+        categoryName: r.category_name,
+        minPrice: r.min_price,
+        maxPrice: r.max_price,
+        compareAtPrice: r.compare_at_price,
+        coverPath: r.cover_path,
+        available: Number(r.available_quantity),
+      })),
+    };
+  },
+  ['catalog-list'],
+  { tags: [PUBLIC_TAGS.catalog], revalidate: PUBLIC_REVALIDATE.catalog },
+);
+
+/** Danh mục công khai (cache ngắn; xóa khi admin sửa sản phẩm / bán / nhập kho). */
 export async function listCatalog(filters: CatalogFilters): Promise<{ items: CatalogItem[]; total: number } | null> {
   if (!isSupabaseConfigured()) return null;
-  const { data, error } = await createPublicClient().rpc('list_catalog', {
-    p_kind: filters.kind,
-    p_category_slug: filters.category,
-    p_branch_id: filters.branchId,
-    p_search: filters.q,
-    p_limit: CATALOG_PAGE_SIZE,
-    p_offset: (filters.page - 1) * CATALOG_PAGE_SIZE,
-  });
-  if (error) return null;
-  return {
-    total: Number(data[0]?.total_count ?? 0),
-    items: data.map((r) => ({
-      id: r.id,
-      name: r.name,
-      kind: r.kind,
-      isBundle: r.is_bundle,
-      brandName: r.brand_name,
-      categoryName: r.category_name,
-      minPrice: r.min_price,
-      maxPrice: r.max_price,
-      compareAtPrice: r.compare_at_price,
-      coverPath: r.cover_path,
-      available: Number(r.available_quantity),
-    })),
-  };
+  return fetchCatalog(filters).catch(() => null);
 }
+
+const fetchCategories = unstable_cache(
+  async () => {
+    const { data, error } = await createPublicClient().from('product_categories').select('slug, name').order('sort_order');
+    if (error) throw new Error(error.message);
+    return data;
+  },
+  ['catalog-categories'],
+  { tags: [PUBLIC_TAGS.catalog], revalidate: PUBLIC_REVALIDATE.catalog },
+);
 
 export const listCategories = cache(async () => {
   if (!isSupabaseConfigured()) return [];
-  const { data } = await createPublicClient().from('product_categories').select('slug, name').order('sort_order');
-  return data ?? [];
+  return fetchCategories().catch(() => []);
 });
+
+const fetchBranchOptions = unstable_cache(
+  async () => {
+    const { data, error } = await createPublicClient().from('branches').select('id, name, slug').order('name');
+    if (error) throw new Error(error.message);
+    return data;
+  },
+  ['catalog-branch-options'],
+  { tags: [PUBLIC_TAGS.branches], revalidate: PUBLIC_REVALIDATE.branches },
+);
 
 export const listBranchOptions = cache(async () => {
   if (!isSupabaseConfigured()) return [];
-  const { data } = await createPublicClient().from('branches').select('id, name, slug').order('name');
-  return data ?? [];
+  return fetchBranchOptions().catch(() => []);
 });
 
-export const getProductDetail = cache(async (id: string, kind: Enums<'product_kind'>) => {
-  if (!isSupabaseConfigured() || !/^[0-9a-f-]{36}$/i.test(id)) return null;
-  const { data } = await createPublicClient()
+async function queryProductDetail(id: string, kind: Enums<'product_kind'>) {
+  const { data, error } = await createPublicClient()
     .from('products')
     .select(
       `id, kind, name, description, excerpt, unit_label, seo_title, seo_description, brand_name, base_price, compare_at_price, is_bundle,
@@ -88,7 +116,18 @@ export const getProductDetail = cache(async (id: string, kind: Enums<'product_ki
     .eq('id', id)
     .eq('kind', kind)
     .maybeSingle();
+  if (error) throw new Error(error.message);
   return data;
+}
+
+const fetchProductDetail = unstable_cache(queryProductDetail, ['catalog-product'], {
+  tags: [PUBLIC_TAGS.catalog],
+  revalidate: PUBLIC_REVALIDATE.catalog,
+});
+
+export const getProductDetail = cache(async (id: string, kind: Enums<'product_kind'>) => {
+  if (!isSupabaseConfigured() || !/^[0-9a-f-]{36}$/i.test(id)) return null;
+  return fetchProductDetail(id, kind).catch(() => null);
 });
 
 export type ProductDetail = NonNullable<Awaited<ReturnType<typeof getProductDetail>>>;

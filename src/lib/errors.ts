@@ -21,6 +21,7 @@ const CODE_MESSAGES: Record<string, string> = {
   INVALID_PHONE: 'Số điện thoại di động Việt Nam không hợp lệ (ví dụ 0912 345 678).',
   INVALID_NAME: 'Họ tên cần từ 2 đến 80 ký tự.',
   BOOKING_NOT_FOUND: 'Không tìm thấy đơn với mã và số điện thoại này.',
+  BOOKING_NAME_MISMATCH: 'Họ tên chưa khớp với tên đã dùng khi đặt sân. Nhập đúng họ tên (có dấu hay không dấu đều được).',
   CANCELLATION_CLOSED: 'Đã qua giờ bắt đầu, không thể hủy trực tuyến.',
   INVALID_STATUS: 'Trạng thái đơn hiện tại không cho phép thao tác này.',
   NOT_HELD: 'Đơn không còn ở trạng thái giữ chỗ.',

@@ -76,3 +76,34 @@ export function bookingStatusInfo(status: string): { label: string; tone: Tone }
   const entry = Object.entries(BOOKING_STATUS).find(([key]) => key === status);
   return entry ? entry[1] : { label: status, tone: 'neutral' };
 }
+
+export type PhoneGroupKey = 'today' | 'upcoming' | 'past';
+
+export interface PhoneGroup<T> {
+  key: PhoneGroupKey;
+  title: string;
+  items: T[];
+}
+
+const PHONE_GROUP_TITLES: Record<PhoneGroupKey, string> = {
+  today: 'Hôm nay',
+  upcoming: 'Sắp tới',
+  past: 'Lịch sử đặt sân',
+};
+
+/** Chia đơn tra theo số điện thoại thành Hôm nay / Sắp tới / Lịch sử (theo ngày chơi, giờ Việt Nam). */
+export function groupPhoneBookings<T extends { starts_at: string }>(items: T[], nowMs: number, tz: string = DEFAULT_TZ): PhoneGroup<T>[] {
+  const today = dateKeyInZone(new Date(nowMs), tz);
+  const buckets: Record<PhoneGroupKey, T[]> = { today: [], upcoming: [], past: [] };
+  for (const item of items) {
+    const day = dateKeyInZone(new Date(item.starts_at), tz);
+    buckets[day === today ? 'today' : day > today ? 'upcoming' : 'past'].push(item);
+  }
+  const byStart = (a: T, b: T) => Date.parse(a.starts_at) - Date.parse(b.starts_at);
+  buckets.today.sort(byStart);
+  buckets.upcoming.sort(byStart);
+  buckets.past.sort((a, b) => byStart(b, a));
+  return (['today', 'upcoming', 'past'] as const)
+    .filter((key) => buckets[key].length > 0)
+    .map((key) => ({ key, title: PHONE_GROUP_TITLES[key], items: buckets[key] }));
+}

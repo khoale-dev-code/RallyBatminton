@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
 
+import { invalidatePublic } from '@/lib/public-cache';
 import { requireBranchPermission } from '@/lib/auth/guards';
 import { formDbError, formSuccess, formZodError, type FormState } from '@/lib/form-state';
 import { createClient } from '@/lib/supabase/server';
@@ -35,6 +36,7 @@ function revalidateStock(variantId: string) {
   revalidatePath(`/admin/inventory/${variantId}`);
   revalidatePath('/products');
   revalidatePath('/rentals');
+  invalidatePublic('catalog');
 }
 
 export async function adjustStockAction(variantId: string, _prev: FormState, formData: FormData): Promise<FormState> {

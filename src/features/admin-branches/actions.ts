@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 import { z } from 'zod';
 
 import { parseMapEmbed } from '@/features/branches/lib/map-embed';
+import { invalidatePublic } from '@/lib/public-cache';
 import { requireOwner } from '@/lib/auth/guards';
 import { formDbError, formError, formSuccess, formZodError, type FormState } from '@/lib/form-state';
 import { slugify } from '@/lib/slug';
@@ -18,6 +19,7 @@ function revalidatePublic(slug?: string | null) {
   revalidatePath('/');
   revalidatePath('/branches');
   if (slug) revalidatePath(`/branches/${slug}`);
+  invalidatePublic('branches');
 }
 
 // ---------------------------------------------------------------------------
@@ -132,6 +134,7 @@ export async function updateBranchAction(branchId: string, _prev: FormState, for
   if (error) return formDbError(error);
   revalidatePublic(data.slug);
   revalidatePath(`/admin/branches/${branchId}`);
+  invalidatePublic('branches');
   return formSuccess('Đã lưu thông tin chi nhánh.');
 }
 
@@ -152,6 +155,7 @@ export async function setBranchStatusAction(branchId: string, _prev: FormState, 
   revalidatePublic(data.slug);
   revalidatePath(`/admin/branches/${branchId}`);
   revalidatePath('/admin/branches');
+  invalidatePublic('branches');
   const messages: Record<z.infer<typeof statusSchema>, string> = {
     published: 'Đã công bố — khách có thể đặt sân.',
     paused: 'Đã tạm ngưng nhận đặt trực tuyến.',
@@ -215,6 +219,7 @@ export async function createCourtAction(branchId: string, _prev: FormState, form
   });
   if (error) return formDbError(error);
   revalidatePath(`/admin/branches/${branchId}/courts`);
+  invalidatePublic('branches');
   return formSuccess(`Đã thêm ${v.name}.`);
 }
 
@@ -242,6 +247,7 @@ export async function updateCourtAction(courtId: string, _prev: FormState, formD
   if (error) return formDbError(error);
   revalidatePublic(data.branches?.slug);
   revalidatePath(`/admin/branches/${data.branch_id}/courts`);
+  invalidatePublic('branches');
   return formSuccess('Đã lưu sân.');
 }
 
@@ -257,6 +263,7 @@ export async function addCourtPhotoAction(courtId: string, path: string): Promis
     is_cover: (count ?? 0) === 0,
   });
   if (error) return formDbError(error);
+  invalidatePublic('branches');
   return formSuccess('Đã thêm ảnh.');
 }
 
@@ -269,6 +276,7 @@ export async function setCourtCoverAction(photoId: string, _prev: FormState): Pr
   const { error } = await supabase.from('court_photos').update({ is_cover: true }).eq('id', photoId);
   if (error) return formDbError(error);
   revalidatePath(`/admin/courts/${photo.court_id}`);
+  invalidatePublic('branches');
   return formSuccess('Đã đặt làm ảnh chính.');
 }
 
@@ -281,6 +289,7 @@ export async function deleteCourtPhotoAction(photoId: string, _prev: FormState):
   if (error) return formDbError(error);
   await supabase.storage.from(MEDIA_BUCKET).remove([photo.storage_path]);
   revalidatePath(`/admin/courts/${photo.court_id}`);
+  invalidatePublic('branches');
   return formSuccess('Đã xóa ảnh.');
 }
 
@@ -327,6 +336,7 @@ export async function createPriceRuleAction(branchId: string, _prev: FormState, 
   const { data } = await supabase.from('branches').select('slug').eq('id', branchId).maybeSingle();
   revalidatePublic(data?.slug);
   revalidatePath(`/admin/branches/${branchId}/pricing`);
+  invalidatePublic('branches');
   return formSuccess('Đã thêm quy tắc giá.');
 }
 
@@ -342,5 +352,6 @@ export async function togglePriceRuleAction(ruleId: string, active: boolean, _pr
   if (error) return formDbError(error);
   revalidatePublic(data.branches?.slug);
   revalidatePath(`/admin/branches/${data.branch_id}/pricing`);
+  invalidatePublic('branches');
   return formSuccess(active ? 'Đã bật lại quy tắc.' : 'Đã tắt quy tắc (lịch sử vẫn được lưu).');
 }

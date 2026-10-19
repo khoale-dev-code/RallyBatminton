@@ -36,13 +36,13 @@ export async function listAuditEvents(opts: { table?: string; page: number }) {
     .order('id', { ascending: false })
     .range(opts.page * PAGE_SIZE, opts.page * PAGE_SIZE + PAGE_SIZE - 1);
   if (opts.table && opts.table in AUDIT_TABLES) query = query.eq('table_name', opts.table);
-  const { data, error, count } = await query;
+  // Danh sách tài khoản nhân sự nhỏ — lấy song song thay vì chờ sự kiện rồi mới tra tên.
+  const [{ data, error, count }, { data: actors }] = await Promise.all([
+    query,
+    supabase.from('staff_accounts').select('user_id, display_name'),
+  ]);
   if (error) throw error;
   const events = data ?? [];
-  const actorIds = [...new Set(events.map((e) => e.actor_id).filter((id): id is string => id !== null))];
-  const { data: actors } = actorIds.length
-    ? await supabase.from('staff_accounts').select('user_id, display_name').in('user_id', actorIds)
-    : { data: [] };
   const names = new Map((actors ?? []).map((a) => [a.user_id, a.display_name]));
   return {
     events: events.map((e) => ({ ...e, actorName: e.actor_id ? (names.get(e.actor_id) ?? 'Tài khoản đã xóa') : 'Hệ thống' })),

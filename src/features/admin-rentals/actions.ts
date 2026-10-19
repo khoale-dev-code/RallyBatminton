@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
 
+import { invalidatePublic } from '@/lib/public-cache';
 import { requireBranchPermission } from '@/lib/auth/guards';
 import { formDbError, formError, formSuccess, formZodError, type FormState } from '@/lib/form-state';
 import { createClient } from '@/lib/supabase/server';
@@ -26,6 +27,7 @@ function revalidateRentals(id?: string) {
   revalidatePath('/admin/inventory');
   revalidatePath('/admin');
   if (id) revalidatePath(`/admin/rentals/${id}`);
+  invalidatePublic('catalog');
 }
 
 const checkoutSchema = z

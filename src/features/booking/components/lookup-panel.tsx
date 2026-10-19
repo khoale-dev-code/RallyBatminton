@@ -1,19 +1,33 @@
 'use client';
 
-import { Info, Search, Smartphone, Ticket } from 'lucide-react';
-import { startTransition, useActionState, useEffect, useRef, type ReactNode } from 'react';
+import { ArrowLeft, Info, Search, Smartphone, Ticket } from 'lucide-react';
+import { startTransition, useActionState, useEffect, useRef, useState, type ReactNode } from 'react';
 
 import { buttonClass } from '@/components/ui/button';
 import { cn } from '@/lib/cn';
 
-import { cancelGuestBookingAction, lookupBookingAction, type LookupState } from '../actions';
+import {
+  cancelGuestBookingAction,
+  lookupBookingAction,
+  lookupByPhoneAction,
+  revealGuestBookingAction,
+  type LookupState,
+  type PhoneLookupState,
+  type RevealState,
+} from '../actions';
 import { rememberBooking, type RecentBooking } from '../lib/recent-bookings';
 
 import { BookingTicket } from './booking-ticket';
 import { LookupHelp } from './lookup-help';
+import { PhoneBookingList } from './phone-booking-list';
 import { RecentBookings } from './recent-bookings';
+import { Turnstile } from './turnstile';
 
 const initial: LookupState = { status: 'idle' };
+const initialPhone: PhoneLookupState = { status: 'idle' };
+const initialReveal: RevealState = { status: 'idle' };
+
+type Mode = 'phone' | 'code';
 
 const inputClass =
   'min-h-12 w-full rounded-control border border-line bg-paper pr-3 pl-11 transition-colors placeholder:text-muted/60 focus:border-court-strong focus:ring-4 focus:ring-court/20 focus:outline-none aria-[invalid=true]:border-shuttle-deep';
@@ -26,42 +40,66 @@ interface LookupPanelProps {
   defaultCode: string;
   hotline: string | null;
   intro: ReactNode;
+  turnstileSiteKey: string;
 }
 
-export function LookupPanel({ defaultCode, hotline, intro }: LookupPanelProps) {
+export function LookupPanel({ defaultCode, hotline, intro, turnstileSiteKey }: LookupPanelProps) {
+  const [mode, setMode] = useState<Mode>(defaultCode ? 'code' : 'phone');
   const [lookup, lookupAction, looking] = useActionState(lookupBookingAction, initial);
+  const [phoneSearch, phoneAction, searching] = useActionState(lookupByPhoneAction, initialPhone);
+  const [reveal, revealAction, revealing] = useActionState(revealGuestBookingAction, initialReveal);
   const [cancel, cancelAction, cancelling] = useActionState(cancelGuestBookingAction, initial);
+  const [token, setToken] = useState<string | null>(turnstileSiteKey ? null : 'dev-no-turnstile');
+  const [turnstileReset, setTurnstileReset] = useState(0);
+  // Bấm "Các đơn của số này" / "Tìm số khác": ẩn vé / danh sách đã xem (theo dấu thời gian kết quả).
+  const [hiddenTicketAt, setHiddenTicketAt] = useState(0);
+  const [hiddenListAt, setHiddenListAt] = useState(0);
   const codeRef = useRef<HTMLInputElement>(null);
   const phoneRef = useRef<HTMLInputElement>(null);
+  const phoneOnlyRef = useRef<HTMLInputElement>(null);
   const resultRef = useRef<HTMLDivElement>(null);
 
+  // Vé đang xem: kết quả mới nhất giữa "tra bằng mã" và "mở đơn bằng họ tên".
+  const codeAt = lookup.status === 'success' && lookup.booking ? (lookup.nonce ?? 0) : 0;
+  const revealAt = reveal.status === 'success' && reveal.booking ? (reveal.nonce ?? 0) : 0;
+  const listAt = phoneSearch.status === 'success' ? (phoneSearch.nonce ?? 0) : 0;
+  const ticketAt = Math.max(codeAt, revealAt);
+  const ticketSource = revealAt > codeAt ? reveal : lookup;
+  const showTicket = ticketAt > 0 && ticketAt > hiddenTicketAt && ticketAt > listAt;
+  const ticketBooking = showTicket ? (ticketSource.booking ?? null) : null;
+  const showList = !showTicket && listAt > hiddenListAt && phoneSearch.items !== undefined;
+
   // Kết quả hủy chỉ áp vào đúng đơn đang xem (tránh hiện đơn cũ sau khi tra đơn khác).
-  const sameBooking = Boolean(cancel.booking && lookup.booking && cancel.booking.code === lookup.booking.code);
-  const booking = sameBooking ? (cancel.booking ?? null) : (lookup.booking ?? null);
-  const phone = (sameBooking ? cancel.phone : lookup.phone) ?? '';
+  const sameBooking = Boolean(cancel.booking && ticketBooking && cancel.booking.code === ticketBooking.code);
+  const booking = sameBooking ? (cancel.booking ?? null) : ticketBooking;
+  const phone = (sameBooking ? cancel.phone : ticketSource.phone) ?? '';
   const bookingCode = booking?.code ?? null;
+  const resultKey = `${bookingCode ?? ''}|${showList ? listAt : 0}`;
 
   useEffect(() => {
-    if (!bookingCode || !resultRef.current) return;
-    if (resultRef.current.getBoundingClientRect().top > window.innerHeight * 0.75) {
+    if (resultKey === '|0' || !resultRef.current) return;
+    if (resultRef.current.getBoundingClientRect().top > window.innerHeight * 0.6) {
       resultRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
-  }, [bookingCode, lookup]);
+  }, [resultKey]);
 
-  // Tra cứu thành công → nhớ đơn trên thiết bị để lần sau bấm là xem, không cần gõ lại.
+  // Tra cứu / mở đơn thành công → nhớ đơn trên thiết bị để lần sau bấm là xem, không cần gõ lại.
   useEffect(() => {
-    const found = lookup.booking;
-    if (lookup.status !== 'success' || !found || !lookup.phone) return;
-    rememberBooking({
-      code: found.code,
-      phone: lookup.phone,
-      startsAt: found.starts_at,
-      branchName: found.branch_name ?? '',
-      courtName: found.court_name ?? '',
-    });
-  }, [lookup]);
+    for (const result of [lookup, reveal]) {
+      const found = result.booking;
+      if (result.status !== 'success' || !found || !result.phone) continue;
+      rememberBooking({
+        code: found.code,
+        phone: result.phone,
+        startsAt: found.starts_at,
+        branchName: found.branch_name ?? '',
+        courtName: found.court_name ?? '',
+      });
+    }
+  }, [lookup, reveal]);
 
   const openRecent = (b: RecentBooking) => {
+    setMode('code');
     if (codeRef.current) codeRef.current.value = b.code;
     if (phoneRef.current) phoneRef.current.value = b.phone;
     const data = new FormData();
@@ -70,13 +108,23 @@ export function LookupPanel({ defaultCode, hotline, intro }: LookupPanelProps) {
     startTransition(() => lookupAction(data));
   };
 
-  const lookupAnother = () => {
-    const input = codeRef.current;
+  const focusInput = (input: HTMLInputElement | null) => {
     if (!input) return;
     input.scrollIntoView({ behavior: 'smooth', block: 'center' });
     input.focus({ preventScroll: true });
     input.select();
   };
+
+  const lookupAnother = () => focusInput(mode === 'phone' ? phoneOnlyRef.current : codeRef.current);
+
+  const searchAnotherPhone = () => {
+    setHiddenListAt(listAt);
+    setHiddenTicketAt(ticketAt);
+    setMode('phone');
+    window.setTimeout(() => focusInput(phoneOnlyRef.current), 0);
+  };
+
+  const backToList = () => setHiddenTicketAt(ticketAt);
 
   return (
     <>
@@ -103,94 +151,176 @@ export function LookupPanel({ defaultCode, hotline, intro }: LookupPanelProps) {
         <div className="mx-auto grid max-w-7xl items-center gap-8 px-4 py-10 sm:px-6 sm:py-14 lg:grid-cols-[1fr_minmax(0,28rem)] lg:gap-16 lg:py-20">
           {intro}
 
-          <form
-            action={lookupAction}
-            onSubmit={(e) => {
-              // Gửi thủ công để ô nhập giữ nguyên giá trị sau khi tra cứu.
-              e.preventDefault();
-              const data = new FormData(e.currentTarget);
-              startTransition(() => lookupAction(data));
-            }}
-            noValidate
-            className="flex flex-col gap-4 rounded-[1.25rem] bg-paper p-5 text-ink shadow-[0_30px_60px_-30px_rgb(0_0_0/0.8)] ring-1 ring-paper/10 sm:p-7"
-          >
+          <div className="flex flex-col gap-4 rounded-[1.25rem] bg-paper p-5 text-ink shadow-[0_30px_60px_-30px_rgb(0_0_0/0.8)] ring-1 ring-paper/10 sm:p-7">
             <div className="flex items-center justify-between gap-3">
-              <p className="font-display text-2xl">Nhập thông tin đơn</p>
+              <p className="font-display text-2xl">Tìm đơn đặt sân</p>
               <span className="inline-flex items-center gap-1.5 text-xs text-muted">
                 <span aria-hidden className="size-2 rounded-full bg-court" />
                 Bảo mật
               </span>
             </div>
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="code" className="text-sm font-medium">
-                Mã đơn
-              </label>
-              <div className="relative">
-                <FieldIcon>
-                  <Ticket className="size-5" aria-hidden />
-                </FieldIcon>
-                <input
-                  ref={codeRef}
-                  id="code"
-                  name="code"
-                  defaultValue={defaultCode}
-                  placeholder="RB-XXXXXXXX"
-                  autoCapitalize="characters"
-                  autoComplete="off"
-                  spellCheck={false}
-                  aria-invalid={Boolean(lookup.fieldErrors?.code)}
-                  aria-describedby={lookup.fieldErrors?.code ? 'code-error' : undefined}
-                  className={cn(inputClass, 'font-display text-xl tracking-wider uppercase placeholder:normal-case')}
-                />
+            <div role="tablist" aria-label="Cách tra cứu" className="grid grid-cols-2 gap-1 rounded-control bg-hall p-1">
+              {(
+                [
+                  ['phone', 'Số điện thoại', Smartphone],
+                  ['code', 'Mã đơn', Ticket],
+                ] as const
+              ).map(([key, label, Icon]) => (
+                <button
+                  key={key}
+                  type="button"
+                  role="tab"
+                  aria-selected={mode === key}
+                  onClick={() => setMode(key)}
+                  className={cn(
+                    'inline-flex min-h-10 items-center justify-center gap-2 rounded-[0.4rem] text-sm font-medium transition-colors',
+                    mode === key ? 'bg-paper text-ink shadow-sm' : 'text-muted hover:text-ink',
+                  )}
+                >
+                  <Icon className="size-4" aria-hidden />
+                  {label}
+                </button>
+              ))}
+            </div>
+            <form
+              action={phoneAction}
+              onSubmit={(e) => {
+                e.preventDefault();
+                const data = new FormData(e.currentTarget);
+                data.set('turnstileToken', token ?? '');
+                startTransition(() => phoneAction(data));
+                // Mã chống bot chỉ dùng một lần: xin mã mới cho lần tìm sau.
+                if (turnstileSiteKey) setTurnstileReset((n) => n + 1);
+              }}
+              noValidate
+              className="flex flex-col gap-4"
+              hidden={mode !== 'phone'}
+            >
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="phone-only" className="text-sm font-medium">
+                  Số điện thoại đã dùng khi đặt
+                </label>
+                <div className="relative">
+                  <FieldIcon>
+                    <Smartphone className="size-5" aria-hidden />
+                  </FieldIcon>
+                  <input
+                    ref={phoneOnlyRef}
+                    id="phone-only"
+                    name="phone"
+                    type="tel"
+                    inputMode="tel"
+                    autoComplete="tel"
+                    placeholder="09xx xxx xxx"
+                    aria-invalid={Boolean(phoneSearch.fieldErrors?.phone)}
+                    aria-describedby={phoneSearch.fieldErrors?.phone ? 'phone-only-error' : undefined}
+                    className={cn(inputClass, 'font-display text-xl tracking-wider tabular')}
+                  />
+                </div>
+                {phoneSearch.fieldErrors?.phone && (
+                  <p id="phone-only-error" className="text-sm text-shuttle-deep">
+                    {phoneSearch.fieldErrors.phone}
+                  </p>
+                )}
               </div>
-              {lookup.fieldErrors?.code && (
-                <p id="code-error" className="text-sm text-shuttle-deep">
-                  {lookup.fieldErrors.code}
+              {turnstileSiteKey && <Turnstile siteKey={turnstileSiteKey} onToken={setToken} resetSignal={turnstileReset} />}
+              {phoneSearch.status === 'error' && !phoneSearch.fieldErrors?.phone && (
+                <p role="alert" className="rounded-control border-l-4 border-shuttle bg-shuttle-soft px-3 py-2.5 text-sm text-shuttle-deep">
+                  {phoneSearch.message}
                 </p>
               )}
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="phone" className="text-sm font-medium">
-                Số điện thoại đã đặt
-              </label>
-              <div className="relative">
-                <FieldIcon>
-                  <Smartphone className="size-5" aria-hidden />
-                </FieldIcon>
-                <input
-                  ref={phoneRef}
-                  id="phone"
-                  name="phone"
-                  type="tel"
-                  inputMode="tel"
-                  autoComplete="tel"
-                  placeholder="09xx xxx xxx"
-                  autoFocus={defaultCode.length > 0}
-                  aria-invalid={Boolean(lookup.fieldErrors?.phone)}
-                  aria-describedby={lookup.fieldErrors?.phone ? 'phone-error' : undefined}
-                  className={cn(inputClass, 'text-[1.05rem] tabular')}
-                />
-              </div>
-              {lookup.fieldErrors?.phone && (
-                <p id="phone-error" className="text-sm text-shuttle-deep">
-                  {lookup.fieldErrors.phone}
-                </p>
-              )}
-            </div>
-            {lookup.status === 'error' && !lookup.fieldErrors && (
-              <p role="alert" className="rounded-control border-l-4 border-shuttle bg-shuttle-soft px-3 py-2.5 text-sm text-shuttle-deep">
-                {lookup.message}
+              <button type="submit" disabled={searching || !token} className={buttonClass('brand', 'lg', 'mt-1 w-full')}>
+                <Search className="size-5" aria-hidden />
+                {searching ? 'Đang tìm đơn…' : 'Tìm đơn của tôi'}
+              </button>
+              <p className="flex items-start gap-2 text-xs leading-relaxed text-muted">
+                <Info className="mt-px size-4 shrink-0" aria-hidden />
+                Dành cho khách đặt không cần tài khoản. Xem đơn hôm nay, sắp tới và lịch sử đặt sân của số này.
               </p>
-            )}
-            <button type="submit" disabled={looking} className={buttonClass('brand', 'lg', 'mt-1 w-full')}>
-              <Search className="size-5" aria-hidden />
-              {looking ? 'Đang tìm đơn…' : 'Tra cứu đơn'}
-            </button>
-            <p className="flex items-start gap-2 text-xs leading-relaxed text-muted">
-              <Info className="mt-px size-4 shrink-0" aria-hidden />
-              Quên mã? Chọn đơn đã lưu trên máy này ở bên dưới, đăng nhập tài khoản thành viên, hoặc gọi hotline.
-            </p>
-          </form>
+            </form>
+            <form
+              action={lookupAction}
+              onSubmit={(e) => {
+                // Gửi thủ công để ô nhập giữ nguyên giá trị sau khi tra cứu.
+                e.preventDefault();
+                const data = new FormData(e.currentTarget);
+                startTransition(() => lookupAction(data));
+              }}
+              noValidate
+              className="flex flex-col gap-4"
+              hidden={mode !== 'code'}
+            >
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="code" className="text-sm font-medium">
+                  Mã đơn
+                </label>
+                <div className="relative">
+                  <FieldIcon>
+                    <Ticket className="size-5" aria-hidden />
+                  </FieldIcon>
+                  <input
+                    ref={codeRef}
+                    id="code"
+                    name="code"
+                    defaultValue={defaultCode}
+                    placeholder="RB-XXXXXXXX"
+                    autoCapitalize="characters"
+                    autoComplete="off"
+                    spellCheck={false}
+                    aria-invalid={Boolean(lookup.fieldErrors?.code)}
+                    aria-describedby={lookup.fieldErrors?.code ? 'code-error' : undefined}
+                    className={cn(inputClass, 'font-display text-xl tracking-wider uppercase placeholder:normal-case')}
+                  />
+                </div>
+                {lookup.fieldErrors?.code && (
+                  <p id="code-error" className="text-sm text-shuttle-deep">
+                    {lookup.fieldErrors.code}
+                  </p>
+                )}
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="phone" className="text-sm font-medium">
+                  Số điện thoại đã đặt
+                </label>
+                <div className="relative">
+                  <FieldIcon>
+                    <Smartphone className="size-5" aria-hidden />
+                  </FieldIcon>
+                  <input
+                    ref={phoneRef}
+                    id="phone"
+                    name="phone"
+                    type="tel"
+                    inputMode="tel"
+                    autoComplete="tel"
+                    placeholder="09xx xxx xxx"
+                    autoFocus={defaultCode.length > 0}
+                    aria-invalid={Boolean(lookup.fieldErrors?.phone)}
+                    aria-describedby={lookup.fieldErrors?.phone ? 'phone-error' : undefined}
+                    className={cn(inputClass, 'text-[1.05rem] tabular')}
+                  />
+                </div>
+                {lookup.fieldErrors?.phone && (
+                  <p id="phone-error" className="text-sm text-shuttle-deep">
+                    {lookup.fieldErrors.phone}
+                  </p>
+                )}
+              </div>
+              {lookup.status === 'error' && !lookup.fieldErrors && (
+                <p role="alert" className="rounded-control border-l-4 border-shuttle bg-shuttle-soft px-3 py-2.5 text-sm text-shuttle-deep">
+                  {lookup.message}
+                </p>
+              )}
+              <button type="submit" disabled={looking} className={buttonClass('brand', 'lg', 'mt-1 w-full')}>
+                <Search className="size-5" aria-hidden />
+                {looking ? 'Đang tìm đơn…' : 'Tra cứu đơn'}
+              </button>
+              <p className="flex items-start gap-2 text-xs leading-relaxed text-muted">
+                <Info className="mt-px size-4 shrink-0" aria-hidden />
+                Quên mã? Chuyển sang tab Số điện thoại để xem các đơn đã đặt bằng số của bạn.
+              </p>
+            </form>
+          </div>
         </div>
       </section>
 
@@ -208,8 +338,27 @@ export function LookupPanel({ defaultCode, hotline, intro }: LookupPanelProps) {
               cancelError={sameBooking && cancel.status === 'error' ? (cancel.message ?? null) : null}
               cancelled={sameBooking && cancel.status === 'success'}
               onLookupAnother={lookupAnother}
+              extraAction={
+                phoneSearch.items && listAt > 0 ? (
+                  <button type="button" onClick={backToList} className={buttonClass('outline', 'md')}>
+                    <ArrowLeft className="size-4" aria-hidden />
+                    Các đơn của số này
+                  </button>
+                ) : undefined
+              }
             />
           </section>
+        ) : showList && phoneSearch.phone ? (
+          <PhoneBookingList
+            phone={phoneSearch.phone}
+            items={phoneSearch.items ?? []}
+            memberBookings={phoneSearch.memberBookings ?? 0}
+            hotline={hotline}
+            revealAction={revealAction}
+            reveal={reveal}
+            revealing={revealing}
+            onSearchAnother={searchAnotherPhone}
+          />
         ) : (
           <div className="flex flex-col gap-10">
             <RecentBookings onOpen={openRecent} />

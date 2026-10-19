@@ -19,8 +19,17 @@ export const metadata: Metadata = { title: 'Tổng quan' };
 const ACTIVE = new Set(['held', 'confirmed', 'checked_in']);
 
 export default async function AccountPage({ searchParams }: { searchParams: Promise<{ welcome?: string; password?: string }> }) {
-  const [profile, params] = await Promise.all([requireMember(), searchParams]);
-  const [bookings, points] = await Promise.all([listMyBookings(), listMyPoints(profile.user_id, 8)]);
+  // Một lượt song song: hồ sơ + đơn + điểm (RLS giới hạn theo tài khoản đang đăng nhập).
+  const profilePromise = requireMember();
+  const [profile, params, bookings, points] = await Promise.all([
+    profilePromise,
+    searchParams,
+    listMyBookings(),
+    listMyPoints(
+      profilePromise.then((p) => p.user_id),
+      8,
+    ),
+  ]);
   const now = requestNow();
   const upcoming = bookings
     .filter((b) => ACTIVE.has(b.status) && new Date(b.ends_at).getTime() > now)

@@ -2142,6 +2142,15 @@ export type Database = {
       }
     }
     Functions: {
+      reveal_guest_booking: {
+        Args: {
+          p_booking_id: string
+          p_client?: string
+          p_name: string
+          p_phone: string
+        }
+        Returns: Json
+      }
       service_register_member: {
         Args: {
           p_user_id: string
@@ -2420,6 +2429,13 @@ export type Database = {
       lookup_guest_booking: {
         Args: {
           p_code: string
+          p_phone: string
+        }
+        Returns: Json
+      }
+      lookup_guest_bookings_by_phone: {
+        Args: {
+          p_client?: string
           p_phone: string
         }
         Returns: Json

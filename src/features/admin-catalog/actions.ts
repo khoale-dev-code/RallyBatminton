@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 
+import { invalidatePublic } from '@/lib/public-cache';
 import { requireBranchPermission, requireOwner } from '@/lib/auth/guards';
 import { errorCode, toUserMessage } from '@/lib/errors';
 import { formDbError, formError, formSuccess, formZodError, type FormState } from '@/lib/form-state';
@@ -24,10 +25,12 @@ function revalidateCatalog(productId?: string) {
   revalidatePath('/products');
   revalidatePath('/rentals');
   revalidatePath('/admin/catalog');
+  invalidatePublic('catalog');
   if (productId) {
     revalidatePath(`/admin/catalog/${productId}`);
     revalidatePath(`/products/${productId}`);
     revalidatePath(`/rentals/${productId}`);
+    invalidatePublic('catalog');
   }
 }
 
@@ -56,6 +59,7 @@ export async function createProductFullAction(input: ProductPayload): Promise<Ed
   }
   revalidateCatalog(data);
   revalidatePath('/admin/inventory');
+  invalidatePublic('catalog');
   return { ok: true, id: data };
 }
 
@@ -76,6 +80,7 @@ export async function updateProductFullAction(productId: string, input: ProductP
   }
   revalidateCatalog(productId);
   revalidatePath('/admin/inventory');
+  invalidatePublic('catalog');
   return { ok: true, id: productId };
 }
 
@@ -202,6 +207,7 @@ export async function updateRentalRateAction(rateId: string, productId: string, 
   if (error) return formDbError(error);
   revalidateCatalog(productId);
   revalidatePath('/admin/rentals');
+  invalidatePublic('catalog');
   return formSuccess('Đã lưu gói giá thuê.');
 }
 
@@ -267,6 +273,7 @@ export async function setBranchListingAction(productId: string, _prev: FormState
   if (error) return formDbError(error);
   revalidateCatalog(productId);
   revalidatePath('/admin/inventory');
+  invalidatePublic('catalog');
   return formSuccess('Đã lưu cài đặt chi nhánh.');
 }
 
@@ -290,6 +297,7 @@ export async function createCategoryAction(_prev: FormState, formData: FormData)
     .insert({ name: v.name, slug: slugify(v.slug ?? v.name), sort_order: v.sort_order });
   if (error) return formDbError(error);
   revalidatePath('/admin/catalog/categories');
+  invalidatePublic('catalog');
   revalidateCatalog();
   return formSuccess('Đã thêm nhóm hàng.');
 }
@@ -306,6 +314,7 @@ export async function updateCategoryAction(categoryId: string, _prev: FormState,
     .eq('id', categoryId);
   if (error) return formDbError(error);
   revalidatePath('/admin/catalog/categories');
+  invalidatePublic('catalog');
   revalidateCatalog();
   return formSuccess('Đã lưu nhóm hàng.');
 }

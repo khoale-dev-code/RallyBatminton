@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 
+import { invalidatePublic } from '@/lib/public-cache';
 import { requireOwner } from '@/lib/auth/guards';
 import { formDbError, formSuccess, formZodError, type FormState } from '@/lib/form-state';
 import { createClient } from '@/lib/supabase/server';
@@ -46,6 +47,7 @@ export async function updateBrandAction(_prev: FormState, formData: FormData): P
     .eq('id', true);
   if (error) return formDbError(error);
   revalidatePath('/', 'layout');
+  invalidatePublic('brand');
   return formSuccess('Đã lưu thông tin thương hiệu.');
 }
 
@@ -77,5 +79,6 @@ export async function updateTaxSettingsAction(_prev: FormState, formData: FormDa
     .eq('id', true);
   if (error) return formDbError(error);
   revalidatePath('/admin', 'layout');
+  invalidatePublic('brand');
   return formSuccess('Đã lưu cài đặt thuế. Đơn bán mới sẽ tính theo cài đặt này; đơn cũ giữ nguyên.');
 }

@@ -3,51 +3,52 @@ import 'server-only';
 import { createClient } from '@/lib/supabase/server';
 import { addDays, parseTstzRange, zonedToUtc } from '@/lib/time';
 
+/** Tổng đã trả / còn nợ — cùng công thức với view booking_balances. */
+function settle(total: number, payments: { amount: number; kind: string; status: string }[]) {
+  let paid = 0;
+  let refunded = 0;
+  for (const p of payments) {
+    if (p.status !== 'succeeded') continue;
+    if (p.kind === 'charge') paid += p.amount;
+    else if (p.kind === 'refund') refunded += p.amount;
+  }
+  return { paid, balance: total - paid + refunded };
+}
+
+/**
+ * Lịch một ngày của chi nhánh — gọi song song 1 lượt (chi nhánh, sân, đơn kèm thanh toán).
+ * Chưa biết múi giờ chi nhánh khi gọi nên lấy rộng ±1 ngày UTC rồi lọc đúng ngày sau.
+ */
 export async function getBookingDay(branchId: string, dateKey: string) {
   const supabase = await createClient();
-  const { data: branch } = await supabase
-    .from('branches')
-    .select('id, name, timezone, opens_at, closes_at, slot_minutes')
-    .eq('id', branchId)
-    .maybeSingle();
-  if (!branch) return null;
-  const from = zonedToUtc(dateKey, '00:00', branch.timezone).toISOString();
-  const to = zonedToUtc(addDays(dateKey, 1), '00:00', branch.timezone).toISOString();
-  const [{ data: courts }, { data: bookings }] = await Promise.all([
+  const wideFrom = `${addDays(dateKey, -1)}T00:00:00Z`;
+  const wideTo = `${addDays(dateKey, 2)}T00:00:00Z`;
+  const [{ data: branch }, { data: courts }, { data: bookings }] = await Promise.all([
+    supabase.from('branches').select('id, name, timezone, opens_at, closes_at, slot_minutes').eq('id', branchId).maybeSingle(),
     supabase.from('courts').select('id, name, status').eq('branch_id', branchId).neq('status', 'retired').order('sort_order').order('name'),
     supabase
       .from('bookings')
       .select(
-        'id, code, status, kind, source, court_id, during, contact_name, total_amount, deposit_amount, hold_expires_at, internal_note, customers(phone)',
+        'id, code, status, kind, source, court_id, during, contact_name, total_amount, deposit_amount, hold_expires_at, internal_note, customers(phone), payments(amount, kind, status)',
       )
       .eq('branch_id', branchId)
-      .overlaps('during', `[${from},${to})`)
+      .overlaps('during', `[${wideFrom},${wideTo})`)
       .is('deleted_at', null)
       .order('during'),
   ]);
-  const ids = (bookings ?? []).map((b) => b.id);
-  const { data: balances } = ids.length
-    ? await supabase.from('booking_balances').select('booking_id, paid_amount, balance_due').in('booking_id', ids)
-    : { data: [] };
-  const balanceById = new Map((balances ?? []).map((b) => [b.booking_id, b]));
+  if (!branch) return null;
+  const from = zonedToUtc(dateKey, '00:00', branch.timezone).getTime();
+  const to = zonedToUtc(addDays(dateKey, 1), '00:00', branch.timezone).getTime();
 
   return {
     branch,
     courts: courts ?? [],
-    bookings: (bookings ?? []).flatMap((b) => {
+    bookings: (bookings ?? []).flatMap(({ payments, ...b }) => {
       const range = parseTstzRange(b.during);
-      if (!range) return [];
-      const bal = balanceById.get(b.id);
-      return [
-        {
-          ...b,
-          start: range.start,
-          end: range.end,
-          paid: bal?.paid_amount ?? 0,
-          balance: bal?.balance_due ?? b.total_amount ?? 0,
-          total: b.total_amount ?? 0,
-        },
-      ];
+      if (!range || range.start.getTime() >= to || range.end.getTime() <= from) return [];
+      const total = b.total_amount ?? 0;
+      const { paid, balance } = settle(total, payments);
+      return [{ ...b, start: range.start, end: range.end, paid, balance, total }];
     }),
   };
 }

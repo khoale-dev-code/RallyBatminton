@@ -1,14 +1,25 @@
 'use server';
 
+import { createHash } from 'node:crypto';
+
+import { headers } from 'next/headers';
 import { z } from 'zod';
 
 import { getAuthUserId } from '@/lib/auth/context';
 import { errorCode, toUserMessage } from '@/lib/errors';
 import { formError, formSuccess, formZodError, type FormState } from '@/lib/form-state';
 import { createSecretClient } from '@/lib/supabase/secret';
-import { zText, zVnPhone } from '@/lib/validation';
+import { zText, zUuid, zVnPhone } from '@/lib/validation';
 
-import { bookingSummarySchema, guestHoldSchema, type BookingSummary, type GuestHoldInput, type GuestHoldResult } from './schemas';
+import {
+  bookingSummarySchema,
+  guestHoldSchema,
+  phoneLookupSchema,
+  type BookingSummary,
+  type GuestHoldInput,
+  type GuestHoldResult,
+  type PhoneBooking,
+} from './schemas';
 import { verifyTurnstile } from './turnstile';
 
 /** Khách giữ sân không cần đăng nhập. Mọi kiểm tra cuối cùng (trùng giờ, giá, giới hạn) nằm trong database. */
@@ -93,4 +104,68 @@ export async function cancelGuestBookingAction(_prev: LookupState, formData: For
   const booking = bookingSummarySchema.safeParse(data);
   if (!booking.success) return formError('Đã hủy đơn, nhưng không đọc được thông tin cập nhật.');
   return { ...formSuccess('Đã hủy đơn.'), booking: booking.data, phone: parsed.data.phone };
+}
+
+// ---- Khách vãng lai quên mã: tra bằng số điện thoại ------------------------------------------
+
+/** Dấu vết thiết bị để giới hạn số lần thử (băm IP, không lưu IP thật). */
+async function clientKey(): Promise<string | undefined> {
+  const h = await headers();
+  const ip = h.get('cf-connecting-ip') ?? h.get('x-real-ip') ?? h.get('x-forwarded-for')?.split(',')[0]?.trim();
+  if (!ip) return undefined;
+  return createHash('sha256').update(`rally-lookup:${ip}`).digest('hex').slice(0, 40);
+}
+
+const phoneOnlySchema = z.object({ phone: zVnPhone(), turnstileToken: z.string().min(1, 'Vui lòng hoàn tất bước xác minh') });
+
+export interface PhoneLookupState extends FormState {
+  phone?: string;
+  items?: PhoneBooking[];
+  memberBookings?: number;
+}
+
+/** Bước 1: danh sách đơn của số điện thoại (chỉ xem — mã che bớt, chỉ hiện tên gọi). */
+export async function lookupByPhoneAction(_prev: PhoneLookupState, formData: FormData): Promise<PhoneLookupState> {
+  const parsed = phoneOnlySchema.safeParse({ phone: formData.get('phone'), turnstileToken: formData.get('turnstileToken') });
+  if (!parsed.success) return formZodError(parsed.error);
+  if (!(await verifyTurnstile(parsed.data.turnstileToken))) {
+    return formError('Xác minh chống spam không thành công. Vui lòng thử lại.', { turnstileToken: 'Hãy xác minh lại' });
+  }
+  const { data, error } = await createSecretClient().rpc('lookup_guest_bookings_by_phone', {
+    p_phone: parsed.data.phone,
+    p_client: await clientKey(),
+  });
+  if (error) return formError(toUserMessage(error));
+  const result = phoneLookupSchema.safeParse(data);
+  if (!result.success) return formError('Không đọc được danh sách đơn.');
+  return { ...formSuccess(''), phone: parsed.data.phone, items: result.data.items, memberBookings: result.data.member_bookings };
+}
+
+const revealSchema = z.object({
+  bookingId: zUuid('đơn'),
+  phone: zVnPhone(),
+  name: zText('họ tên người đặt', 2, 80).transform((v) => v.normalize('NFC')),
+});
+
+export interface RevealState extends LookupState {
+  bookingId?: string;
+}
+
+/** Bước 2: nhập đúng họ tên đã dùng khi đặt → mở đủ thông tin đơn (mã đầy đủ, hủy đơn). */
+export async function revealGuestBookingAction(_prev: RevealState, formData: FormData): Promise<RevealState> {
+  const bookingId = String(formData.get('bookingId') ?? '');
+  const parsed = revealSchema.safeParse({ bookingId, phone: formData.get('phone'), name: formData.get('name') });
+  if (!parsed.success) return { ...formZodError(parsed.error), bookingId };
+  const { data, error } = await createSecretClient().rpc('reveal_guest_booking', {
+    p_booking_id: parsed.data.bookingId,
+    p_phone: parsed.data.phone,
+    p_name: parsed.data.name,
+    p_client: await clientKey(),
+  });
+  if (error) return { ...formError(toUserMessage(error)), bookingId };
+  const mismatch = z.object({ error: z.string() }).safeParse(data);
+  if (mismatch.success) return { ...formError(toUserMessage({ message: mismatch.data.error }), { name: 'Họ tên chưa khớp' }), bookingId };
+  const booking = bookingSummarySchema.safeParse(data);
+  if (!booking.success) return { ...formError('Không đọc được thông tin đơn.'), bookingId };
+  return { ...formSuccess(''), booking: booking.data, phone: parsed.data.phone, bookingId };
 }

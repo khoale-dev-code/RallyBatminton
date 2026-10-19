@@ -118,6 +118,19 @@ with checks as (
          and exists (select 1 from pg_constraint where conname = 'branches_map_embed_fmt'),
          'branches.map_embed_url + ràng buộc chỉ nhận link nhúng Google Maps'
   union all
+  select 20, 'Đã chạy 13_performance.sql (chỉ mục tăng tốc)',
+         exists (select 1 from pg_extension where extname = 'pg_trgm')
+         and exists (select 1 from pg_indexes where schemaname = 'public' and indexname = 'customers_phone_trgm_idx')
+         and exists (select 1 from pg_indexes where schemaname = 'public' and indexname = 'audit_events_time_idx'),
+         'pg_trgm + chỉ mục tìm kiếm khách/thành viên/sản phẩm, nhật ký, bảng lương'
+  union all
+  select 21, 'Đã chạy 14_guest_phone_lookup.sql (tra cứu đơn bằng số điện thoại)',
+         to_regprocedure('public.lookup_guest_bookings_by_phone(text,text)') is not null
+         and to_regprocedure('public.reveal_guest_booking(uuid,text,text,text)') is not null
+         and not has_function_privilege('anon', 'public.lookup_guest_bookings_by_phone(text,text)', 'execute')
+         and not has_function_privilege('anon', 'public.reveal_guest_booking(uuid,text,text,text)', 'execute'),
+         'RPC tra theo SĐT + xác nhận họ tên; chỉ máy chủ gọi được'
+  union all
   select 12, 'pg_cron (tùy chọn)',
          true,
          case when exists (select 1 from pg_extension where extname = 'pg_cron')

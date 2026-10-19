@@ -7,16 +7,16 @@ import { formatPhone } from '@/lib/format';
 
 const TIPS = [
   {
-    icon: Ticket,
+    icon: Smartphone,
     tone: 'bg-court text-ink',
-    title: 'Mã đơn ở đâu?',
-    text: 'Mã dạng RB-XXXXXXXX hiện ngay khi giữ sân thành công và được lưu sẵn trên thiết bị bạn đã đặt. Thành viên xem mọi đơn trong tài khoản.',
+    title: 'Quên mã đơn?',
+    text: 'Chọn tab Số điện thoại: xem các sân đã đặt hôm nay, sắp tới và lịch sử bằng đúng số đã dùng khi đặt.',
   },
   {
-    icon: Smartphone,
+    icon: Ticket,
     tone: 'bg-ink text-paper',
-    title: 'Đúng số điện thoại đã đặt',
-    text: 'Đơn chỉ hiện khi khớp cả mã đơn và số điện thoại, nên thông tin của bạn luôn được giữ kín.',
+    title: 'Thông tin được giữ kín',
+    text: 'Tìm bằng số điện thoại chỉ thấy mã đơn che bớt. Muốn xem đầy đủ hoặc hủy đơn, nhập họ tên người đặt (hoặc mã đơn RB-…).',
   },
   {
     icon: RotateCcw,

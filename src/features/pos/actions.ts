@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 
+import { invalidatePublic } from '@/lib/public-cache';
 import { requireBranchPermission } from '@/lib/auth/guards';
 import { isOwner } from '@/lib/auth/permissions';
 import { errorCode, toUserMessage } from '@/lib/errors';
@@ -56,5 +57,6 @@ export async function recordSaleAction(input: SaleInput): Promise<SaleResult> {
   revalidatePath('/admin/sales');
   revalidatePath('/admin/inventory');
   revalidatePath('/admin');
+  invalidatePublic('catalog');
   return { ok: true, saleId: res.data.sale_id, code: res.data.code, total: res.data.total_amount, replayed: res.data.replayed ?? false };
 }

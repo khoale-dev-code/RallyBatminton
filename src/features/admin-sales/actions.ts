@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 
+import { invalidatePublic } from '@/lib/public-cache';
 import { requireOwner } from '@/lib/auth/guards';
 import { formDbError, formSuccess, formZodError, type FormState } from '@/lib/form-state';
 import { createClient } from '@/lib/supabase/server';
@@ -19,5 +20,6 @@ export async function voidSaleAction(saleId: string, _prev: FormState, formData:
   revalidatePath(`/admin/sales/${saleId}`);
   revalidatePath('/admin/sales');
   revalidatePath('/admin/inventory');
+  invalidatePublic('catalog');
   return formSuccess('Đã hủy đơn và hoàn hàng về kho.');
 }

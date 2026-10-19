@@ -5,8 +5,9 @@ import '@fontsource/be-vietnam-pro/600.css';
 import './globals.css';
 
 import { type Metadata, type Viewport } from 'next';
-import { type ReactNode } from 'react';
+import { Suspense, type ReactNode } from 'react';
 
+import { NavProgress } from '@/components/layout/nav-progress';
 import { publicEnv } from '@/lib/env';
 
 export const metadata: Metadata = {
@@ -25,7 +26,12 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="vi">
-      <body className="min-h-dvh">{children}</body>
+      <body className="min-h-dvh">
+        <Suspense fallback={null}>
+          <NavProgress />
+        </Suspense>
+        {children}
+      </body>
     </html>
   );
 }

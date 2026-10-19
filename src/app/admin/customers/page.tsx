@@ -1,3 +1,4 @@
+import Form from 'next/form';
 import { Lock, Mail, Search, Smartphone } from 'lucide-react';
 import Link from 'next/link';
 
@@ -88,7 +89,7 @@ export default async function CustomersPage({ searchParams }: { searchParams: Pr
         </div>
       )}
 
-      <form action="/admin/customers" className="mb-4 flex flex-col gap-2 sm:flex-row">
+      <Form action="/admin/customers" className="mb-4 flex flex-col gap-2 sm:flex-row">
         {tab === 'members' && <input type="hidden" name="tab" value="members" />}
         {tab === 'members' && filter !== 'all' && <input type="hidden" name="filter" value={filter} />}
         <label htmlFor="q" className="sr-only">
@@ -107,7 +108,7 @@ export default async function CustomersPage({ searchParams }: { searchParams: Pr
         <button type="submit" className={buttonClass('primary')}>
           Tìm
         </button>
-      </form>
+      </Form>
 
       {tab === 'members' && (
         <div className="scrollbar-none mb-4 flex gap-1.5 overflow-x-auto">

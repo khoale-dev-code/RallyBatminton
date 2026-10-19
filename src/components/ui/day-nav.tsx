@@ -1,3 +1,4 @@
+import Form from 'next/form';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { type ReactNode } from 'react';
@@ -49,7 +50,7 @@ export function DayNav({ basePath, dateKey }: { basePath: string; dateKey: strin
       currentHref={basePath}
       currentLabel="Hôm nay"
     >
-      <form action={basePath} className="flex min-w-0 flex-1 items-center gap-2 sm:flex-none">
+      <Form action={basePath} className="flex min-w-0 flex-1 items-center gap-2 sm:flex-none">
         <label htmlFor="day-nav-date" className="sr-only">
           Chọn ngày
         </label>
@@ -63,7 +64,7 @@ export function DayNav({ basePath, dateKey }: { basePath: string; dateKey: strin
         <button type="submit" className={buttonClass('ghost', 'md', 'min-h-11')}>
           Xem
         </button>
-      </form>
+      </Form>
     </PeriodNav>
   );
 }

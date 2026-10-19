@@ -5,11 +5,15 @@ import { SetupNotice } from '@/components/layout/setup-notice';
 import { PageHeader } from '@/components/ui/primitives';
 import { getBrandInfo } from '@/features/brand/queries';
 import { LookupPanel } from '@/features/booking/components/lookup-panel';
-import { isSupabaseConfigured } from '@/lib/env';
+import { isSupabaseConfigured, publicEnv } from '@/lib/env';
 
 export const metadata: Metadata = { title: 'Tra cứu đơn', robots: { index: false } };
 
-const PERKS = ['Xem trạng thái đơn và giờ chơi', 'Theo dõi tiền đã thanh toán, tiền cọc', 'Tự hủy đơn trước giờ bắt đầu'];
+const PERKS = [
+  'Quên mã? Tìm bằng số điện thoại đã đặt',
+  'Xem sân đặt hôm nay, sắp tới và lịch sử',
+  'Theo dõi thanh toán, tự hủy trước giờ chơi',
+];
 
 function LookupIntro() {
   return (
@@ -24,7 +28,7 @@ function LookupIntro() {
         <span className="text-court">đơn đặt sân</span>
       </h1>
       <p className="max-w-md text-[0.95rem] text-paper/75 sm:text-lg">
-        Chỉ cần mã đơn và số điện thoại bạn đã dùng khi đặt — xem ngay sân, giờ chơi và tình trạng thanh toán.
+        Đặt sân không cần tài khoản? Chỉ cần số điện thoại bạn đã dùng khi đặt — xem ngay sân, giờ chơi và tình trạng thanh toán.
       </p>
       <ul className="flex flex-col gap-2.5 text-sm text-paper/85 sm:text-[0.95rem]">
         {PERKS.map((perk) => (
@@ -45,12 +49,19 @@ export default async function LookupPage({ searchParams }: { searchParams: Promi
       <div className="py-10">
         <PageHeader
           title="Tra cứu đơn đặt sân"
-          description="Nhập mã đơn và số điện thoại đã dùng khi đặt để xem trạng thái hoặc hủy đơn."
+          description="Nhập số điện thoại (hoặc mã đơn) đã dùng khi đặt để xem trạng thái hoặc hủy đơn."
         />
         <SetupNotice />
       </div>
     );
   }
   const brand = await getBrandInfo();
-  return <LookupPanel defaultCode={typeof code === 'string' ? code.slice(0, 20) : ''} hotline={brand.hotline} intro={<LookupIntro />} />;
+  return (
+    <LookupPanel
+      defaultCode={typeof code === 'string' ? code.slice(0, 20) : ''}
+      hotline={brand.hotline}
+      intro={<LookupIntro />}
+      turnstileSiteKey={publicEnv.turnstileSiteKey}
+    />
+  );
 }

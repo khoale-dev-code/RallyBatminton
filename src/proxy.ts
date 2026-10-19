@@ -34,8 +34,10 @@ export async function proxy(request: NextRequest) {
     },
   });
 
-  const { data } = await supabase.auth.getClaims();
-  const isSignedIn = Boolean(data?.claims?.sub);
+  // getSession chỉ đọc cookie (gọi mạng khi cần làm mới token hết hạn) — nhanh hơn getClaims/getUser.
+  // Đây chỉ là kiểm tra lạc quan để chuyển hướng; quyền thật do database xác minh JWT ở từng truy vấn.
+  const { data } = await supabase.auth.getSession();
+  const isSignedIn = data.session !== null;
   const { pathname, search } = request.nextUrl;
 
   const loginPath = matches(pathname, STAFF_PREFIXES) ? '/admin-login' : matches(pathname, MEMBER_PREFIXES) ? '/login' : null;

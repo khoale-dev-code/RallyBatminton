@@ -5,6 +5,7 @@ import { cache } from 'react';
 import { z } from 'zod';
 
 import { isSupabaseConfigured } from '@/lib/env';
+import { hasSessionCookie } from '@/lib/auth/session-cookie';
 import { createClient } from '@/lib/supabase/server';
 
 import { ALL_PERMISSIONS, branchesWith, type AppPermission, type StaffBranch, type StaffContext } from './permissions';
@@ -40,8 +41,9 @@ export const getAuthUserId = cache(async (): Promise<string | null> => {
  * null = chưa đăng nhập hoặc không phải tài khoản nhân sự.
  */
 export const getStaffContext = cache(async (): Promise<StaffContext | null> => {
-  const userId = await getAuthUserId();
-  if (!userId) return null;
+  // Không gọi getClaims trước (tốn thêm 1 lượt mạng): RPC chạy bằng JWT trong cookie, PostgREST tự
+  // xác minh chữ ký + hạn; JWT sai/hết hạn → lỗi → null. Proxy đã làm mới phiên trước khi render.
+  if (!isSupabaseConfigured() || !(await hasSessionCookie())) return null;
   const supabase = await createClient();
   const { data, error } = await supabase.rpc('my_staff_context');
   if (error || data === null) return null;

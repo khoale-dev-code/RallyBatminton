@@ -25,6 +25,29 @@ export const bookingSummarySchema = z.object({
 
 export type BookingSummary = z.infer<typeof bookingSummarySchema>;
 
+/** Một đơn trong danh sách tra cứu bằng số điện thoại (mã che bớt, chỉ tên gọi). */
+export const phoneBookingSchema = z.object({
+  booking_id: z.string(),
+  code_masked: z.string(),
+  status: z.string(),
+  starts_at: z.string(),
+  ends_at: z.string(),
+  branch_name: z.string(),
+  branch_address: z.string().nullable(),
+  court_name: z.string(),
+  total_amount: z.number(),
+  paid_amount: z.number(),
+  name_hint: z.string().nullable(),
+  created_at: z.string(),
+});
+
+export type PhoneBooking = z.infer<typeof phoneBookingSchema>;
+
+export const phoneLookupSchema = z.object({
+  items: z.array(phoneBookingSchema),
+  member_bookings: z.number(),
+});
+
 export const guestHoldSchema = z.object({
   courtId: zUuid('sân'),
   startsAt: z.iso.datetime({ offset: true }),
