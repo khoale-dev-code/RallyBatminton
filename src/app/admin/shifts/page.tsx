@@ -27,7 +27,7 @@ export default async function ShiftsPage({ searchParams }: { searchParams: Promi
   const weekStart = startOfIsoWeek(week && isDateKey(week) ? week : today);
   const [{ branch: info, shifts }, employees] = await Promise.all([
     canBranch && branch
-      ? getWeekShifts(branch.branchId, weekStart)
+      ? getWeekShifts(branch.branchId, weekStart, { colleagues: !owner })
       : getMyWeekShifts(ctx.employeeId ?? '', weekStart).then((rows) => ({ branch: null, shifts: rows })),
     owner ? listSchedulableEmployees() : Promise.resolve([]),
   ]);

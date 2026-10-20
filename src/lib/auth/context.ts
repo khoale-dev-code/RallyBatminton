@@ -8,6 +8,7 @@ import { isSupabaseConfigured } from '@/lib/env';
 import { hasSessionCookie } from '@/lib/auth/session-cookie';
 import { createClient } from '@/lib/supabase/server';
 
+import { readCachedContext, tokenCacheKey, writeCachedContext } from './context-cache';
 import { ALL_PERMISSIONS, branchesWith, type AppPermission, type StaffBranch, type StaffContext } from './permissions';
 
 const contextSchema = z.object({
@@ -36,18 +37,9 @@ export const getAuthUserId = cache(async (): Promise<string | null> => {
   return typeof sub === 'string' ? sub : null;
 });
 
-/**
- * Vai trò + quyền HIỆU LỰC theo chi nhánh, tính bởi database (cùng hàm RLS dùng).
- * null = chưa đăng nhập hoặc không phải tài khoản nhân sự.
- */
-export const getStaffContext = cache(async (): Promise<StaffContext | null> => {
-  // Không gọi getClaims trước (tốn thêm 1 lượt mạng): RPC chạy bằng JWT trong cookie, PostgREST tự
-  // xác minh chữ ký + hạn; JWT sai/hết hạn → lỗi → null. Proxy đã làm mới phiên trước khi render.
-  if (!isSupabaseConfigured() || !(await hasSessionCookie())) return null;
-  const supabase = await createClient();
-  const { data, error } = await supabase.rpc('my_staff_context');
-  if (error || data === null) return null;
-  const parsed = contextSchema.safeParse(data);
+/** Kết quả RPC `my_staff_context` → StaffContext (null nếu sai dạng). */
+export function parseStaffContext(raw: unknown): StaffContext | null {
+  const parsed = contextSchema.safeParse(raw);
   if (!parsed.success) return null;
   const c = parsed.data;
   return {
@@ -64,6 +56,36 @@ export const getStaffContext = cache(async (): Promise<StaffContext | null> => {
       permissions: b.permissions,
     })),
   };
+}
+
+/** Ghi nhớ quyền vừa đọc được bằng token này (xem context-cache.ts). */
+export function rememberStaffContext(session: { access_token: string; expires_at?: number } | null, ctx: StaffContext): void {
+  if (!session?.access_token || !session.expires_at) return;
+  writeCachedContext(tokenCacheKey(session.access_token), ctx, session.expires_at * 1000);
+}
+
+/**
+ * Vai trò + quyền HIỆU LỰC theo chi nhánh, tính bởi database (cùng hàm RLS dùng).
+ * null = chưa đăng nhập hoặc không phải tài khoản nhân sự.
+ *
+ * Nhanh: token đã được database xác minh trong 60 giây gần đây → dùng lại kết quả (không tốn lượt mạng).
+ */
+export const getStaffContext = cache(async (): Promise<StaffContext | null> => {
+  // Không gọi getClaims trước (tốn thêm 1 lượt mạng): RPC chạy bằng JWT trong cookie, PostgREST tự
+  // xác minh chữ ký + hạn; JWT sai/hết hạn → lỗi → null. Proxy đã làm mới phiên trước khi render.
+  if (!isSupabaseConfigured() || !(await hasSessionCookie())) return null;
+  const supabase = await createClient();
+  // getSession chỉ đọc cookie (không gọi mạng khi token còn hạn) — dùng token làm khóa bộ nhớ đệm, KHÔNG dùng để tin.
+  const { data: auth } = await supabase.auth.getSession();
+  const session = auth.session;
+  const key = session?.access_token ? tokenCacheKey(session.access_token) : null;
+  const hit = key ? readCachedContext(key) : null;
+  if (hit) return hit;
+  const { data, error } = await supabase.rpc('my_staff_context');
+  if (error || data === null) return null;
+  const ctx = parseStaffContext(data);
+  if (ctx) rememberStaffContext(session, ctx);
+  return ctx;
 });
 
 export const ACTIVE_BRANCH_COOKIE = 'rally_branch';

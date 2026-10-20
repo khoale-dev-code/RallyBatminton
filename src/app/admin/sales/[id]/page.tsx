@@ -5,7 +5,7 @@ import { ActionForm, SubmitButton, TextField } from '@/components/ui/form';
 import { Badge, DescriptionList, Disclosure, PageHeader, Panel } from '@/components/ui/primitives';
 import { voidSaleAction } from '@/features/admin-sales/actions';
 import { getSale } from '@/features/admin-sales/queries';
-import { requireBranchPermission } from '@/lib/auth/guards';
+import { requireBranchPermission, withGuard } from '@/lib/auth/guards';
 import { isOwner } from '@/lib/auth/permissions';
 import { formatDateTime, formatPhone, formatVnd } from '@/lib/format';
 import { isUuid } from '@/lib/ids';
@@ -13,10 +13,9 @@ import { PAYMENT_METHOD, PAYMENT_STATUS } from '@/lib/labels';
 import { formatPercent } from '@/lib/tax';
 
 export default async function SaleDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { ctx } = await requireBranchPermission('sale.record');
   const { id } = await params;
   if (!isUuid(id)) notFound();
-  const sale = await getSale(id);
+  const [{ ctx }, sale] = await withGuard(requireBranchPermission('sale.record'), () => getSale(id));
   if (!sale) notFound();
   const tz = sale.branches?.timezone;
   // Thuế đã chụp vào từng dòng lúc bán; giảm giá trên đơn chia theo tỷ lệ.

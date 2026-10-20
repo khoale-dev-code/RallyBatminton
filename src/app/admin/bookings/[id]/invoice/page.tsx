@@ -6,7 +6,7 @@ import { buttonClass } from '@/components/ui/button';
 import { PrintButton } from '@/components/ui/print-button';
 import { getBookingDetail } from '@/features/admin-bookings/queries';
 import { getBrandInfo } from '@/features/brand/queries';
-import { requireStaff } from '@/lib/auth/guards';
+import { requireStaff, withGuard } from '@/lib/auth/guards';
 import { formatDate, formatDateTime, formatMinutes, formatPhone, formatTime, formatVnd } from '@/lib/format';
 import { isUuid } from '@/lib/ids';
 import { PAYMENT_METHOD } from '@/lib/labels';
@@ -26,10 +26,9 @@ function Line({ label, value, strong }: { label: string; value: string; strong?:
 
 /** Hóa đơn tiền sân khổ 80mm (in nhiệt) — nhân viên in sau khi thu tiền. RLS: chỉ người xem được đơn. */
 export default async function BookingInvoicePage({ params }: { params: Promise<{ id: string }> }) {
-  const ctx = await requireStaff();
   const { id } = await params;
   if (!isUuid(id)) notFound();
-  const [data, brand] = await Promise.all([getBookingDetail(id), getBrandInfo()]);
+  const [ctx, [data, brand]] = await withGuard(requireStaff(), () => Promise.all([getBookingDetail(id), getBrandInfo()]));
   if (!data) notFound();
   const { booking: b, range, payments, balance } = data;
   const tz = b.courts?.branches?.timezone ?? 'Asia/Ho_Chi_Minh';

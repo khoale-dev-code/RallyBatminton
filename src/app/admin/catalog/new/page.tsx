@@ -4,17 +4,18 @@ import { PageHeader } from '@/components/ui/primitives';
 import { ProductEditor } from '@/features/admin-catalog/components/editor/product-editor';
 import { newProductDraft } from '@/features/admin-catalog/lib/initial-draft';
 import { listCategoriesAdmin, listTagSuggestions } from '@/features/admin-catalog/queries';
-import { requireBranchPermission } from '@/lib/auth/guards';
+import { requireBranchPermission, withGuard } from '@/lib/auth/guards';
 import { branchesWith, isOwner } from '@/lib/auth/permissions';
 import { getBrandTax } from '@/features/brand/queries';
 
 export const metadata = { title: 'Thêm sản phẩm' };
 
 export default async function NewProductPage({ searchParams }: { searchParams: Promise<{ kind?: string; bundle?: string }> }) {
-  const { ctx } = await requireBranchPermission('catalog.edit');
   const sp = await searchParams;
   const kind = sp.kind === 'rental' ? 'rental' : 'sale';
-  const [categories, tagSuggestions, brandTax] = await Promise.all([listCategoriesAdmin(), listTagSuggestions(), getBrandTax()]);
+  const [{ ctx }, [categories, tagSuggestions, brandTax]] = await withGuard(requireBranchPermission('catalog.edit'), () =>
+    Promise.all([listCategoriesAdmin(), listTagSuggestions(), getBrandTax()]),
+  );
   // Chỉ bày bán được ở chi nhánh có quyền sửa danh mục; tồn đầu kỳ cần thêm quyền điều chỉnh kho (database cũng kiểm tra).
   const branches = branchesWith(ctx, 'catalog.edit').map((b) => ({
     id: b.branchId,

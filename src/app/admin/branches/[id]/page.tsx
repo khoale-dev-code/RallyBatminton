@@ -16,7 +16,7 @@ import {
 import { BranchTabs } from '@/features/admin-branches/components/branch-tabs';
 import { BankFields } from '@/features/payments/components/bank-fields';
 import { getBranchForEdit } from '@/features/admin-branches/queries';
-import { requireOwner } from '@/lib/auth/guards';
+import { requireOwner, withGuard } from '@/lib/auth/guards';
 import { BRANCH_STATUS } from '@/lib/labels';
 import { halfHourOptions } from '@/lib/options';
 import { shortTime } from '@/lib/time';
@@ -28,9 +28,8 @@ const PROBLEM_TEXT: Record<string, string> = {
 };
 
 export default async function BranchEditPage({ params }: { params: Promise<{ id: string }> }) {
-  await requireOwner();
   const { id } = await params;
-  const data = await getBranchForEdit(id);
+  const [, data] = await withGuard(requireOwner(), () => getBranchForEdit(id));
   if (!data) notFound();
   const { branch: b, amenities, selectedAmenities, publishProblems } = data;
   const status = BRANCH_STATUS[b.status];

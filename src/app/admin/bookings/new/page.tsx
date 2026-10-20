@@ -4,7 +4,7 @@ import { ActionForm, CheckboxField, SelectField, SubmitButton, TextField } from 
 import { PageHeader, Panel } from '@/components/ui/primitives';
 import { createCounterBookingAction, createCourtBlockAction } from '@/features/admin-bookings/actions';
 import { listCourtsForBranch } from '@/features/admin-bookings/queries';
-import { requireBranchPermission } from '@/lib/auth/guards';
+import { requireBranchData } from '@/lib/auth/guards';
 import { isOwner } from '@/lib/auth/permissions';
 import { newIdempotencyKey } from '@/lib/ids';
 import { halfHourOptions } from '@/lib/options';
@@ -19,9 +19,12 @@ interface SearchParams {
 }
 
 export default async function NewBookingPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
-  const { ctx, branch } = await requireBranchPermission('booking.operate');
   const sp = await searchParams;
-  const { branch: info, courts } = await listCourtsForBranch(branch.branchId);
+  const {
+    ctx,
+    branch,
+    data: { branch: info, courts },
+  } = await requireBranchData('booking.operate', listCourtsForBranch);
   const date = sp.date && isDateKey(sp.date) ? sp.date : todayKey(info?.timezone);
   const start = sp.start && /^\d{2}:\d{2}$/.test(sp.start) ? sp.start : undefined;
   const end = start ? minutesToTime(Math.min(timeToMinutes(start) + 60, 24 * 60)) : undefined;

@@ -6,10 +6,15 @@ import { addDays } from '@/lib/time';
 const WEEK_SHIFT_COLUMNS =
   'id, work_date, scheduled_start, scheduled_end, break_minutes, status, checked_in_at, checked_out_at, paid_minutes, employee_id, employees(id, code, full_name), shift_overtime(id, minutes, status)';
 
-export async function getWeekShifts(branchId: string, weekStart: string) {
+/**
+ * `colleagues`: người xem là nhân viên (không đọc được hồ sơ đồng nghiệp) → lấy tên + mã đồng nghiệp qua
+ * `shift_people` CÙNG LƯỢT với truy vấn ca (thay vì chờ ca về rồi mới hỏi — bớt 1 lượt mạng).
+ */
+export async function getWeekShifts(branchId: string, weekStart: string, options: { colleagues?: boolean } = {}) {
   const supabase = await createClient();
   const weekEnd = addDays(weekStart, 6);
-  const [{ data: branch }, { data: shifts, error }] = await Promise.all([
+  const peopleQuery = () => supabase.rpc('shift_people', { p_branch_id: branchId, p_from: weekStart, p_to: weekEnd });
+  const [{ data: branch }, { data: shifts, error }, early] = await Promise.all([
     supabase.from('branches').select('id, name, timezone').eq('id', branchId).maybeSingle(),
     supabase
       .from('shifts')
@@ -19,12 +24,13 @@ export async function getWeekShifts(branchId: string, weekStart: string) {
       .lte('work_date', weekEnd)
       .is('deleted_at', null)
       .order('scheduled_start'),
+    options.colleagues ? peopleQuery() : Promise.resolve(null),
   ]);
   if (error) throw error;
   const rows = shifts ?? [];
   // Nhân viên chỉ đọc được hồ sơ của chính mình: lấy tên đồng nghiệp qua hàm chỉ trả tên + mã.
   if (rows.some((s) => !s.employees)) {
-    const { data: people } = await supabase.rpc('shift_people', { p_branch_id: branchId, p_from: weekStart, p_to: weekEnd });
+    const { data: people } = early ?? (await peopleQuery());
     const byId = new Map((people ?? []).map((p) => [p.employee_id, { id: p.employee_id, code: p.code, full_name: p.full_name }]));
     return { branch, shifts: rows.map((s) => (s.employees ? s : { ...s, employees: byId.get(s.employee_id) ?? null })) };
   }
@@ -58,13 +64,9 @@ export async function listSchedulableEmployees() {
 
 export async function getShift(id: string) {
   const supabase = await createClient();
-  const { data } = await supabase
-    .from('shifts')
-    .select('*, employees(id, code, full_name), branches(id, name, timezone)')
-    .eq('id', id)
-    .maybeSingle();
-  if (!data) return null;
-  const [{ data: history }, { data: overtime }, { data: rates }, { data: closed }] = await Promise.all([
+  // Nhật ký + tăng ca chỉ cần id ca → chạy cùng lượt với truy vấn ca (bớt 1 lượt mạng).
+  const [{ data }, { data: history }, { data: overtime }] = await Promise.all([
+    supabase.from('shifts').select('*, employees(id, code, full_name), branches(id, name, timezone)').eq('id', id).maybeSingle(),
     supabase
       .from('audit_events')
       .select('id, occurred_at, reason, action, old_data, new_data')
@@ -77,6 +79,9 @@ export async function getShift(id: string) {
       .select('id, minutes, hourly_rate, reason, status, consent, requested_at, responded_at, response_note')
       .eq('shift_id', id)
       .order('requested_at', { ascending: false }),
+  ]);
+  if (!data) return null;
+  const [{ data: rates }, { data: closed }] = await Promise.all([
     supabase
       .from('employee_pay_rates')
       .select('pay_type, hourly_rate, daily_rate, standard_day_minutes, effective_from')

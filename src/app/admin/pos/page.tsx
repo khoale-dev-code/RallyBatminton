@@ -4,7 +4,7 @@ import { accountForBranch } from '@/features/payments/lib/transfer';
 import { getBankAccounts } from '@/features/payments/queries';
 import { PosTerminal } from '@/features/pos/components/pos-terminal';
 import { getPosCatalog } from '@/features/pos/queries';
-import { requireBranchPermission } from '@/lib/auth/guards';
+import { requireBranchData } from '@/lib/auth/guards';
 import { isOwner } from '@/lib/auth/permissions';
 import { describeDateKey } from '@/lib/format';
 import { todayKey } from '@/lib/time';
@@ -12,13 +12,22 @@ import { todayKey } from '@/lib/time';
 export const metadata = { title: 'Bán hàng' };
 
 export default async function PosPage() {
-  const { ctx, branch } = await requireBranchPermission('sale.record');
   const dateKey = todayKey();
-  const [brandTax, brand, catalog, today, accounts] = await Promise.all([
+  const [
+    {
+      ctx,
+      branch,
+      data: [catalog, today],
+    },
+    brandTax,
+    brand,
+    accounts,
+  ] = await Promise.all([
+    requireBranchData('sale.record', (branchId) =>
+      Promise.all([getPosCatalog(branchId, getBrandTax()), listSalesForDay(branchId, dateKey)]),
+    ),
     getBrandTax(),
     getBrandInfo(),
-    getBrandTax().then((t) => getPosCatalog(branch.branchId, t)),
-    listSalesForDay(branch.branchId, dateKey),
     getBankAccounts(),
   ]);
   const day = describeDateKey(dateKey);

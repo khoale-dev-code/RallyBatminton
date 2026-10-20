@@ -5,7 +5,8 @@ const vnd = new Intl.NumberFormat('vi-VN');
 /** 120000 → "120.000 ₫" */
 export function formatVnd(amount: number | null | undefined): string {
   if (amount === null || amount === undefined || Number.isNaN(amount)) return '—';
-  return `${vnd.format(Math.round(amount))} ₫`;
+  // Khoảng trắng không ngắt dòng: trên điện thoại "690.000 ₫" không bị tách "690.000" / "₫" ra hai dòng.
+  return `${vnd.format(Math.round(amount))}\u00a0₫`;
 }
 
 /** 120000 → "120k" (gọn cho lưới giờ) */

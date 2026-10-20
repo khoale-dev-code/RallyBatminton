@@ -1,6 +1,6 @@
 import 'server-only';
 
-import { publicEnv } from '@/lib/env';
+import { configuredSiteUrl } from '@/lib/site-origin';
 import { getAlertEmailConfig } from '@/lib/env.server';
 import { createSecretClient } from '@/lib/supabase/secret';
 
@@ -37,7 +37,7 @@ async function sendEmail(
   }
 }
 
-const adminBankUrl = () => `${publicEnv.siteUrl}/admin/bank?tab=pending`;
+const adminBankUrl = () => `${configuredSiteUrl()}/admin/bank?tab=pending`;
 
 /**
  * Báo chủ sân các giao dịch "Cần xử lý" / "Chưa khớp đơn" chưa báo (gộp một email).

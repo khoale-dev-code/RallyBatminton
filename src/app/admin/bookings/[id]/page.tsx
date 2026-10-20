@@ -20,7 +20,7 @@ import {
 import { getBookingDetail } from '@/features/admin-bookings/queries';
 import { ExtendPlayPanel } from '@/features/checkout/components/extend-play-panel';
 import { getExtendOptions } from '@/features/checkout/queries';
-import { requireStaff } from '@/lib/auth/guards';
+import { requireStaff, withGuard } from '@/lib/auth/guards';
 import { hasPermission, isOwner } from '@/lib/auth/permissions';
 import { formatDate, formatDateTime, formatMinutes, formatPhone, formatTime, formatVnd } from '@/lib/format';
 import { BOOKING_SOURCE, BOOKING_STATUS, MANUAL_PAYMENT_METHODS, PAYMENT_METHOD, PAYMENT_STATUS } from '@/lib/labels';
@@ -33,9 +33,8 @@ const snapshotSchema = z.array(z.object({ price_per_hour: z.number(), minutes: z
 export const metadata = { title: 'Chi tiết đơn' };
 
 export default async function BookingDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const ctx = await requireStaff();
   const { id } = await params;
-  const [data, extend] = await Promise.all([getBookingDetail(id), getExtendOptions(id)]);
+  const [ctx, [data, extend]] = await withGuard(requireStaff(), () => Promise.all([getBookingDetail(id), getExtendOptions(id)]));
   if (!data) notFound();
   const { booking: b, range, payments, balance, courts, audit } = data;
   const branchInfo = b.courts?.branches;

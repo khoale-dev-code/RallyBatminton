@@ -3,7 +3,8 @@
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
 
-import { getAuthUserId } from '@/lib/auth/context';
+import { getAuthUserId, parseStaffContext, rememberStaffContext } from '@/lib/auth/context';
+import { clearStaffContextCache } from '@/lib/auth/context-cache';
 import { formError, formZodError, type FormState } from '@/lib/form-state';
 import { createClient } from '@/lib/supabase/server';
 import { createSecretClient } from '@/lib/supabase/secret';
@@ -45,18 +46,22 @@ export async function signInAction(_prev: FormState, formData: FormData): Promis
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  const { data: signedIn, error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) return formError(GENERIC_LOGIN_ERROR);
   // Trang này chỉ dành cho nhân sự: tài khoản khách (thành viên) bị đăng xuất ngay.
   const { data: staff } = await supabase.rpc('my_staff_context');
-  if (!staff) {
+  const ctx = staff ? parseStaffContext(staff) : null;
+  if (!ctx) {
     await supabase.auth.signOut();
     return formError(GENERIC_LOGIN_ERROR);
   }
+  // Trang quản trị đầu tiên sau đăng nhập không phải hỏi lại quyền.
+  rememberStaffContext(signedIn.session, ctx);
   redirect(safeNext(next));
 }
 
 export async function signOutAction(): Promise<void> {
+  clearStaffContextCache();
   const supabase = await createClient();
   await supabase.auth.signOut();
   redirect('/admin-login');
@@ -91,6 +96,7 @@ export async function changePasswordAction(_prev: FormState, formData: FormData)
   }
   try {
     await createSecretClient().rpc('service_mark_password_changed', { p_user_id: userId });
+    clearStaffContextCache();
   } catch {
     return formError('Đã đổi mật khẩu nhưng máy chủ chưa cấu hình SUPABASE_SECRET_KEY để mở khóa tài khoản.');
   }

@@ -7,7 +7,7 @@ import { Badge, EmptyState, PageHeader, Stat } from '@/components/ui/primitives'
 import { MemberTierBadge } from '@/features/admin-customers/components/member-tier-badge';
 import { listMembers, MEMBER_FILTERS, MEMBER_PAGE_SIZE, searchCustomers, type MemberFilter } from '@/features/admin-customers/queries';
 import { initialsOf } from '@/features/member/lib/initials';
-import { requireBranchPermission } from '@/lib/auth/guards';
+import { requireBranchPermission, withGuard } from '@/lib/auth/guards';
 import { cn } from '@/lib/cn';
 import { formatDate, formatNumber, formatPhone } from '@/lib/format';
 
@@ -35,17 +35,18 @@ function hrefWith(params: Search, patch: Partial<Search>): string {
 }
 
 export default async function CustomersPage({ searchParams }: { searchParams: Promise<Search> }) {
-  await requireBranchPermission('booking.view');
   const params = await searchParams;
   const q = typeof params.q === 'string' ? params.q.slice(0, 60) : undefined;
   const tab = params.tab === 'members' ? 'members' : 'customers';
   const filter = MEMBER_FILTERS.find((f) => f === params.filter) ?? 'all';
   const page = Math.max(1, Number.parseInt(params.page ?? '1', 10) || 1);
 
-  const [customers, members] = await Promise.all([
-    tab === 'customers' ? searchCustomers(q) : Promise.resolve([]),
-    listMembers(tab === 'members' ? q : undefined, tab === 'members' ? filter : 'all', tab === 'members' ? page : 1),
-  ]);
+  const [, [customers, members]] = await withGuard(requireBranchPermission('booking.view'), () =>
+    Promise.all([
+      tab === 'customers' ? searchCustomers(q) : Promise.resolve([]),
+      listMembers(tab === 'members' ? q : undefined, tab === 'members' ? filter : 'all', tab === 'members' ? page : 1),
+    ]),
+  );
   const pages = members ? Math.max(1, Math.ceil(members.total / MEMBER_PAGE_SIZE)) : 1;
 
   return (

@@ -34,9 +34,11 @@ export async function searchCustomers(q: string | undefined) {
 
 export async function getCustomer(id: string) {
   const supabase = await createClient();
-  const { data: customer } = await supabase.from('customers').select('*').eq('id', id).maybeSingle();
-  if (!customer) return null;
-  const [{ data: bookings }, { data: rentals }, { data: sales }] = await Promise.all([
+  // Mọi truy vấn chỉ cần id khách → chạy cùng lúc (1 lượt mạng thay vì 2); hồ sơ thành viên nối ngay sau khi có khách.
+  const customerQuery = supabase.from('customers').select('*').eq('id', id).maybeSingle();
+  const [{ data: customer }, member, { data: bookings }, { data: rentals }, { data: sales }] = await Promise.all([
+    customerQuery,
+    customerQuery.then(({ data }) => getLinkedMember(data?.auth_user_id ?? null)),
     supabase
       .from('bookings')
       .select('id, code, status, during, total_amount, courts(name, branches(name))')
@@ -57,6 +59,7 @@ export async function getCustomer(id: string) {
       .order('sold_at', { ascending: false })
       .limit(100),
   ]);
+  if (!customer) return null;
   const playedStatuses = new Set(['checked_in', 'completed']);
   const bookingList = (bookings ?? []).map((b) => ({ ...b, range: parseTstzRange(b.during) }));
   const saleList = sales ?? [];
@@ -67,6 +70,7 @@ export async function getCustomer(id: string) {
     rentalList.filter((r) => r.status !== 'voided').reduce((n, r) => n + (r.rental_fee ?? 0) + r.late_fee + r.damage_fee, 0);
   return {
     customer,
+    member,
     bookings: bookingList,
     rentals: rentalList,
     sales: saleList,
@@ -149,11 +153,9 @@ export type MemberDetail = z.infer<typeof memberDetailSchema>;
 
 export async function getMember(userId: string) {
   const supabase = await createClient();
-  const { data, error } = await supabase.rpc('admin_get_member', { p_user_id: userId });
-  if (error || data === null) return null;
-  const parsed = memberDetailSchema.safeParse(data);
-  if (!parsed.success) return null;
-  const [{ data: bookings }, { data: ledger }] = await Promise.all([
+  // Ba truy vấn chỉ cần id thành viên → chạy cùng một lượt mạng.
+  const [{ data, error }, { data: bookings }, { data: ledger }] = await Promise.all([
+    supabase.rpc('admin_get_member', { p_user_id: userId }),
     // Nhân viên chỉ thấy đơn ở chi nhánh mình (RLS).
     supabase
       .from('bookings')
@@ -168,6 +170,9 @@ export async function getMember(userId: string) {
       .order('created_at', { ascending: false })
       .limit(50),
   ]);
+  if (error || data === null) return null;
+  const parsed = memberDetailSchema.safeParse(data);
+  if (!parsed.success) return null;
   return {
     member: parsed.data,
     bookings: (bookings ?? []).map((b) => ({ ...b, range: parseTstzRange(b.during) })),

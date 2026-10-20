@@ -8,18 +8,19 @@ import { Notice } from '@/components/ui/notice';
 import { Badge, Disclosure, EmptyState, PageHeader, Panel, Stat } from '@/components/ui/primitives';
 import { addAdjustmentAction, closePayrollAction, voidAdjustmentAction } from '@/features/payroll/actions';
 import { getPayrollMonth, listEmployeesForPayroll } from '@/features/payroll/queries';
-import { requireOwner } from '@/lib/auth/guards';
+import { requireOwner, withGuard } from '@/lib/auth/guards';
 import { formatDateTime, formatMinutes, formatMonthKey, formatVnd } from '@/lib/format';
 import { addMonths, monthKey, todayKey } from '@/lib/time';
 
 export const metadata = { title: 'Bảng lương' };
 
 export default async function PayrollPage({ searchParams }: { searchParams: Promise<{ month?: string }> }) {
-  await requireOwner();
   const { month: raw } = await searchParams;
   const currentMonth = monthKey(todayKey());
   const month = raw && /^\d{4}-\d{2}-01$/.test(raw) ? raw : addMonths(currentMonth, -1);
-  const [{ period, rows, adjustments, totals }, employees] = await Promise.all([getPayrollMonth(month), listEmployeesForPayroll()]);
+  const [, [{ period, rows, adjustments, totals }, employees]] = await withGuard(requireOwner(), () =>
+    Promise.all([getPayrollMonth(month), listEmployeesForPayroll()]),
+  );
   const closed = period !== null;
   const canClose = !closed && month < currentMonth;
 

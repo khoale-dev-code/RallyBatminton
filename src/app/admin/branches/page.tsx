@@ -3,15 +3,14 @@ import Link from 'next/link';
 import { LinkButton } from '@/components/ui/button';
 import { Badge, EmptyState, PageHeader } from '@/components/ui/primitives';
 import { listAllBranches } from '@/features/admin-branches/queries';
-import { requireOwner } from '@/lib/auth/guards';
+import { requireOwner, withGuard } from '@/lib/auth/guards';
 import { BRANCH_STATUS } from '@/lib/labels';
 import { shortTime } from '@/lib/time';
 
 export const metadata = { title: 'Chi nhánh & sân' };
 
 export default async function AdminBranchesPage() {
-  await requireOwner();
-  const branches = await listAllBranches();
+  const [, branches] = await withGuard(requireOwner(), () => listAllBranches());
   return (
     <>
       <PageHeader

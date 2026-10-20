@@ -12,12 +12,14 @@ import { formDbError, formError, formSuccess, formZodError, type FormState } fro
 import { slugify } from '@/lib/slug';
 import { MEDIA_BUCKET } from '@/lib/storage';
 import { Constants } from '@/lib/supabase/database.types';
+import { clearStaffContextCache } from '@/lib/auth/context-cache';
 import { createClient } from '@/lib/supabase/server';
 import { formDataStrings, zCheckbox, zDateKey, zInt, zMoney, zOptionalText, zOptionalUuid, zText, zTime } from '@/lib/validation';
 import { bankColumns, bankFieldsSchema } from '@/features/payments/lib/bank-form';
 
 /** Làm mới trang công khai sau khi đổi dữ liệu chi nhánh/sân/giá. */
 function revalidatePublic(slug?: string | null) {
+  clearStaffContextCache(); // tên / trạng thái chi nhánh nằm trong quyền nhân sự (bộ chọn chi nhánh)
   revalidatePath('/');
   revalidatePath('/branches');
   if (slug) revalidatePath(`/branches/${slug}`);
@@ -57,6 +59,7 @@ export async function createBranchAction(_prev: FormState, formData: FormData): 
     .select('id')
     .single();
   if (error) return formDbError(error);
+  clearStaffContextCache(); // chi nhánh mới phải hiện ngay trong bộ chọn chi nhánh
   await setFlash('Đã tạo chi nhánh. Thêm sân và bảng giá để công bố.');
   redirect(`/admin/branches/${data.id}/courts?created=1`);
 }

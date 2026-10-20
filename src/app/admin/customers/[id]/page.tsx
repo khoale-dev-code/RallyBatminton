@@ -5,19 +5,17 @@ import { ActionForm, CheckboxField, SubmitButton, TextareaField, TextField } fro
 import { Badge, DescriptionList, PageHeader, Panel, Stat } from '@/components/ui/primitives';
 import { updateCustomerAction } from '@/features/admin-customers/actions';
 import { MemberTierBadge } from '@/features/admin-customers/components/member-tier-badge';
-import { getCustomer, getLinkedMember } from '@/features/admin-customers/queries';
-import { requireStaff } from '@/lib/auth/guards';
+import { getCustomer } from '@/features/admin-customers/queries';
+import { requireStaff, withGuard } from '@/lib/auth/guards';
 import { isOwner } from '@/lib/auth/permissions';
 import { formatDate, formatNumber, formatPhone, formatTime, formatVnd } from '@/lib/format';
 import { BOOKING_STATUS, RENTAL_STATUS } from '@/lib/labels';
 
 export default async function CustomerPage({ params }: { params: Promise<{ id: string }> }) {
-  const ctx = await requireStaff();
   const { id } = await params;
-  const data = await getCustomer(id);
+  const [ctx, data] = await withGuard(requireStaff(), () => getCustomer(id));
   if (!data) notFound();
-  const { customer: c, bookings, rentals, sales, stats } = data;
-  const member = await getLinkedMember(c.auth_user_id);
+  const { customer: c, member, bookings, rentals, sales, stats } = data;
   return (
     <>
       <PageHeader

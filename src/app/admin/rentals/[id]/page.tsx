@@ -9,7 +9,7 @@ import { recordRentalPaymentAction } from '@/features/admin-rentals/actions';
 import { RentalLiveStatus, RentalReturnForm } from '@/features/admin-rentals/components/rental-return-panel';
 import { initials } from '@/features/admin-rentals/lib/rental-status';
 import { getRental } from '@/features/admin-rentals/queries';
-import { requireBranchPermission } from '@/lib/auth/guards';
+import { requireBranchPermission, withGuard } from '@/lib/auth/guards';
 import { formatDate, formatDateTime, formatPhone, formatRateLabel, formatTime, formatVnd } from '@/lib/format';
 import { isUuid, newIdempotencyKey } from '@/lib/ids';
 import { MANUAL_PAYMENT_METHODS, PAYMENT_METHOD, PAYMENT_STATUS, RENTAL_BILLING, RENTAL_STATUS, RENTAL_USAGE } from '@/lib/labels';
@@ -19,10 +19,9 @@ import { requestNow } from '@/lib/time';
 export const metadata = { title: 'Phiếu thuê' };
 
 export default async function RentalDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  await requireBranchPermission('rental.operate');
   const { id } = await params;
   if (!isUuid(id)) notFound();
-  const data = await getRental(id);
+  const [, data] = await withGuard(requireBranchPermission('rental.operate'), () => getRental(id));
   if (!data) notFound();
   const { rental: r, lines, paid, due, balance, policy, dueAt, booking } = data;
   const tz = r.branches?.timezone;

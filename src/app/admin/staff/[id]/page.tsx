@@ -18,7 +18,7 @@ import {
 } from '@/features/admin-staff/actions';
 import { PermissionMatrix } from '@/features/admin-staff/components/permission-matrix';
 import { getStaffMember } from '@/features/admin-staff/queries';
-import { requireOwner } from '@/lib/auth/guards';
+import { requireOwner, withGuard } from '@/lib/auth/guards';
 import { formatDate, formatDateKey, formatMinutes, formatPhone, formatVnd } from '@/lib/format';
 import { isUuid } from '@/lib/ids';
 import { EMPLOYMENT_TYPE, PAY_TYPE } from '@/lib/labels';
@@ -31,11 +31,9 @@ export default async function StaffDetailPage({
   params: Promise<{ id: string }>;
   searchParams: Promise<{ account_error?: string }>;
 }) {
-  await requireOwner();
-  const { id } = await params;
-  const { account_error: accountError } = await searchParams;
+  const [{ id }, { account_error: accountError }] = await Promise.all([params, searchParams]);
   if (!isUuid(id)) notFound();
-  const data = await getStaffMember(id);
+  const [, data] = await withGuard(requireOwner(), () => getStaffMember(id));
   if (!data) notFound();
   const { employee: e, account, loginEmail, rates, perms, branches } = data;
   const active = e.status === 'active';

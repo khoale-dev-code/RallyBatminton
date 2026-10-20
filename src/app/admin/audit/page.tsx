@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { buttonClass } from '@/components/ui/button';
 import { Badge, EmptyState, PageHeader } from '@/components/ui/primitives';
 import { AUDIT_TABLES, changedFields, listAuditEvents, PAGE_SIZE } from '@/features/audit/queries';
-import { requireOwner } from '@/lib/auth/guards';
+import { requireOwner, withGuard } from '@/lib/auth/guards';
 import { formatDateTime } from '@/lib/format';
 
 export const metadata = { title: 'Nhật ký thay đổi' };
@@ -16,11 +16,10 @@ const ACTION_LABEL: Record<string, { label: string; tone: 'green' | 'amber' | 'r
 };
 
 export default async function AuditPage({ searchParams }: { searchParams: Promise<{ table?: string; page?: string }> }) {
-  await requireOwner();
   const sp = await searchParams;
   const page = Math.max(0, Math.min(200, Number(sp.page) || 0));
   const table = sp.table && sp.table in AUDIT_TABLES ? sp.table : undefined;
-  const { events, count } = await listAuditEvents({ table, page });
+  const [, { events, count }] = await withGuard(requireOwner(), () => listAuditEvents({ table, page }));
   const href = (p: number) => `/admin/audit?${new URLSearchParams({ ...(table ? { table } : {}), page: String(p) }).toString()}`;
 
   return (

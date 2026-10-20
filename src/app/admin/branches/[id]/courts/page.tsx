@@ -7,7 +7,7 @@ import { Badge, EmptyState, PageHeader, Panel } from '@/components/ui/primitives
 import { createCourtAction } from '@/features/admin-branches/actions';
 import { BranchTabs } from '@/features/admin-branches/components/branch-tabs';
 import { getBranchCourts } from '@/features/admin-branches/queries';
-import { requireOwner } from '@/lib/auth/guards';
+import { requireOwner, withGuard } from '@/lib/auth/guards';
 import { COURT_STATUS } from '@/lib/labels';
 
 export default async function BranchCourtsPage({
@@ -17,10 +17,8 @@ export default async function BranchCourtsPage({
   params: Promise<{ id: string }>;
   searchParams: Promise<{ created?: string }>;
 }) {
-  await requireOwner();
-  const { id } = await params;
-  const { created } = await searchParams;
-  const data = await getBranchCourts(id);
+  const [{ id }, { created }] = await Promise.all([params, searchParams]);
+  const [, data] = await withGuard(requireOwner(), () => getBranchCourts(id));
   if (!data) notFound();
   const { branch, courts, surfaces } = data;
   const surfaceLabel = Object.fromEntries(surfaces.map((s) => [s.code, s.label]));

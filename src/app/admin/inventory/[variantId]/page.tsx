@@ -5,17 +5,16 @@ import { ActionForm, SelectField, SubmitButton, TextField } from '@/components/u
 import { Badge, PageHeader, Panel, Stat } from '@/components/ui/primitives';
 import { adjustStockAction, recordCountAction } from '@/features/admin-inventory/actions';
 import { getVariantStock } from '@/features/admin-inventory/queries';
-import { requireBranchPermission } from '@/lib/auth/guards';
+import { requireBranchData } from '@/lib/auth/guards';
 import { hasPermission } from '@/lib/auth/permissions';
 import { formatDateTime } from '@/lib/format';
 import { isUuid } from '@/lib/ids';
 import { STOCK_REASON } from '@/lib/labels';
 
 export default async function VariantStockPage({ params }: { params: Promise<{ variantId: string }> }) {
-  const { ctx, branch } = await requireBranchPermission('catalog.view');
   const { variantId } = await params;
   if (!isUuid(variantId)) notFound();
-  const data = await getVariantStock(branch.branchId, variantId);
+  const { ctx, branch, data } = await requireBranchData('catalog.view', (branchId) => getVariantStock(branchId, variantId));
   if (!data) notFound();
   const { variant, label, level, movements } = data;
   const canAdjust = hasPermission(ctx, 'inventory.adjust', branch.branchId) && !variant.products?.is_bundle;

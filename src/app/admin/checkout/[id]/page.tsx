@@ -11,7 +11,7 @@ import { ExtendPlayPanel } from '@/features/checkout/components/extend-play-pane
 import { getExtendOptions } from '@/features/checkout/queries';
 import { accountForBranch } from '@/features/payments/lib/transfer';
 import { getBankAccounts } from '@/features/payments/queries';
-import { requireStaff } from '@/lib/auth/guards';
+import { requireStaff, withGuard } from '@/lib/auth/guards';
 import { hasPermission, isOwner } from '@/lib/auth/permissions';
 import { formatDate, formatMinutes, formatPhone, formatTime, formatVnd } from '@/lib/format';
 import { isUuid } from '@/lib/ids';
@@ -23,10 +23,11 @@ export const metadata = { title: 'Thu tiền sân' };
 const snapshotSchema = z.array(z.object({ price_per_hour: z.number(), minutes: z.number(), amount: z.number() }));
 
 export default async function CheckoutPage({ params }: { params: Promise<{ id: string }> }) {
-  const ctx = await requireStaff();
   const { id } = await params;
   if (!isUuid(id)) notFound();
-  const [data, accounts, extend] = await Promise.all([getBookingDetail(id), getBankAccounts(), getExtendOptions(id)]);
+  const [ctx, [data, accounts, extend]] = await withGuard(requireStaff(), () =>
+    Promise.all([getBookingDetail(id), getBankAccounts(), getExtendOptions(id)]),
+  );
   if (!data) notFound();
   const { booking: b, range, payments, balance } = data;
   if (!isOwner(ctx) && !hasPermission(ctx, 'payment.record', b.branch_id)) redirect('/admin/denied');

@@ -15,7 +15,7 @@ import {
   type BankTransactionRow,
 } from '@/features/payments/admin-queries';
 import { ReconcileBar } from '@/features/payments/components/reconcile-bar';
-import { requireStaff } from '@/lib/auth/guards';
+import { requireStaff, withGuard } from '@/lib/auth/guards';
 import { hasPermission, isOwner } from '@/lib/auth/permissions';
 import { getSepayApiConfig } from '@/lib/env.server';
 import { formatDateTime, formatVnd } from '@/lib/format';
@@ -73,16 +73,16 @@ function PendingActions({ row }: { row: BankTransactionRow }) {
 }
 
 export default async function BankTransactionsPage({ searchParams }: { searchParams: Promise<{ tab?: string; page?: string }> }) {
-  const ctx = await requireStaff();
-  if (!isOwner(ctx) && !hasPermission(ctx, 'payment.record')) redirect('/admin/denied');
   const params = await searchParams;
   const filter = BANK_FILTERS.find((f) => f === params.tab) ?? 'pending';
   const page = Math.max(1, Number.parseInt(params.page ?? '1', 10) || 1);
+  // Truy vấn chạy song song với bước đọc quyền (RLS chặn dữ liệu ngoài quyền; reconcile_runs chỉ chủ sân đọc được).
+  const [ctx, [{ rows, total, summary }, run]] = await withGuard(requireStaff(), () =>
+    Promise.all([listBankTransactions(filter, page), getLastReconcileRun()]),
+  );
+  if (!isOwner(ctx) && !hasPermission(ctx, 'payment.record')) redirect('/admin/denied');
   const owner = isOwner(ctx);
-  const [{ rows, total, summary }, lastRun] = await Promise.all([
-    listBankTransactions(filter, page),
-    owner ? getLastReconcileRun() : Promise.resolve(null),
-  ]);
+  const lastRun = owner ? run : null;
   const pages = Math.max(1, Math.ceil(total / BANK_PAGE_SIZE));
 
   return (

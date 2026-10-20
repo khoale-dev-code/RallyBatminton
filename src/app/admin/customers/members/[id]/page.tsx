@@ -12,7 +12,7 @@ import {
 import { MemberTierBadge } from '@/features/admin-customers/components/member-tier-badge';
 import { getMember } from '@/features/admin-customers/queries';
 import { tierProgress } from '@/features/member/lib/tiers';
-import { requireBranchPermission } from '@/lib/auth/guards';
+import { requireBranchPermission, withGuard } from '@/lib/auth/guards';
 import { isOwner } from '@/lib/auth/permissions';
 import { cn } from '@/lib/cn';
 import { formatDate, formatDateTime, formatNumber, formatPhone, formatTime, formatVnd } from '@/lib/format';
@@ -23,10 +23,9 @@ export const metadata = { title: 'Thành viên' };
 const LOGIN_KIND = { phone: 'Số điện thoại', email: 'Email', google: 'Google' } as const;
 
 export default async function MemberPage({ params }: { params: Promise<{ id: string }> }) {
-  const { ctx } = await requireBranchPermission('booking.view');
   const { id } = await params;
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
-  const data = await getMember(id);
+  const [{ ctx }, data] = await withGuard(requireBranchPermission('booking.view'), () => getMember(id));
   if (!data) notFound();
   const { member: m, bookings, ledger } = data;
   const owner = isOwner(ctx);

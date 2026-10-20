@@ -3,15 +3,14 @@ import Link from 'next/link';
 import { LinkButton } from '@/components/ui/button';
 import { Badge, EmptyState, PageHeader, Panel } from '@/components/ui/primitives';
 import { listStaff } from '@/features/admin-staff/queries';
-import { requireOwner } from '@/lib/auth/guards';
+import { requireOwner, withGuard } from '@/lib/auth/guards';
 import { formatPhone } from '@/lib/format';
 import { EMPLOYMENT_TYPE } from '@/lib/labels';
 
 export const metadata = { title: 'Nhân viên' };
 
 export default async function StaffPage() {
-  await requireOwner();
-  const { employees, owners } = await listStaff();
+  const [, { employees, owners }] = await withGuard(requireOwner(), () => listStaff());
   return (
     <>
       <PageHeader

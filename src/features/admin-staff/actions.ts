@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
 
+import { clearStaffContextCache } from '@/lib/auth/context-cache';
 import { setFlash } from '@/lib/flash';
 import { requireOwner } from '@/lib/auth/guards';
 import { ALL_PERMISSIONS, type AppPermission } from '@/lib/auth/permissions';
@@ -36,6 +37,7 @@ const zOptionalDate = () => z.preprocess((v) => (v === '' ? undefined : v), zDat
 const zPassword = () => z.string().min(8, 'Mật khẩu tối thiểu 8 ký tự').max(72, 'Mật khẩu tối đa 72 ký tự');
 
 function revalidateStaff(employeeId?: string) {
+  clearStaffContextCache(); // tên / trạng thái / quyền nhân viên đổi → đọc lại quyền ở lần mở trang tới
   revalidatePath('/admin/staff');
   if (employeeId) revalidatePath(`/admin/staff/${employeeId}`);
 }

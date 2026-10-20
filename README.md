@@ -236,7 +236,9 @@ Giữ mẫu mặc định vẫn chạy, nhưng khách phải mở liên kết tr
 
 - **Trang công khai** (trang chủ, chi nhánh, vật phẩm, cho thuê, giới thiệu) đọc dữ liệu qua bộ nhớ đệm phía máy chủ (`src/lib/public-cache.ts`): gần như không gọi database. Khi chủ sân sửa ở trang quản trị, bộ đệm liên quan được xóa ngay (`invalidatePublic`), nên khách thấy thay đổi tức thì. Lịch trống sân vẫn luôn lấy trực tiếp.
 - **Đăng nhập**: middleware chỉ đọc phiên trong cookie (không gọi mạng mỗi lần chuyển trang); quyền vẫn do RLS của database kiểm tra ở mọi truy vấn.
-- **Trang quản trị**: các truy vấn độc lập chạy song song — mỗi trang chỉ còn ~2 lượt tới database (trước đây 4–6).
+- **Trang quản trị**: các truy vấn độc lập chạy song song, chạy cùng lúc với bước kiểm tra quyền — hầu hết trang chỉ còn **1 lượt** tới database (trước đây 2–3, đầu tiên là 4–6).
+- **Quyền nhân sự** (`my_staff_context`) được nhớ 60 giây trong máy chủ, khóa theo mã băm của chính token đăng nhập: chuyển trang không phải hỏi lại quyền. Đổi nhân viên / quyền / chi nhánh / mật khẩu thì xóa ngay; dữ liệu vẫn do RLS kiểm tra ở mọi truy vấn (`src/lib/auth/context-cache.ts`).
+- **Menu quản trị** tải trước cả dữ liệu trang khi rê chuột / chạm vào mục (chỉ dùng lại trong 30 giây) — bấm vào thường hiện ngay.
 - **Giao diện**: thanh tiến trình xanh ở đỉnh màn hình khi bấm chuyển trang, khung xương (skeleton) giữ bố cục khi đang tải, ô lọc/tìm kiếm ở quản trị và trang vật phẩm chuyển trang không tải lại toàn bộ.
 
 Để chạy thật nhanh khi triển khai:
@@ -244,7 +246,8 @@ Giữ mẫu mặc định vẫn chạy, nhưng khách phải mở liên kết tr
 1. Chạy `13_performance.sql`.
 2. Chọn **region Supabase gần Việt Nam** (Singapore — `ap-southeast-1`) và đặt Vercel Functions cùng vùng (*Project → Settings → Functions → Region*: `sin1`). Mỗi truy vấn đi xa (ví dụ sang Mỹ) tốn thêm ~200 ms.
 3. Bật **JWT Signing Keys** bất đối xứng ở Supabase (*Project Settings → JWT Keys → Migrate*): xác minh đăng nhập ngay trên máy chủ, không cần hỏi lại Supabase.
-4. Chạy bản build (`npm run build && npm start` hoặc Vercel). `npm run dev` biên dịch từng trang lần đầu nên luôn chậm hơn nhiều — không dùng để đánh giá tốc độ.
+4. Chạy bản build (`npm run build && npm start`, hoặc Vercel). `npm run dev` biên dịch từng trang lần đầu và chạy React chế độ phát triển nên chậm hơn nhiều (log `next.js: 1112ms` là thời gian biên dịch) — không dùng để đánh giá tốc độ.
+5. Kiểm tra: *Cài đặt → Tốc độ máy chủ → Đo tốc độ*. Dưới ~30 ms là máy chủ web và database cùng vùng; trên ~150 ms là đang ở xa nhau (làm lại bước 2) — mỗi trang chờ ít nhất 1 lượt như vậy.
 
 ## 14. Tra cứu đơn bằng số điện thoại (khách vãng lai, `14_guest_phone_lookup.sql`)
 

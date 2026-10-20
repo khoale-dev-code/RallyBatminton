@@ -153,3 +153,36 @@ export async function sendTestAlertAction(_prev: FormState, _formData: FormData)
   if (!result.ok) return formError(result.message);
   return formSuccess(`Đã gửi email thử tới ${result.recipients.join(', ')} — kiểm tra cả thư mục Spam.`);
 }
+
+export type SpeedReport = {
+  /** Vùng máy chủ Vercel đang chạy trang (null khi chạy trên máy cá nhân). */
+  region: string | null;
+  /** Thời gian mỗi lượt hỏi database (ms), đo tuần tự. */
+  samples: number[];
+  best: number;
+  median: number;
+};
+
+/**
+ * Đo thời gian 1 lượt hỏi Supabase từ máy chủ web (chủ sân). Mỗi trang quản trị cần 1–2 lượt như vậy, nên con số
+ * này gần như quyết định tốc độ mở trang: dưới ~30 ms là máy chủ web và database cùng vùng; trên ~150 ms là
+ * hai bên ở xa nhau (ví dụ Vercel ở Mỹ, Supabase ở Singapore).
+ */
+export async function measureServerSpeedAction(): Promise<SpeedReport> {
+  await requireOwner();
+  const supabase = await createClient();
+  const samples: number[] = [];
+  for (let i = 0; i < 5; i++) {
+    const t0 = performance.now();
+    await supabase.from('brand_settings').select('name').limit(1).maybeSingle();
+    samples.push(Math.round(performance.now() - t0));
+  }
+  // Lượt đầu có thể gồm bắt tay TLS — bỏ khi lấy trung vị.
+  const warm = samples.slice(1).toSorted((a, b) => a - b);
+  return {
+    region: process.env.VERCEL_REGION ?? null,
+    samples,
+    best: Math.min(...samples),
+    median: warm[Math.floor(warm.length / 2)] ?? samples[0] ?? 0,
+  };
+}

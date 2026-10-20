@@ -5,7 +5,7 @@ import { buttonClass } from '@/components/ui/button';
 import { DayNav } from '@/components/ui/day-nav';
 import { Badge, EmptyState, PageHeader } from '@/components/ui/primitives';
 import { getBookingDay, type DayBooking } from '@/features/admin-bookings/queries';
-import { requireBranchPermission } from '@/lib/auth/guards';
+import { requireBranchData } from '@/lib/auth/guards';
 import { cn } from '@/lib/cn';
 import { formatPhone, formatTime, formatVnd } from '@/lib/format';
 import { BOOKING_STATUS } from '@/lib/labels';
@@ -32,40 +32,46 @@ function Row({ b, tz, now }: { b: DayBooking; tz: string; now: number }) {
       <Link
         href={`/admin/checkout/${b.id}`}
         className={cn(
-          'group flex flex-wrap items-center gap-x-4 gap-y-2 rounded-panel border bg-paper p-4 transition-shadow hover:shadow-lift',
+          // Điện thoại: lưới 2 cột (giờ | khách), tiền xuống hàng riêng full chiều ngang; từ sm: một hàng ngang.
+          'group grid grid-cols-[4.75rem_minmax(0,1fr)] items-start gap-x-3 gap-y-2 rounded-panel border bg-paper p-3.5 transition-shadow hover:shadow-lift sm:flex sm:items-center sm:gap-x-4 sm:p-4',
           due > 0 && (playing || ended) ? 'border-court' : 'border-line',
         )}
       >
-        <span className="flex w-24 shrink-0 flex-col">
+        <span className="flex flex-col sm:w-24 sm:shrink-0">
           <span className="font-display text-xl tabular">{formatTime(b.start, tz)}</span>
-          <span className="text-sm text-muted tabular">đến {formatTime(b.end, tz)}</span>
+          <span className="text-sm whitespace-nowrap text-muted tabular">đến {formatTime(b.end, tz)}</span>
         </span>
-        <span className="flex min-w-0 flex-1 flex-col">
-          <span className="font-medium">
+        <span className="flex min-w-0 flex-col gap-1 sm:flex-1">
+          <span className="font-medium break-words">
             {b.contact_name ?? 'Khách'}
-            {b.customers?.phone && <span className="ml-2 font-normal text-muted">{formatPhone(b.customers.phone)}</span>}
+            {b.customers?.phone && (
+              <span className="block font-normal text-muted tabular sm:ml-2 sm:inline">{formatPhone(b.customers.phone)}</span>
+            )}
           </span>
-          <span className="flex flex-wrap items-center gap-2 text-sm text-muted">
+          <span className="flex flex-wrap items-center gap-1.5 text-sm text-muted">
             <span className="tabular">{b.code}</span>
             <Badge tone={status.tone}>{status.label}</Badge>
             {playing && <Badge tone="green">Đang chơi</Badge>}
             {ended && due > 0 && <Badge tone="red">Đã hết giờ</Badge>}
           </span>
         </span>
-        <span className="flex flex-col items-end">
+        <span className="col-span-2 flex items-center justify-between gap-3 border-t border-line pt-2 sm:shrink-0 sm:flex-col sm:items-end sm:justify-center sm:gap-0 sm:border-0 sm:pt-0">
           {due > 0 ? (
             <>
               <span className="text-sm text-muted">Còn phải thu</span>
-              <span className="font-display text-2xl tabular">{formatVnd(due)}</span>
+              <span className="inline-flex items-center gap-2">
+                <span className="font-display text-2xl tabular">{formatVnd(due)}</span>
+                <ArrowRight className="size-5 shrink-0 text-muted sm:hidden" aria-hidden />
+              </span>
             </>
           ) : (
             <span className="inline-flex items-center gap-1.5 font-medium text-court-deep">
-              <CircleCheck className="size-4" aria-hidden />
+              <CircleCheck className="size-4 shrink-0" aria-hidden />
               Đã thu đủ {formatVnd(b.total)}
             </span>
           )}
         </span>
-        <ArrowRight className="size-5 shrink-0 text-muted transition-transform group-hover:translate-x-0.5" aria-hidden />
+        <ArrowRight className="hidden size-5 shrink-0 text-muted transition-transform group-hover:translate-x-0.5 sm:block" aria-hidden />
       </Link>
     </li>
   );
@@ -73,12 +79,11 @@ function Row({ b, tz, now }: { b: DayBooking; tz: string; now: number }) {
 
 /** Thu tiền sân: đơn trong ngày của chi nhánh, đơn đang chơi / hết giờ còn nợ lên đầu. */
 export default async function CheckoutListPage({ searchParams }: { searchParams: Promise<{ date?: string; q?: string }> }) {
-  const { branch } = await requireBranchPermission('payment.record');
   const params = await searchParams;
   const today = todayKey();
   const date = params.date && isDateKey(params.date) ? params.date : today;
   const q = (params.q ?? '').trim().slice(0, 40);
-  const day = await getBookingDay(branch.branchId, date);
+  const { branch, data: day } = await requireBranchData('payment.record', (branchId) => getBookingDay(branchId, date));
   const tz = day?.branch.timezone ?? 'Asia/Ho_Chi_Minh';
   const now = requestNow();
   const list = (day?.bookings ?? []).filter((b) => b.kind === 'customer' && PAYABLE.has(b.status) && matches(b, q));

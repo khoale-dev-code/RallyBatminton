@@ -5,15 +5,14 @@ import { PageHeader, Panel } from '@/components/ui/primitives';
 import { generateTempPassword } from '@/features/admin-staff/accounts';
 import { createEmployeeAction } from '@/features/admin-staff/actions';
 import { listBranchesForSelect, suggestEmployeeCode } from '@/features/admin-staff/queries';
-import { requireOwner } from '@/lib/auth/guards';
+import { requireOwner, withGuard } from '@/lib/auth/guards';
 import { EMPLOYMENT_TYPE } from '@/lib/labels';
 import { todayKey } from '@/lib/time';
 
 export const metadata = { title: 'Thêm nhân viên' };
 
 export default async function NewStaffPage() {
-  await requireOwner();
-  const [branches, code] = await Promise.all([listBranchesForSelect(), suggestEmployeeCode()]);
+  const [, [branches, code]] = await withGuard(requireOwner(), () => Promise.all([listBranchesForSelect(), suggestEmployeeCode()]));
   return (
     <>
       <PageHeader

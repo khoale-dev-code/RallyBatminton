@@ -8,14 +8,13 @@ import { ActionForm, CheckboxField, SelectField, SubmitButton, TextareaField, Te
 import { Badge, PageHeader, Panel } from '@/components/ui/primitives';
 import { addCourtPhotoAction, deleteCourtPhotoAction, setCourtCoverAction, updateCourtAction } from '@/features/admin-branches/actions';
 import { getCourtForEdit } from '@/features/admin-branches/queries';
-import { requireOwner } from '@/lib/auth/guards';
+import { requireOwner, withGuard } from '@/lib/auth/guards';
 import { COURT_STATUS } from '@/lib/labels';
 import { Constants } from '@/lib/supabase/database.types';
 
 export default async function CourtEditPage({ params }: { params: Promise<{ id: string }> }) {
-  await requireOwner();
   const { id } = await params;
-  const data = await getCourtForEdit(id);
+  const [, data] = await withGuard(requireOwner(), () => getCourtForEdit(id));
   if (!data) notFound();
   const { court, surfaces } = data;
   const photos = [...court.court_photos].sort((a, b) => Number(b.is_cover) - Number(a.is_cover) || a.sort_order - b.sort_order);

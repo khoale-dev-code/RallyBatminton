@@ -5,7 +5,7 @@ import { DayNav } from '@/components/ui/day-nav';
 import { Badge, EmptyState, PageHeader } from '@/components/ui/primitives';
 import { DayBoard } from '@/features/admin-bookings/components/day-board';
 import { getBookingDay } from '@/features/admin-bookings/queries';
-import { requireBranchPermission } from '@/lib/auth/guards';
+import { requireBranchData } from '@/lib/auth/guards';
 import { hasPermission } from '@/lib/auth/permissions';
 import { formatDateKey, formatPhone, formatTime, formatVnd } from '@/lib/format';
 import { BOOKING_STATUS } from '@/lib/labels';
@@ -14,10 +14,9 @@ import { isDateKey, todayKey } from '@/lib/time';
 export const metadata = { title: 'Lịch đặt sân' };
 
 export default async function BookingsPage({ searchParams }: { searchParams: Promise<{ date?: string }> }) {
-  const { ctx, branch } = await requireBranchPermission('booking.view');
   const { date } = await searchParams;
   const dateKey = date && isDateKey(date) ? date : todayKey();
-  const data = await getBookingDay(branch.branchId, dateKey);
+  const { ctx, branch, data } = await requireBranchData('booking.view', (branchId) => getBookingDay(branchId, dateKey));
   if (!data) return <EmptyState title="Không tải được chi nhánh" />;
   const canOperate = hasPermission(ctx, 'booking.operate', branch.branchId);
   const tz = data.branch.timezone;

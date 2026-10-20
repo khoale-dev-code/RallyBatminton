@@ -7,7 +7,7 @@ import { LinkTabs } from '@/components/ui/link-tabs';
 import { Badge, Disclosure, EmptyState, PageHeader } from '@/components/ui/primitives';
 import { receiveNewItemAction } from '@/features/admin-inventory/actions';
 import { getBranchStock, listUnstockedVariants } from '@/features/admin-inventory/queries';
-import { requireBranchPermission } from '@/lib/auth/guards';
+import { requireBranchData } from '@/lib/auth/guards';
 import { hasPermission } from '@/lib/auth/permissions';
 
 export const metadata = { title: 'Tồn kho' };
@@ -19,16 +19,20 @@ interface Search {
 }
 
 export default async function InventoryPage({ searchParams }: { searchParams: Promise<Search> }) {
-  const { ctx, branch } = await requireBranchPermission('catalog.view');
   const sp = await searchParams;
   const kind = sp.kind === 'rental' ? 'rental' : sp.kind === 'sale' ? 'sale' : undefined;
   const lowOnly = sp.low === '1';
   const q = typeof sp.q === 'string' ? sp.q.slice(0, 60) : undefined;
+  // Tải song song cả danh sách chưa có tồn (rẻ); chỉ hiện khi có quyền điều chỉnh kho.
+  const {
+    ctx,
+    branch,
+    data: [rows, unstockedAll],
+  } = await requireBranchData('catalog.view', (branchId) =>
+    Promise.all([getBranchStock(branchId, { q, lowOnly, kind }), listUnstockedVariants(branchId)]),
+  );
   const canAdjust = hasPermission(ctx, 'inventory.adjust', branch.branchId);
-  const [rows, unstocked] = await Promise.all([
-    getBranchStock(branch.branchId, { q, lowOnly, kind }),
-    canAdjust ? listUnstockedVariants(branch.branchId) : Promise.resolve([]),
-  ]);
+  const unstocked = canAdjust ? unstockedAll : [];
   const href = (extra: Partial<Search>) => {
     const params = new URLSearchParams();
     for (const [k, v] of Object.entries({ q, low: lowOnly ? '1' : undefined, kind, ...extra })) if (v) params.set(k, v);

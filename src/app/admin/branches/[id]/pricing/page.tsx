@@ -8,15 +8,14 @@ import { createPriceRuleAction, togglePriceRuleAction } from '@/features/admin-b
 import { BranchTabs } from '@/features/admin-branches/components/branch-tabs';
 import { PriceMatrix } from '@/features/admin-branches/components/price-matrix';
 import { getBranchPricing } from '@/features/admin-branches/queries';
-import { requireOwner } from '@/lib/auth/guards';
+import { requireOwner, withGuard } from '@/lib/auth/guards';
 import { formatDate, formatDaysMask, formatVnd } from '@/lib/format';
 import { halfHourOptions, WEEKDAY_OPTIONS } from '@/lib/options';
 import { shortTime } from '@/lib/time';
 
 export default async function PricingPage({ params }: { params: Promise<{ id: string }> }) {
-  await requireOwner();
   const { id } = await params;
-  const data = await getBranchPricing(id);
+  const [, data] = await withGuard(requireOwner(), () => getBranchPricing(id));
   if (!data) notFound();
   const { branch, rules, courts } = data;
   const courtName = Object.fromEntries(courts.map((c) => [c.id, c.name]));

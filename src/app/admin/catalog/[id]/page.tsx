@@ -23,7 +23,7 @@ import { RentalRatesPanel } from '@/features/admin-catalog/components/rental-rat
 import { draftFromProduct } from '@/features/admin-catalog/lib/initial-draft';
 import { variantTitle } from '@/features/admin-catalog/lib/product-draft';
 import { getProductForEdit, listCategoriesAdmin, listComponentCandidates, listTagSuggestions } from '@/features/admin-catalog/queries';
-import { requireBranchPermission } from '@/lib/auth/guards';
+import { requireBranchPermission, withGuard } from '@/lib/auth/guards';
 import { hasPermission, isOwner } from '@/lib/auth/permissions';
 import { getBrandTax } from '@/features/brand/queries';
 import { formatVariantLabel } from '@/lib/format';
@@ -42,20 +42,26 @@ export default async function ProductEditPage({
   params: Promise<{ id: string }>;
   searchParams: Promise<Search>;
 }) {
-  const { ctx } = await requireBranchPermission('catalog.view');
   const [{ id }, sp] = await Promise.all([params, searchParams]);
-  const [data, categories, tagSuggestions, brandTax] = await Promise.all([
-    getProductForEdit(id),
-    listCategoriesAdmin(),
-    listTagSuggestions(),
-    getBrandTax(),
-  ]);
+  const productQuery = getProductForEdit(id);
+  const [{ ctx }, [data, categories, tagSuggestions, brandTax, bundleCandidates]] = await withGuard(
+    requireBranchPermission('catalog.view'),
+    () =>
+      Promise.all([
+        productQuery,
+        listCategoriesAdmin(),
+        listTagSuggestions(),
+        getBrandTax(),
+        // Món thành phần của combo: tải ngay khi biết là combo, không chờ thêm một lượt sau khi trang đã có dữ liệu.
+        productQuery.then((d) => (d?.product.is_bundle ? listComponentCandidates() : [])),
+      ]),
+  );
   if (!data) notFound();
   const { product: p, variants, photos, rates, components, levels, branches, units } = data;
   const canEdit = hasPermission(ctx, 'catalog.edit');
   const archived = p.deleted_at !== null;
   const stockable = !p.is_bundle;
-  const candidates = p.is_bundle && canEdit ? await listComponentCandidates() : [];
+  const candidates = canEdit ? bundleCandidates : [];
   const onHand: Record<string, number> = {};
   for (const l of levels) onHand[l.variant_id] = (onHand[l.variant_id] ?? 0) + l.on_hand;
   const initial = draftFromProduct(p, variants, onHand, units);

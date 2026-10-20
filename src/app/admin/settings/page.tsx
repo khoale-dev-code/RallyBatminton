@@ -5,8 +5,9 @@ import { PageHeader, Panel } from '@/components/ui/primitives';
 import { AlertSettings } from '@/features/payments/components/alert-settings';
 import { BankFields } from '@/features/payments/components/bank-fields';
 import { updateBankSettingsAction, updateBrandAction, updateTaxSettingsAction } from '@/features/settings/actions';
-import { requireOwner } from '@/lib/auth/guards';
-import { publicEnv } from '@/lib/env';
+import { ServerSpeed } from '@/features/settings/components/server-speed';
+import { requireOwner, withGuard } from '@/lib/auth/guards';
+import { siteOrigin } from '@/lib/site-origin';
 import { getAlertEmailConfig, getCronSecret, getSepayApiConfig, getSepayWebhookAuth } from '@/lib/env.server';
 import { formatDateTime } from '@/lib/format';
 import { createClient } from '@/lib/supabase/server';
@@ -15,17 +16,19 @@ import { formatPercent, TAX_INDUSTRIES, TAX_METHODS, VAT_PRESETS } from '@/lib/t
 export const metadata = { title: 'Cài đặt thương hiệu' };
 
 export default async function SettingsPage() {
-  await requireOwner();
   const supabase = await createClient();
-  const [{ data: brand }, { data: lastTxn }, { data: notify }, { data: auth }] = await Promise.all([
-    supabase.from('brand_settings').select('*').maybeSingle(),
-    supabase.from('bank_transactions').select('created_at').order('created_at', { ascending: false }).limit(1).maybeSingle(),
-    supabase.from('notification_settings').select('alert_emails, alert_on_review, alert_on_unmatched').maybeSingle(),
-    supabase.auth.getUser(),
-  ]);
+  const [, [{ data: brand }, { data: lastTxn }, { data: notify }, { data: auth }]] = await withGuard(requireOwner(), () =>
+    Promise.all([
+      supabase.from('brand_settings').select('*').maybeSingle(),
+      supabase.from('bank_transactions').select('created_at').order('created_at', { ascending: false }).limit(1).maybeSingle(),
+      supabase.from('notification_settings').select('alert_emails, alert_on_review, alert_on_unmatched').maybeSingle(),
+      supabase.auth.getUser(),
+    ]),
+  );
   const sepay = getSepayWebhookAuth();
   const webhookReady = Boolean(sepay.secret ?? sepay.apiKey);
-  const webhookUrl = `${publicEnv.siteUrl.replace(/\/$/, '')}/api/webhooks/sepay`;
+  const origin = await siteOrigin();
+  const webhookUrl = `${origin}/api/webhooks/sepay`;
   return (
     <>
       <PageHeader
@@ -133,7 +136,7 @@ export default async function SettingsPage() {
             <AlertSettings
               settings={notify}
               ownerEmail={auth.user?.email ?? null}
-              siteUrl={publicEnv.siteUrl.replace(/\/$/, '')}
+              siteUrl={origin}
               env={{
                 resend: Boolean(getAlertEmailConfig().apiKey),
                 sepayToken: Boolean(getSepayApiConfig().token),
@@ -186,6 +189,25 @@ export default async function SettingsPage() {
               </details>
               <SubmitButton pendingLabel="Đang lưu…">Lưu cài đặt thuế</SubmitButton>
             </ActionForm>
+          </Panel>
+        </div>
+        <div id="toc-do" className="scroll-mt-20">
+          <Panel
+            title="Tốc độ máy chủ"
+            description="Đo thời gian máy chủ web hỏi database. Trang quản trị mở chậm (trên 1 giây) thường do hai máy chủ ở hai vùng khác nhau."
+          >
+            <ServerSpeed />
+            <details className="mt-4 rounded-control bg-hall/60 px-3 py-2 text-sm">
+              <summary className="min-h-9 cursor-pointer py-1.5 font-medium">Cách đặt máy chủ web cùng vùng với database</summary>
+              <ol className="mt-1 mb-2 flex list-decimal flex-col gap-1.5 pl-5">
+                <li>Supabase → Project Settings → General: xem mục Region (ví dụ Southeast Asia (Singapore) = ap-southeast-1).</li>
+                <li>
+                  Vercel → Project → Settings → Functions → Function Region: chọn vùng gần nhất với database (Singapore = sin1, Tokyo =
+                  hnd1, Mỹ Đông = iad1), lưu rồi Redeploy.
+                </li>
+                <li>Bấm Đo lại: nên dưới 30 ms.</li>
+              </ol>
+            </details>
           </Panel>
         </div>
       </div>

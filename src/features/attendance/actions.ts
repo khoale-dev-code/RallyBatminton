@@ -6,11 +6,11 @@ import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 
 import { requireOwner, requireStaff } from '@/lib/auth/guards';
-import { publicEnv } from '@/lib/env';
 import { toUserMessage } from '@/lib/errors';
 import { formError, formSuccess, type FormState } from '@/lib/form-state';
 import { createClient } from '@/lib/supabase/server';
 import { formatTime } from '@/lib/format';
+import { siteOrigin } from '@/lib/site-origin';
 import { formDataToObject, zUuid } from '@/lib/validation';
 
 export type IssueQrResult = { ok: true; url: string; expiresAt: string } | { ok: false; error: string };
@@ -29,7 +29,8 @@ export async function issueQrAction(branchId: string): Promise<IssueQrResult> {
   if (error) return { ok: false, error: toUserMessage(error) };
   const res = z.object({ expires_at: z.string() }).safeParse(data);
   if (!res.success) return { ok: false, error: 'Không tạo được mã QR.' };
-  return { ok: true, url: `${publicEnv.siteUrl}/checkin?t=${token}`, expiresAt: res.data.expires_at };
+  // Tên miền đang mở trang (không phải NEXT_PUBLIC_SITE_URL) → điện thoại nhân viên quét là mở đúng website.
+  return { ok: true, url: `${await siteOrigin()}/checkin?t=${token}`, expiresAt: res.data.expires_at };
 }
 
 const scanSchema = z.object({

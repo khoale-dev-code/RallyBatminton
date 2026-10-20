@@ -8,7 +8,7 @@ import { OvertimePanel } from '@/features/shifts/components/overtime-panel';
 import { overtimeEndsAt } from '@/features/shifts/lib/overtime';
 import { plannedMinutes } from '@/features/shifts/lib/shift-time';
 import { getShift } from '@/features/shifts/queries';
-import { requireOwner } from '@/lib/auth/guards';
+import { requireOwner, withGuard } from '@/lib/auth/guards';
 import { formatDateKey, formatDateTime, formatMinutes, formatTime } from '@/lib/format';
 import { isUuid } from '@/lib/ids';
 import { ATTENDANCE_STATUS } from '@/lib/labels';
@@ -22,10 +22,9 @@ function toLocalInput(value: string | null, tz: string): string {
 }
 
 export default async function ShiftDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  await requireOwner();
   const { id } = await params;
   if (!isUuid(id)) notFound();
-  const data = await getShift(id);
+  const [, data] = await withGuard(requireOwner(), () => getShift(id));
   if (!data) notFound();
   const { shift: s, history, overtime, rate, monthClosed } = data;
   const tz = s.branches?.timezone ?? DEFAULT_TZ;

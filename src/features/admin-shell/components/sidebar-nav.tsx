@@ -2,12 +2,54 @@
 
 import { ChevronDown } from 'lucide-react';
 import Link from 'next/link';
+import { useEffect, useRef, useState, type ComponentProps } from 'react';
 
 import { cn } from '@/lib/cn';
 
 import { type NavGroup, type NavGroupKey } from '../nav';
 
 import { NAV_ICONS } from './nav-icons';
+
+/** Rê chuột / chạm giữ trên mục bao lâu thì bắt đầu tải trước cả dữ liệu trang (ms). */
+const INTENT_DELAY_MS = 90;
+
+/**
+ * Link tải trước TOÀN BỘ trang (cả dữ liệu) khi người dùng tỏ ý muốn mở: rê chuột, chạm, focus bàn phím.
+ * Mặc định Next chỉ tải trước khung (loading) của trang động → bấm vào vẫn phải chờ máy chủ đọc dữ liệu.
+ * Tải trước khi rê chuột giúp trang thường đã sẵn sàng lúc bấm. Dữ liệu tải trước chỉ dùng trong 30 giây
+ * (`staleTimes.static` trong next.config.ts) nên không hiện số liệu cũ.
+ */
+function IntentLink({ onPointerEnter, onPointerLeave, onFocus, onTouchStart, ...props }: ComponentProps<typeof Link>) {
+  const [hot, setHot] = useState(false);
+  const timer = useRef<number | null>(null);
+  const cancel = () => {
+    if (timer.current !== null) window.clearTimeout(timer.current);
+    timer.current = null;
+  };
+  useEffect(() => cancel, []);
+  return (
+    <Link
+      {...props}
+      prefetch={hot ? true : null}
+      onPointerEnter={(e) => {
+        onPointerEnter?.(e);
+        if (!hot && e.pointerType === 'mouse') timer.current = window.setTimeout(() => setHot(true), INTENT_DELAY_MS);
+      }}
+      onPointerLeave={(e) => {
+        onPointerLeave?.(e);
+        cancel();
+      }}
+      onFocus={(e) => {
+        onFocus?.(e);
+        setHot(true);
+      }}
+      onTouchStart={(e) => {
+        onTouchStart?.(e);
+        setHot(true);
+      }}
+    />
+  );
+}
 
 export function isNavActive(pathname: string, href: string): boolean {
   return href === '/admin' ? pathname === '/admin' : pathname === href || pathname.startsWith(`${href}/`);
@@ -54,7 +96,7 @@ export function SidebarNav({ nav, pathname, rail, closedGroups, onToggleGroup, o
                 const active = isNavActive(pathname, item.href);
                 return (
                   <li key={item.href} className={cn(rail && 'w-full')}>
-                    <Link
+                    <IntentLink
                       href={item.href}
                       onClick={onNavigate}
                       aria-current={active ? 'page' : undefined}
@@ -83,7 +125,7 @@ export function SidebarNav({ nav, pathname, rail, closedGroups, onToggleGroup, o
                           <span className="sr-only"> việc chờ</span>
                         </span>
                       ) : null}
-                    </Link>
+                    </IntentLink>
                   </li>
                 );
               })}

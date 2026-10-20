@@ -94,26 +94,21 @@ export async function listCategoriesAdmin() {
 
 export async function getProductForEdit(id: string) {
   const supabase = await createClient();
-  const { data: product } = await supabase
-    .from('products')
-    .select(
-      '*, product_variants!product_variants_product_id_fkey(id, sku, size_label, color_label, price_override, barcode, is_default, is_active, sort_order, deleted_at), product_photos(id, storage_path, alt_text, is_cover, sort_order), rental_rates(id, label, duration_minutes, price, is_active, usage, billing, grace_minutes, overtime_block_minutes, overtime_block_price, overtime_cap)',
-    )
-    .eq('id', id)
-    .maybeSingle();
-  if (!product) return null;
-
-  const variantIds = product.product_variants.map((v) => v.id);
-  const [{ data: components }, { data: levels }, { data: branches }, { data: costs }, { data: units }] = await Promise.all([
+  // Mọi truy vấn chỉ cần id sản phẩm → chạy cùng lúc (tồn kho lấy kèm biến thể) — 1 lượt mạng thay vì 2.
+  const [{ data: product }, { data: components }, { data: branches }, { data: costs }, { data: units }] = await Promise.all([
+    supabase
+      .from('products')
+      .select(
+        '*, product_variants!product_variants_product_id_fkey(id, sku, size_label, color_label, price_override, barcode, is_default, is_active, sort_order, deleted_at, inventory_levels(branch_id, variant_id, on_hand, reorder_level, is_listed)), product_photos(id, storage_path, alt_text, is_cover, sort_order), rental_rates(id, label, duration_minutes, price, is_active, usage, billing, grace_minutes, overtime_block_minutes, overtime_block_price, overtime_cap)',
+      )
+      .eq('id', id)
+      .maybeSingle(),
     supabase
       .from('bundle_components')
       .select(
         'component_variant_id, quantity, product_variants(sku, size_label, color_label, products!product_variants_product_id_fkey(name))',
       )
       .eq('bundle_product_id', id),
-    variantIds.length > 0
-      ? supabase.from('inventory_levels').select('branch_id, variant_id, on_hand, reorder_level, is_listed').in('variant_id', variantIds)
-      : Promise.resolve({ data: [] }),
     supabase.from('branches').select('id, name').is('deleted_at', null).order('name'),
     // Giá vốn không đọc trực tiếp được (quyền theo cột) — hàm này kiểm tra quyền xem danh mục.
     supabase.rpc('get_variant_costs', { p_product_id: id }),
@@ -124,19 +119,21 @@ export async function getProductForEdit(id: string) {
       .is('deleted_at', null)
       .order('sort_order'),
   ]);
+  if (!product) return null;
+  const levels = product.product_variants.flatMap((v) => v.inventory_levels);
   const costOf = new Map((costs ?? []).map((c) => [c.variant_id, c.cost_price ?? null]));
 
   return {
     product,
     variants: [...product.product_variants]
-      .map((v) => ({ ...v, cost_price: costOf.get(v.id) ?? null }))
+      .map(({ inventory_levels: _levels, ...v }) => ({ ...v, cost_price: costOf.get(v.id) ?? null }))
       .filter((v) => v.deleted_at === null)
       .sort((a, b) => Number(b.is_default) - Number(a.is_default) || a.sort_order - b.sort_order),
     photos: [...product.product_photos].sort((a, b) => Number(b.is_cover) - Number(a.is_cover) || a.sort_order - b.sort_order),
     rates: [...product.rental_rates].sort((a, b) => a.duration_minutes - b.duration_minutes),
     components: components ?? [],
     units: units ?? [],
-    levels: levels ?? [],
+    levels,
     branches: branches ?? [],
   };
 }

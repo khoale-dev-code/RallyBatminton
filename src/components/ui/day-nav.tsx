@@ -50,7 +50,8 @@ export function DayNav({ basePath, dateKey }: { basePath: string; dateKey: strin
       currentHref={basePath}
       currentLabel="Hôm nay"
     >
-      <Form data-nav-progress action={basePath} className="flex min-w-0 flex-1 items-center gap-2 sm:flex-none">
+      {/* Điện thoại: ô chọn ngày xuống hàng riêng, rộng hết màn hình (trước đây bị ép còn "10/"). */}
+      <Form data-nav-progress action={basePath} className="flex w-full min-w-0 items-center gap-2 sm:w-auto">
         <label htmlFor="day-nav-date" className="sr-only">
           Chọn ngày
         </label>
@@ -59,7 +60,7 @@ export function DayNav({ basePath, dateKey }: { basePath: string; dateKey: strin
           type="date"
           name="date"
           defaultValue={dateKey}
-          className="min-h-11 min-w-0 flex-1 rounded-control border border-line bg-paper px-3 sm:w-44 sm:flex-none"
+          className="min-h-11 min-w-0 flex-1 rounded-control border border-line bg-paper px-3 text-left sm:w-44 sm:flex-none [&::-webkit-date-and-time-value]:text-left"
         />
         <button type="submit" className={buttonClass('ghost', 'md', 'min-h-11')}>
           Xem

@@ -6,15 +6,20 @@ import { Panel, PageHeader } from '@/components/ui/primitives';
 import { RentalBoard } from '@/features/admin-rentals/components/rental-board';
 import { OvertimePolicyCard, PriceBoard, RentalHistory, RentalStats } from '@/features/admin-rentals/components/rental-overview';
 import { listPriceBoard, listRentals } from '@/features/admin-rentals/queries';
-import { requireBranchPermission } from '@/lib/auth/guards';
+import { requireBranchData } from '@/lib/auth/guards';
 import { formatDate } from '@/lib/format';
 import { requestNow } from '@/lib/time';
 
 export const metadata = { title: 'Cho thuê' };
 
 export default async function RentalsPage() {
-  const { branch } = await requireBranchPermission('rental.operate');
-  const [{ board, history, today }, prices] = await Promise.all([listRentals(branch.branchId), listPriceBoard()]);
+  const [
+    {
+      branch,
+      data: { board, history, today },
+    },
+    prices,
+  ] = await Promise.all([requireBranchData('rental.operate', listRentals), listPriceBoard()]);
   const now = requestNow();
 
   return (

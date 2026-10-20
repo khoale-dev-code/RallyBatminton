@@ -3,16 +3,18 @@ import Link from 'next/link';
 import { EmptyState, PageHeader } from '@/components/ui/primitives';
 import { RentalCheckoutForm } from '@/features/admin-rentals/components/rental-checkout-form';
 import { getRentalCatalog, listActiveBookings } from '@/features/admin-rentals/queries';
-import { requireBranchPermission } from '@/lib/auth/guards';
+import { requireBranchData } from '@/lib/auth/guards';
 import { newIdempotencyKey } from '@/lib/ids';
 import { requestNow } from '@/lib/time';
 
 export const metadata = { title: 'Tạo phiếu thuê' };
 
 export default async function NewRentalPage() {
-  const { branch } = await requireBranchPermission('rental.operate');
   const now = requestNow();
-  const [options, bookings] = await Promise.all([getRentalCatalog(branch.branchId), listActiveBookings(branch.branchId, now)]);
+  const {
+    branch,
+    data: [options, bookings],
+  } = await requireBranchData('rental.operate', (branchId) => Promise.all([getRentalCatalog(branchId), listActiveBookings(branchId, now)]));
   return (
     <>
       <PageHeader

@@ -4,13 +4,12 @@ import { ActionForm, CheckboxField, SubmitButton, TextField } from '@/components
 import { Badge, Disclosure, PageHeader, Panel } from '@/components/ui/primitives';
 import { createCategoryAction, updateCategoryAction } from '@/features/admin-catalog/actions';
 import { listCategoriesAdmin } from '@/features/admin-catalog/queries';
-import { requireOwner } from '@/lib/auth/guards';
+import { requireOwner, withGuard } from '@/lib/auth/guards';
 
 export const metadata = { title: 'Nhóm sản phẩm' };
 
 export default async function CategoriesPage() {
-  await requireOwner();
-  const categories = await listCategoriesAdmin();
+  const [, categories] = await withGuard(requireOwner(), () => listCategoriesAdmin());
   return (
     <>
       <PageHeader

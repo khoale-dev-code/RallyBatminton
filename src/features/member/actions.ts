@@ -1,12 +1,11 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
 
 import { verifyTurnstile } from '@/features/booking/turnstile';
-import { publicEnv } from '@/lib/env';
+import { siteOrigin } from '@/lib/site-origin';
 import { errorCode, toUserMessage } from '@/lib/errors';
 import { formError, formSuccess, formZodError, type FormState } from '@/lib/form-state';
 import { createClient } from '@/lib/supabase/server';
@@ -21,14 +20,6 @@ import { isMemberAliasEmail, memberAliasEmail, memberBookingSchema, safeMemberNe
 const GENERIC_LOGIN_ERROR = 'Số điện thoại/email hoặc mật khẩu không đúng.';
 const GOOGLE_DISABLED = 'Đăng nhập bằng Google đang tạm chưa mở. Bạn vui lòng đăng nhập hoặc đăng ký bằng số điện thoại / email nhé.';
 const NO_SECRET = 'Máy chủ chưa cấu hình SUPABASE_SECRET_KEY nên chưa đăng ký / đăng nhập bằng số điện thoại được.';
-
-/** Địa chỉ gốc của website để Supabase chuyển về sau khi xác nhận email / Google. */
-async function siteOrigin(): Promise<string> {
-  const h = await headers();
-  const origin = h.get('origin');
-  if (origin && /^https?:\/\/[^/]+$/.test(origin)) return origin;
-  return publicEnv.siteUrl;
-}
 
 function secretOrNull() {
   try {

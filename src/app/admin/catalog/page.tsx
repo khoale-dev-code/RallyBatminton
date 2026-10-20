@@ -7,7 +7,7 @@ import { LinkTabs } from '@/components/ui/link-tabs';
 import { EmptyState, PageHeader } from '@/components/ui/primitives';
 import { ProductTable } from '@/features/admin-catalog/components/list/product-table';
 import { listCategoriesAdmin, listProductsAdmin, type ProductKind, type ProductStatusFilter } from '@/features/admin-catalog/queries';
-import { requireBranchPermission } from '@/lib/auth/guards';
+import { requireBranchPermission, withGuard } from '@/lib/auth/guards';
 import { hasPermission, isOwner } from '@/lib/auth/permissions';
 
 export const metadata = { title: 'Quản lý sản phẩm' };
@@ -29,13 +29,14 @@ const STATUS: Array<{ value: ProductStatusFilter; label: string }> = [
 const selectClass = 'min-h-11 w-full min-w-0 rounded-control border border-line bg-paper px-2 text-[0.95rem]';
 
 export default async function ProductManagerPage({ searchParams }: { searchParams: Promise<Search> }) {
-  const { ctx } = await requireBranchPermission('catalog.view');
   const sp = await searchParams;
   const kind: ProductKind = sp.kind === 'rental' ? 'rental' : 'sale';
   const q = typeof sp.q === 'string' ? sp.q.slice(0, 60) : undefined;
   const status = STATUS.find((s) => s.value === sp.status)?.value ?? 'all';
   const categoryId = typeof sp.category === 'string' ? sp.category : undefined;
-  const [products, categories] = await Promise.all([listProductsAdmin({ kind, q, status, categoryId }), listCategoriesAdmin()]);
+  const [{ ctx }, [products, categories]] = await withGuard(requireBranchPermission('catalog.view'), () =>
+    Promise.all([listProductsAdmin({ kind, q, status, categoryId }), listCategoriesAdmin()]),
+  );
   const canEdit = hasPermission(ctx, 'catalog.edit');
   const filtered = Boolean(q || status !== 'all' || categoryId);
   const tabHref = (k: ProductKind) => `/admin/catalog?kind=${k}`;

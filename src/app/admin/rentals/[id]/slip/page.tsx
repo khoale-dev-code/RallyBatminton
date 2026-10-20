@@ -5,7 +5,7 @@ import { buttonClass } from '@/components/ui/button';
 import { PrintButton } from '@/components/ui/print-button';
 import { getRental } from '@/features/admin-rentals/queries';
 import { getBrandInfo } from '@/features/brand/queries';
-import { requireBranchPermission } from '@/lib/auth/guards';
+import { requireBranchPermission, withGuard } from '@/lib/auth/guards';
 import { formatDateTime, formatPhone, formatRateLabel, formatVnd } from '@/lib/format';
 import { isUuid } from '@/lib/ids';
 import { PAYMENT_METHOD, RENTAL_STATUS, RENTAL_USAGE } from '@/lib/labels';
@@ -24,10 +24,11 @@ function Line({ label, value, strong }: { label: string; value: string; strong?:
 
 /** Phiếu cho thuê khổ 80mm (in nhiệt) — tùy chọn, để giao khách giữ hoặc kẹp cùng vật cầm cọc. */
 export default async function RentalSlipPage({ params }: { params: Promise<{ id: string }> }) {
-  const { ctx } = await requireBranchPermission('rental.operate');
   const { id } = await params;
   if (!isUuid(id)) notFound();
-  const [data, brand] = await Promise.all([getRental(id), getBrandInfo()]);
+  const [{ ctx }, [data, brand]] = await withGuard(requireBranchPermission('rental.operate'), () =>
+    Promise.all([getRental(id), getBrandInfo()]),
+  );
   if (!data) notFound();
   const { rental: r, lines, paid, due, policy, dueAt, booking } = data;
   const tz = r.branches?.timezone;

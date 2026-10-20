@@ -25,33 +25,36 @@ export async function suggestEmployeeCode(): Promise<string> {
   return `NV${String((count ?? 0) + 1).padStart(3, '0')}`;
 }
 
+/** Email đăng nhập nằm trong Supabase Auth (không lưu lặp ở bảng public) — đọc bằng quyền server. */
+async function loginEmailOf(userId: string): Promise<string | null> {
+  try {
+    const { data } = await createSecretClient().auth.admin.getUserById(userId);
+    return data.user?.email ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export async function getStaffMember(employeeId: string) {
   const supabase = await createClient();
-  const { data: employee } = await supabase
-    .from('employees')
-    .select('*, branches(name), staff_accounts(user_id, role, display_name, login_phone, is_active, must_change_password, created_at)')
-    .eq('id', employeeId)
-    .maybeSingle();
+  // Lượt 1: hồ sơ + bậc lương + chi nhánh (chỉ cần id nhân viên). Lượt 2: quyền + email (cần user_id).
+  const [{ data: employee }, { data: rates }, { data: branches }] = await Promise.all([
+    supabase
+      .from('employees')
+      .select('*, branches(name), staff_accounts(user_id, role, display_name, login_phone, is_active, must_change_password, created_at)')
+      .eq('id', employeeId)
+      .maybeSingle(),
+    supabase.from('employee_pay_rates').select('*').eq('employee_id', employeeId).order('effective_from', { ascending: false }),
+    supabase.from('branches').select('id, name, status').is('deleted_at', null).order('name'),
+  ]);
   if (!employee) return null;
   const account = employee.staff_accounts;
-  const [{ data: rates }, { data: perms }, { data: branches }] = await Promise.all([
-    supabase.from('employee_pay_rates').select('*').eq('employee_id', employeeId).order('effective_from', { ascending: false }),
+  const [{ data: perms }, loginEmail] = await Promise.all([
     account
       ? supabase.from('staff_branch_permissions').select('branch_id, permission').eq('user_id', account.user_id)
       : Promise.resolve({ data: [] }),
-    supabase.from('branches').select('id, name, status').is('deleted_at', null).order('name'),
+    account ? loginEmailOf(account.user_id) : Promise.resolve(null),
   ]);
-
-  // Email đăng nhập nằm trong Supabase Auth (không lưu lặp ở bảng public) — đọc bằng quyền server.
-  let loginEmail: string | null = null;
-  if (account) {
-    try {
-      const { data } = await createSecretClient().auth.admin.getUserById(account.user_id);
-      loginEmail = data.user?.email ?? null;
-    } catch {
-      loginEmail = null;
-    }
-  }
   return { employee, account, loginEmail, rates: rates ?? [], perms: perms ?? [], branches: branches ?? [] };
 }
 

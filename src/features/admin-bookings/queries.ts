@@ -57,23 +57,22 @@ export type DayBooking = NonNullable<Awaited<ReturnType<typeof getBookingDay>>>[
 
 export async function getBookingDetail(id: string) {
   const supabase = await createClient();
-  const { data: booking } = await supabase
-    .from('bookings')
-    .select(
-      `*, courts(id, name, branch_id, branches(id, name, timezone, opens_at, closes_at, slot_minutes)),
-       customers(id, full_name, phone, staff_note)`,
-    )
-    .eq('id', id)
-    .maybeSingle();
-  if (!booking) return null;
-  const [{ data: payments }, { data: balance }, { data: courts }, { data: audit }] = await Promise.all([
+  // Mọi truy vấn chỉ cần id đơn → chạy cùng lúc (sân cùng chi nhánh lấy kèm đơn) — 1 lượt mạng thay vì 2.
+  const [{ data: booking }, { data: payments }, { data: balance }, { data: audit }] = await Promise.all([
+    supabase
+      .from('bookings')
+      .select(
+        `*, courts(id, name, branch_id, branches(id, name, timezone, opens_at, closes_at, slot_minutes, branch_courts:courts(id, name, status, sort_order))),
+         customers(id, full_name, phone, staff_note)`,
+      )
+      .eq('id', id)
+      .maybeSingle(),
     supabase
       .from('payments')
       .select('id, kind, method, status, amount, reference, note, received_at, void_reason')
       .eq('booking_id', id)
       .order('received_at'),
     supabase.from('booking_balances').select('paid_amount, refunded_amount, balance_due').eq('booking_id', id).maybeSingle(),
-    supabase.from('courts').select('id, name').eq('branch_id', booking.branch_id).eq('status', 'active').order('sort_order'),
     supabase
       .from('audit_events')
       .select('id, occurred_at, action, reason, new_data')
@@ -82,8 +81,13 @@ export async function getBookingDetail(id: string) {
       .order('occurred_at', { ascending: false })
       .limit(20),
   ]);
+  if (!booking) return null;
+  const courts = (booking.courts?.branches?.branch_courts ?? [])
+    .filter((c) => c.status === 'active')
+    .sort((a, b) => a.sort_order - b.sort_order)
+    .map((c) => ({ id: c.id, name: c.name }));
   const range = parseTstzRange(booking.during);
-  return { booking, range, payments: payments ?? [], balance, courts: courts ?? [], audit: audit ?? [] };
+  return { booking, range, payments: payments ?? [], balance, courts, audit: audit ?? [] };
 }
 
 export async function listCourtsForBranch(branchId: string) {

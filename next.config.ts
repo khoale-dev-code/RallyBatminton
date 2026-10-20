@@ -38,6 +38,10 @@ const nextConfig: NextConfig = {
   },
   experimental: {
     serverActions: { bodySizeLimit: '2mb' },
+    // Bộ nhớ đệm phía trình duyệt khi chuyển trang:
+    //  - dynamic 0: trang quản trị luôn lấy số liệu mới khi bấm vào (mặc định Next 16);
+    //  - static 30: trang tải trước toàn bộ (rê chuột lên menu quản trị) chỉ dùng lại trong 30 giây thay vì 5 phút.
+    staleTimes: { dynamic: 0, static: 30 },
   },
   async headers() {
     return [{ source: '/:path*', headers: securityHeaders }];

@@ -4,7 +4,7 @@ import { LinkButton } from '@/components/ui/button';
 import { DayNav } from '@/components/ui/day-nav';
 import { Badge, EmptyState, PageHeader, Panel, Stat } from '@/components/ui/primitives';
 import { listSalesForDay } from '@/features/admin-sales/queries';
-import { requireBranchPermission } from '@/lib/auth/guards';
+import { requireBranchData } from '@/lib/auth/guards';
 import { formatDateKey, formatTime, formatVnd } from '@/lib/format';
 import { PAYMENT_METHOD } from '@/lib/labels';
 import { isDateKey, todayKey } from '@/lib/time';
@@ -12,10 +12,12 @@ import { isDateKey, todayKey } from '@/lib/time';
 export const metadata = { title: 'Đơn bán' };
 
 export default async function SalesPage({ searchParams }: { searchParams: Promise<{ date?: string }> }) {
-  const { branch } = await requireBranchPermission('sale.record');
   const { date } = await searchParams;
   const dateKey = date && isDateKey(date) ? date : todayKey();
-  const { sales, revenue, count } = await listSalesForDay(branch.branchId, dateKey);
+  const {
+    branch,
+    data: { sales, revenue, count },
+  } = await requireBranchData('sale.record', (branchId) => listSalesForDay(branchId, dateKey));
 
   return (
     <>
@@ -47,13 +49,14 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
                 <Link href={`/admin/sales/${s.id}`} className="flex items-center justify-between gap-4 px-4 py-3 hover:bg-hall/60 sm:px-6">
                   <span className="flex min-w-0 flex-col">
                     <span className="font-medium tabular">
-                      {formatTime(s.sold_at)} <span className="text-muted">{s.code}</span>
+                      {formatTime(s.sold_at)} <span className="whitespace-nowrap text-muted">{s.code}</span>
                     </span>
                     <span className="text-sm text-muted">
                       {[`${items} món`, method ? PAYMENT_METHOD[method] : null, s.customers?.full_name].filter(Boolean).join(', ')}
                     </span>
                   </span>
-                  <span className="flex shrink-0 items-center gap-3">
+                  {/* Điện thoại: số tiền trên, nhãn trạng thái dưới (không chen giữa làm vỡ mã đơn). */}
+                  <span className="flex shrink-0 flex-col-reverse items-end gap-1 sm:flex-row sm:items-center sm:gap-3">
                     {s.status === 'voided' && <Badge tone="red">Đã hủy</Badge>}
                     {s.status === 'completed' && s.payments.some((p) => p.status === 'pending') && (
                       <Badge tone="amber">Chờ chuyển khoản</Badge>

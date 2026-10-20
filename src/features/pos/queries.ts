@@ -9,10 +9,11 @@ import { type PosItem } from './lib/cart';
 /** Hàng bán đang kinh doanh, bật kênh Quầy, có dòng tồn tại chi nhánh (kể cả tồn 0 để nhân viên thấy hết hàng). */
 export async function getPosCatalog(
   branchId: string,
-  brandTax: BrandTax,
+  brandTaxInput: BrandTax | Promise<BrandTax>,
 ): Promise<{ items: PosItem[]; categories: Array<{ id: string; name: string }> }> {
   const supabase = await createClient();
-  const [{ data: levels, error }, { data: categories }] = await Promise.all([
+  // Thuế mặc định có thể đang tải song song (truyền Promise) — không chờ nó trước khi truy vấn hàng.
+  const [{ data: levels, error }, { data: categories }, brandTax] = await Promise.all([
     supabase
       .from('inventory_levels')
       .select(
@@ -26,6 +27,7 @@ export async function getPosCatalog(
       .eq('product_variants.products.show_on_pos', true)
       .is('product_variants.products.deleted_at', null),
     supabase.from('product_categories').select('id, name').eq('is_active', true).order('sort_order'),
+    brandTaxInput,
   ]);
   if (error) throw error;
   const items: PosItem[] = (levels ?? []).flatMap((l) => {
