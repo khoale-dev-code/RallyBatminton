@@ -7,7 +7,10 @@ import { Button, buttonClass } from '@/components/ui/button';
 import { formatDateTime, formatPhone, formatVnd } from '@/lib/format';
 import { PAYMENT_METHOD } from '@/lib/labels';
 
+import { type BankAccount } from '@/features/payments/lib/transfer';
+
 import { type Receipt } from '../hooks/use-pos';
+import { PendingTransfer } from './pending-transfer';
 
 export interface ReceiptBrand {
   name: string;
@@ -22,44 +25,58 @@ interface ReceiptViewProps {
   branchName: string;
   cashierName: string;
   onNewOrder: () => void;
+  account: BankAccount | null;
+  onPaid: (method?: 'cash' | 'bank_transfer') => void;
 }
 
 /** Màn sau khi thu tiền: kết quả lớn, dễ đọc cho thu ngân + phiếu in khổ 80mm. */
-export function ReceiptView({ receipt, brand, branchName, cashierName, onNewOrder }: ReceiptViewProps) {
+export function ReceiptView({ receipt, brand, branchName, cashierName, onNewOrder, account, onPaid }: ReceiptViewProps) {
   const s = receipt.snapshot;
   return (
     <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
-      <section aria-live="polite" className="flex flex-col items-start gap-5 rounded-panel border border-line bg-paper p-6 sm:p-8">
-        <span className="inline-flex items-center gap-2 rounded-full bg-court-soft px-3 py-1 text-sm font-medium text-court-deep">
-          <CircleCheck className="size-4" aria-hidden />
-          {receipt.replayed ? 'Đơn đã được ghi trước đó' : 'Đã ghi đơn'}
-        </span>
-        <div>
-          <p className="text-sm text-muted">Đã thu ({PAYMENT_METHOD[s.paymentMethod]})</p>
-          <p className="font-display text-5xl leading-none tabular sm:text-6xl">{formatVnd(receipt.total)}</p>
-        </div>
-        {s.change !== null && s.change > 0 && (
-          <div className="rounded-panel bg-ink px-5 py-3 text-paper">
-            <p className="text-sm text-paper/70">Tiền thối cho khách</p>
-            <p className="font-display text-4xl tabular">{formatVnd(s.change)}</p>
+      {receipt.transferCode ? (
+        <PendingTransfer
+          saleId={receipt.saleId}
+          code={receipt.code}
+          total={receipt.total}
+          transferCode={receipt.transferCode}
+          account={account}
+          onPaid={onPaid}
+          onCancelled={onNewOrder}
+        />
+      ) : (
+        <section aria-live="polite" className="flex flex-col items-start gap-5 rounded-panel border border-line bg-paper p-6 sm:p-8">
+          <span className="inline-flex items-center gap-2 rounded-full bg-court-soft px-3 py-1 text-sm font-medium text-court-deep">
+            <CircleCheck className="size-4" aria-hidden />
+            {receipt.replayed ? 'Đơn đã được ghi trước đó' : 'Đã ghi đơn'}
+          </span>
+          <div>
+            <p className="text-sm text-muted">Đã thu ({PAYMENT_METHOD[s.paymentMethod]})</p>
+            <p className="font-display text-5xl leading-none tabular sm:text-6xl">{formatVnd(receipt.total)}</p>
           </div>
-        )}
-        <p>
-          Mã đơn <span className="font-display text-2xl tabular">{receipt.code}</span>
-        </p>
-        <div className="flex w-full flex-wrap gap-2">
-          <Button onClick={onNewOrder} size="lg" autoFocus className="flex-1 sm:flex-none">
-            Đơn mới
-          </Button>
-          <Button onClick={() => window.print()} size="lg" variant="outline">
-            <Printer className="size-5" aria-hidden />
-            In phiếu
-          </Button>
-          <Link href={`/admin/sales/${receipt.saleId}`} className={buttonClass('ghost', 'lg')}>
-            Xem đơn
-          </Link>
-        </div>
-      </section>
+          {s.change !== null && s.change > 0 && (
+            <div className="rounded-panel bg-ink px-5 py-3 text-paper">
+              <p className="text-sm text-paper/70">Tiền thối cho khách</p>
+              <p className="font-display text-4xl tabular">{formatVnd(s.change)}</p>
+            </div>
+          )}
+          <p>
+            Mã đơn <span className="font-display text-2xl tabular">{receipt.code}</span>
+          </p>
+          <div className="flex w-full flex-wrap gap-2">
+            <Button onClick={onNewOrder} size="lg" autoFocus className="flex-1 sm:flex-none">
+              Đơn mới
+            </Button>
+            <Button onClick={() => window.print()} size="lg" variant="outline">
+              <Printer className="size-5" aria-hidden />
+              In phiếu
+            </Button>
+            <Link href={`/admin/sales/${receipt.saleId}`} className={buttonClass('ghost', 'lg')}>
+              Xem đơn
+            </Link>
+          </div>
+        </section>
+      )}
 
       <article
         id="pos-receipt"
@@ -122,7 +139,10 @@ export function ReceiptView({ receipt, brand, branchName, cashierName, onNewOrde
             </div>
           )}
           <div className="mt-1 flex justify-between">
-            <dt>{PAYMENT_METHOD[s.paymentMethod]}</dt>
+            <dt>
+              {PAYMENT_METHOD[s.paymentMethod]}
+              {receipt.transferCode ? ' (chờ tiền về)' : ''}
+            </dt>
             <dd>{formatVnd(s.tendered ?? receipt.total)}</dd>
           </div>
           {s.change !== null && s.change > 0 && (

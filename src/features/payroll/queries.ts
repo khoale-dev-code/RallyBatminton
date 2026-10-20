@@ -13,6 +13,10 @@ export interface PayrollRow {
   netPay: number;
   unresolved: number;
   missingRate: number;
+  /** Phần tăng ca (đã gồm trong basePay). */
+  overtimeMinutes: number;
+  overtimePay: number;
+  pendingOvertime: number;
 }
 
 export async function getPayrollMonth(month: string) {
@@ -22,7 +26,7 @@ export async function getPayrollMonth(month: string) {
     supabase
       .from('payroll_periods')
       .select(
-        'id, closed_at, note, payroll_lines(employee_id, employee_code, employee_name, shifts_count, paid_minutes, base_pay, adjustments_total, net_pay)',
+        'id, closed_at, note, payroll_lines(employee_id, employee_code, employee_name, shifts_count, paid_minutes, base_pay, adjustments_total, net_pay, overtime_minutes, overtime_pay)',
       )
       .eq('month', month)
       .order('employee_name', { referencedTable: 'payroll_lines' })
@@ -50,6 +54,9 @@ export async function getPayrollMonth(month: string) {
       netPay: l.net_pay ?? l.base_pay + l.adjustments_total,
       unresolved: 0,
       missingRate: 0,
+      overtimeMinutes: l.overtime_minutes,
+      overtimePay: l.overtime_pay,
+      pendingOvertime: 0,
     }));
   } else {
     const { data, error } = await supabase.rpc('preview_payroll_month', { p_month: month });
@@ -65,6 +72,9 @@ export async function getPayrollMonth(month: string) {
       netPay: l.net_pay,
       unresolved: l.unresolved_shifts,
       missingRate: l.missing_rate_shifts,
+      overtimeMinutes: l.overtime_minutes,
+      overtimePay: l.overtime_pay,
+      pendingOvertime: l.pending_overtime,
     }));
   }
 
@@ -76,6 +86,9 @@ export async function getPayrollMonth(month: string) {
       net: rows.reduce((n, r) => n + r.netPay, 0),
       unresolved: rows.reduce((n, r) => n + r.unresolved, 0),
       missingRate: rows.reduce((n, r) => n + r.missingRate, 0),
+      overtimePay: rows.reduce((n, r) => n + r.overtimePay, 0),
+      overtimeMinutes: rows.reduce((n, r) => n + r.overtimeMinutes, 0),
+      pendingOvertime: rows.reduce((n, r) => n + r.pendingOvertime, 0),
     },
   };
 }

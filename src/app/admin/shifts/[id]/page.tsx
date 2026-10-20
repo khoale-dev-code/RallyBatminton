@@ -4,6 +4,8 @@ import { notFound } from 'next/navigation';
 import { ActionForm, SelectField, SubmitButton, TextField } from '@/components/ui/form';
 import { Badge, DescriptionList, Disclosure, PageHeader, Panel } from '@/components/ui/primitives';
 import { adjustAttendanceAction, rescheduleShiftAction } from '@/features/shifts/actions';
+import { OvertimePanel } from '@/features/shifts/components/overtime-panel';
+import { overtimeEndsAt } from '@/features/shifts/lib/overtime';
 import { plannedMinutes } from '@/features/shifts/lib/shift-time';
 import { getShift } from '@/features/shifts/queries';
 import { requireOwner } from '@/lib/auth/guards';
@@ -11,7 +13,7 @@ import { formatDateKey, formatDateTime, formatMinutes, formatTime } from '@/lib/
 import { isUuid } from '@/lib/ids';
 import { ATTENDANCE_STATUS } from '@/lib/labels';
 import { halfHourOptions } from '@/lib/options';
-import { dateKeyInZone, DEFAULT_TZ, timeInZone } from '@/lib/time';
+import { dateKeyInZone, DEFAULT_TZ, requestNow, timeInZone } from '@/lib/time';
 
 function toLocalInput(value: string | null, tz: string): string {
   if (!value) return '';
@@ -25,9 +27,12 @@ export default async function ShiftDetailPage({ params }: { params: Promise<{ id
   if (!isUuid(id)) notFound();
   const data = await getShift(id);
   if (!data) notFound();
-  const { shift: s, history } = data;
+  const { shift: s, history, overtime, rate, monthClosed } = data;
   const tz = s.branches?.timezone ?? DEFAULT_TZ;
   const started = s.checked_in_at !== null;
+  const acceptedOt = overtime.find((o) => o.status === 'accepted');
+  // Có tăng ca đã đồng ý thì giờ ra gợi ý = hết khung tăng ca.
+  const expectedOut = acceptedOt ? overtimeEndsAt(s.scheduled_end, acceptedOt.minutes).toISOString() : s.scheduled_end;
 
   return (
     <>
@@ -81,6 +86,12 @@ export default async function ShiftDetailPage({ params }: { params: Promise<{ id
           </Panel>
         </div>
         <div className="flex flex-col gap-6">
+          <Panel
+            title="Tăng ca"
+            description="Đề nghị nhân viên ở lại sau giờ ra ca với giá riêng. Chỉ tính khi nhân viên đồng ý; phần làm thêm tính theo giá tăng ca."
+          >
+            <OvertimePanel shift={s} offers={overtime} rate={rate} monthClosed={monthClosed} tz={tz} now={requestNow()} />
+          </Panel>
           <Panel title="Điều chỉnh công" description="Chỉ chủ sân. Bắt buộc ghi lý do; không sửa được ca thuộc tháng đã chốt lương.">
             <ActionForm action={adjustAttendanceAction.bind(null, s.id)} confirmMessage="Lưu điều chỉnh công cho ca này?">
               <SelectField
@@ -103,7 +114,7 @@ export default async function ShiftDetailPage({ params }: { params: Promise<{ id
                 name="checked_out_at"
                 label="Giờ ra thực tế"
                 type="datetime-local"
-                defaultValue={toLocalInput(s.checked_out_at ?? s.scheduled_end, tz)}
+                defaultValue={toLocalInput(s.checked_out_at ?? expectedOut, tz)}
               />
               <TextField
                 name="actual_break_minutes"

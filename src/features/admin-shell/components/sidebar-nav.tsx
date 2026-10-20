@@ -65,8 +65,24 @@ export function SidebarNav({ nav, pathname, rail, closedGroups, onToggleGroup, o
                         active ? 'bg-ink text-paper' : 'hover:bg-hall',
                       )}
                     >
-                      <Icon className={cn('shrink-0', rail ? 'size-5' : 'size-4')} aria-hidden />
+                      <span className="relative shrink-0">
+                        <Icon className={rail ? 'size-5' : 'size-4'} aria-hidden />
+                        {rail && item.badge ? (
+                          <span className="absolute -top-1.5 -right-1.5 size-2.5 rounded-full bg-shuttle ring-2 ring-paper" aria-hidden />
+                        ) : null}
+                      </span>
                       <span className={cn(rail && 'sr-only')}>{item.label}</span>
+                      {item.badge ? (
+                        <span
+                          className={cn(
+                            'ml-auto grid min-w-5 place-items-center rounded-full bg-shuttle px-1.5 text-[11px] leading-5 font-semibold text-paper',
+                            rail && 'sr-only',
+                          )}
+                        >
+                          {item.badge}
+                          <span className="sr-only"> việc chờ</span>
+                        </span>
+                      ) : null}
                     </Link>
                   </li>
                 );

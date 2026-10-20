@@ -5,7 +5,13 @@ const money = z.preprocess((v) => (typeof v === 'string' ? Number(v) : v), z.num
 const text = z.string().nullish().catch(null);
 
 export const sepayApiTransactionSchema = z.looseObject({
-  id: z.union([z.string().trim().regex(/^\d{1,30}$/), z.number().int().nonnegative()]),
+  id: z.union([
+    z
+      .string()
+      .trim()
+      .regex(/^\d{1,30}$/),
+    z.number().int().nonnegative(),
+  ]),
   bank_brand_name: text,
   account_number: text,
   sub_account: text,

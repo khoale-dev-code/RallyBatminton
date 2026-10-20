@@ -1,10 +1,11 @@
 import { LinkButton } from '@/components/ui/button';
 import { Badge, EmptyState, PageHeader, Panel } from '@/components/ui/primitives';
 import { getMyOverview } from '@/features/me/queries';
+import { OvertimeRequestCard } from '@/features/shifts/components/overtime-request-card';
 import { requireStaff } from '@/lib/auth/guards';
 import { describeDateKey, formatMinutes, formatMonthKey, formatTime, formatVnd } from '@/lib/format';
 import { ATTENDANCE_STATUS } from '@/lib/labels';
-import { todayKey } from '@/lib/time';
+import { requestNow, todayKey } from '@/lib/time';
 
 export const metadata = { title: 'Ca & lương của tôi' };
 
@@ -22,6 +23,13 @@ export default async function MyPage() {
   const { employee, shifts, payslips, rate, adjustments } = await getMyOverview(ctx.employeeId, today);
   const upcoming = shifts.filter((s) => s.work_date >= today);
   const past = shifts.filter((s) => s.work_date < today).reverse();
+  const now = requestNow();
+  // Đề nghị tăng ca còn hạn trả lời (trước khi hết khung giờ tăng ca).
+  const requests = shifts.flatMap((s) =>
+    s.shift_overtime
+      .filter((o) => o.status === 'pending' && new Date(s.scheduled_end).getTime() + o.minutes * 60000 > now)
+      .map((o) => ({ offer: o, shift: s })),
+  );
 
   const shiftRow = (s: (typeof shifts)[number]) => {
     const tz = s.branches?.timezone;
@@ -40,6 +48,13 @@ export default async function MyPage() {
             {s.branches?.name}
             {s.status === 'present' ? `, công ${formatMinutes(s.paid_minutes ?? 0)}` : ''}
           </span>
+          {s.shift_overtime
+            .filter((o) => o.status === 'accepted')
+            .map((o) => (
+              <span key={o.id} className="text-sm text-court-deep">
+                Tăng ca +{formatMinutes(o.minutes)}, {formatVnd(o.hourly_rate)}/giờ
+              </span>
+            ))}
         </span>
         <Badge tone={ATTENDANCE_STATUS[s.status].tone}>
           {s.status === 'scheduled' && s.checked_in_at ? 'Đang làm' : ATTENDANCE_STATUS[s.status].label}
@@ -59,6 +74,21 @@ export default async function MyPage() {
           </LinkButton>
         }
       />
+      {requests.length > 0 && (
+        <section aria-label="Đề nghị tăng ca" className="mb-6">
+          <h2 className="mb-3 text-xl">Đề nghị tăng ca ({requests.length})</h2>
+          <ul className="grid gap-3 lg:grid-cols-2">
+            {requests.map(({ offer, shift }) => (
+              <OvertimeRequestCard
+                key={offer.id}
+                offer={offer}
+                shift={{ ...shift, branchName: shift.branches?.name ?? null }}
+                tz={shift.branches?.timezone}
+              />
+            ))}
+          </ul>
+        </section>
+      )}
       <div className="grid gap-6 lg:grid-cols-2">
         <Panel title="Ca sắp tới">
           {upcoming.length === 0 ? (
@@ -87,6 +117,7 @@ export default async function MyPage() {
                       <span>{p.payroll_periods ? formatMonthKey(p.payroll_periods.month) : ''}</span>
                       <span className="text-sm text-muted">
                         {p.shifts_count} ca, {formatMinutes(p.paid_minutes)}
+                        {p.overtime_minutes > 0 ? `, tăng ca ${formatMinutes(p.overtime_minutes)} (${formatVnd(p.overtime_pay)})` : ''}
                         {p.adjustments_total !== 0 ? `, điều chỉnh ${formatVnd(p.adjustments_total)}` : ''}
                       </span>
                     </span>

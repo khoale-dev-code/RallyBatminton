@@ -35,6 +35,7 @@
 
   --animate-draw: draw 1.6s cubic-bezier(0.65, 0, 0.35, 1) forwards;
   --animate-fade: fade 0.35s ease-out both;
+  --animate-toast: toast-in 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) both;
 
   @keyframes draw {
     from {
@@ -42,6 +43,16 @@
     }
     to {
       stroke-dashoffset: 0;
+    }
+  }
+  @keyframes toast-in {
+    from {
+      opacity: 0;
+      transform: translateY(-12px) scale(0.98);
+    }
+    to {
+      opacity: 1;
+      transform: none;
     }
   }
   @keyframes fade {
@@ -159,7 +170,7 @@
   }
 }
 
-/* In phiếu thanh toán tại quầy (khổ giấy nhiệt 80mm): chỉ in khối #pos-receipt. */
+/* In phiếu tại quầy (khổ giấy nhiệt 80mm): chỉ in khối #pos-receipt / .print-sheet (hóa đơn sân, phiếu cho thuê). */
 @media print {
   @page {
     margin: 4mm;
@@ -168,10 +179,16 @@
     visibility: hidden !important;
   }
   #pos-receipt,
-  #pos-receipt * {
+  #pos-receipt *,
+  .print-sheet,
+  .print-sheet * {
     visibility: visible !important;
   }
-  #pos-receipt {
+  .print-hide {
+    display: none !important;
+  }
+  #pos-receipt,
+  .print-sheet {
     position: absolute;
     top: 0;
     left: 0;

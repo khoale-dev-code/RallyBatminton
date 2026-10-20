@@ -1,6 +1,6 @@
 'use client';
 
-import { CircleAlert, CircleCheck, Info, X } from 'lucide-react';
+import { CircleAlert, CircleCheck, Info, LoaderCircle, X } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { createContext, useContext, useEffect, useSyncExternalStore, type ReactNode } from 'react';
 
@@ -8,13 +8,14 @@ import { cn } from '@/lib/cn';
 import { FLASH_COOKIE, type FlashTone } from '@/lib/flash-cookie';
 
 export type ToastTone = FlashTone;
+/** "loading" = đang xử lý (không tự tắt), sau đó đổi thành thành công / lỗi bằng toast.update. */
+type ItemTone = ToastTone | 'loading';
 
 interface ToastItem {
   id: number;
-  tone: ToastTone;
+  tone: ItemTone;
   message: string;
 }
-
 
 const DURATION: Record<ToastTone, number> = { success: 3500, info: 4500, error: 7000 };
 const MAX_VISIBLE = 4;
@@ -34,21 +35,48 @@ function dismiss(id: number) {
   emit();
 }
 
-function push(tone: ToastTone, message: string) {
-  const text = message.trim();
-  if (!text) return;
-  // Cùng nội dung đang hiện → không chồng thêm bản nữa.
-  if (items.some((t) => t.message === text && t.tone === tone)) return;
-  const id = nextId++;
-  items = [...items, { id, tone, message: text }].slice(-MAX_VISIBLE);
-  emit();
+function scheduleDismiss(id: number, tone: ToastTone) {
   window.setTimeout(() => dismiss(id), DURATION[tone]);
 }
 
+function push(tone: ItemTone, message: string): number | null {
+  const text = message.trim();
+  if (!text) return null;
+  // Cùng nội dung đang hiện → không chồng thêm bản nữa.
+  const same = items.find((t) => t.message === text && t.tone === tone);
+  if (same) return same.id;
+  const id = nextId++;
+  items = [...items, { id, tone, message: text }].slice(-MAX_VISIBLE);
+  emit();
+  if (tone !== 'loading') scheduleDismiss(id, tone);
+  return id;
+}
+
+/**
+ * Đổi một thông báo đang hiện (thường là "Đang tải…") thành tiến độ mới hoặc kết quả;
+ * nếu đã bị đóng thì hiện thông báo mới.
+ */
+function update(id: number | null, tone: ItemTone, message: string) {
+  const text = message.trim();
+  if (id === null || !items.some((t) => t.id === id)) {
+    push(tone, text);
+    return;
+  }
+  items = items.map((t) => (t.id === id ? { id, tone, message: text } : t));
+  emit();
+  if (tone !== 'loading') scheduleDismiss(id, tone);
+}
+
 export const toast = {
-  success: (message: string) => push('success', message),
-  error: (message: string) => push('error', message),
-  info: (message: string) => push('info', message),
+  success: (message: string) => void push('success', message),
+  error: (message: string) => void push('error', message),
+  info: (message: string) => void push('info', message),
+  /** Hiện "đang xử lý" (không tự tắt); trả về id để toast.update(id, 'success', …) khi xong. */
+  loading: (message: string) => push('loading', message),
+  update,
+  dismiss: (id: number | null) => {
+    if (id !== null) dismiss(id);
+  },
 };
 
 function subscribe(listener: () => void) {
@@ -82,7 +110,8 @@ function readFlash(): { tone: ToastTone; message: string } | null {
   return null;
 }
 
-const ICON: Record<ToastTone, ReactNode> = {
+const ICON: Record<ItemTone, ReactNode> = {
+  loading: <LoaderCircle className="size-5 shrink-0 animate-spin text-paper/80" aria-hidden />,
   success: <CircleCheck className="size-5 shrink-0 text-court" aria-hidden />,
   error: <CircleAlert className="size-5 shrink-0 text-shuttle" aria-hidden />,
   info: <Info className="size-5 shrink-0 text-paper/80" aria-hidden />,
@@ -106,23 +135,27 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <ToastEnabledContext.Provider value={true}>
       {children}
+      {/* Hiện ở phía trên, giữa màn hình: không bị che bởi thanh thao tác dưới đáy, admin dễ thấy ngay. */}
       <section
         aria-label="Thông báo"
-        className="pointer-events-none fixed inset-x-0 bottom-0 z-[90] flex flex-col items-center gap-2 px-3 pb-[max(1rem,env(safe-area-inset-bottom))] sm:inset-x-auto sm:right-5 sm:bottom-5 sm:items-end sm:px-0 sm:pb-0"
+        className="pointer-events-none fixed inset-x-0 top-0 z-[90] flex justify-center px-3 pt-[max(0.75rem,env(safe-area-inset-top))] sm:pt-4"
       >
-        <ol className="flex w-full max-w-sm flex-col gap-2">
+        <ol className="flex w-full max-w-md flex-col gap-2">
           {list.map((t) => (
             <li
               key={t.id}
               role={t.tone === 'error' ? 'alert' : 'status'}
               aria-live={t.tone === 'error' ? 'assertive' : 'polite'}
+              aria-busy={t.tone === 'loading' || undefined}
               className={cn(
-                'animate-fade pointer-events-auto flex items-start gap-3 rounded-control bg-ink px-4 py-3 text-sm text-paper shadow-[0_18px_40px_-16px_rgb(0_0_0/0.6)]',
-                t.tone === 'error' && 'ring-1 ring-shuttle/60',
+                'animate-toast pointer-events-auto flex items-start gap-3 rounded-control border-l-4 bg-ink px-4 py-3 text-sm text-paper shadow-[0_18px_40px_-16px_rgb(0_0_0/0.6)]',
+                t.tone === 'success' && 'border-court',
+                t.tone === 'error' && 'border-shuttle',
+                (t.tone === 'info' || t.tone === 'loading') && 'border-paper/40',
               )}
             >
               {ICON[t.tone]}
-              <span className="min-w-0 flex-1 leading-snug break-words">{t.message}</span>
+              <span className="min-w-0 flex-1 leading-snug font-medium break-words">{t.message}</span>
               <button
                 type="button"
                 onClick={() => dismiss(t.id)}

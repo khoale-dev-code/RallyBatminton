@@ -13,6 +13,7 @@ import { CartPanel, EMPTY_FORM, moneyInput, type CheckoutForm } from './cart-pan
 import { PosHeader } from './pos-header';
 import { CatalogToolbar, ProductGrid } from './product-grid';
 import { ReceiptView, type ReceiptBrand } from './receipt-view';
+import { type BankAccount } from '@/features/payments/lib/transfer';
 
 interface PosTerminalProps {
   branchName: string;
@@ -23,6 +24,8 @@ interface PosTerminalProps {
   items: PosItem[];
   categories: Array<{ id: string; name: string }>;
   canDiscount: boolean;
+  /** Tài khoản nhận chuyển khoản của chi nhánh (mã QR); null = chưa cài. */
+  bankAccount: BankAccount | null;
 }
 
 function isTypingTarget(el: EventTarget | null): boolean {
@@ -30,7 +33,17 @@ function isTypingTarget(el: EventTarget | null): boolean {
 }
 
 /** Màn bán hàng tại quầy: chọn món bên trái, đơn hiện tại bên phải (điện thoại: mở dạng trang phủ). */
-export function PosTerminal({ branchName, cashierName, dateLabel, today, brand, items, categories, canDiscount }: PosTerminalProps) {
+export function PosTerminal({
+  branchName,
+  cashierName,
+  dateLabel,
+  today,
+  brand,
+  items,
+  categories,
+  canDiscount,
+  bankAccount,
+}: PosTerminalProps) {
   const router = useRouter();
   const pos = usePos(items);
   const searchRef = useRef<HTMLInputElement>(null);
@@ -152,6 +165,11 @@ export function PosTerminal({ branchName, cashierName, dateLabel, today, brand, 
           brand={brand}
           branchName={branchName}
           cashierName={cashierName}
+          account={bankAccount}
+          onPaid={(method) => {
+            pos.markPaid(method);
+            router.refresh();
+          }}
           onNewOrder={() => {
             pos.dismissReceipt();
             setForm(EMPTY_FORM);

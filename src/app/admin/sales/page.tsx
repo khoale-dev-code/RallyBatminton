@@ -41,7 +41,7 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
         <ul className="divide-y divide-line rounded-panel border border-line bg-paper">
           {sales.map((s) => {
             const items = s.sale_lines.reduce((n, l) => n + l.quantity, 0);
-            const method = s.payments.find((p) => p.status !== 'voided')?.method ?? s.payments[0]?.method;
+            const method = s.payments.find((p) => p.status === 'succeeded' || p.status === 'pending')?.method ?? s.payments[0]?.method;
             return (
               <li key={s.id}>
                 <Link href={`/admin/sales/${s.id}`} className="flex items-center justify-between gap-4 px-4 py-3 hover:bg-hall/60 sm:px-6">
@@ -55,6 +55,9 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
                   </span>
                   <span className="flex shrink-0 items-center gap-3">
                     {s.status === 'voided' && <Badge tone="red">Đã hủy</Badge>}
+                    {s.status === 'completed' && s.payments.some((p) => p.status === 'pending') && (
+                      <Badge tone="amber">Chờ chuyển khoản</Badge>
+                    )}
                     <span className={s.status === 'voided' ? 'text-muted line-through tabular' : 'font-display text-lg tabular'}>
                       {formatVnd(s.total_amount)}
                     </span>

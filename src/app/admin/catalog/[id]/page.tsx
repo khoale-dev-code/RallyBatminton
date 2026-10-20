@@ -25,7 +25,6 @@ import { variantTitle } from '@/features/admin-catalog/lib/product-draft';
 import { getProductForEdit, listCategoriesAdmin, listComponentCandidates, listTagSuggestions } from '@/features/admin-catalog/queries';
 import { requireBranchPermission } from '@/lib/auth/guards';
 import { hasPermission, isOwner } from '@/lib/auth/permissions';
-import { publicEnv } from '@/lib/env';
 import { getBrandTax } from '@/features/brand/queries';
 import { formatVariantLabel } from '@/lib/format';
 
@@ -286,7 +285,6 @@ export default async function ProductEditPage({
         branches={[]}
         tagSuggestions={tagSuggestions}
         canManageCategories={isOwner(ctx)}
-        siteHost={new URL(publicEnv.siteUrl).host}
         brandTax={brandTax}
         canManageTax={isOwner(ctx)}
         readOnly={!canEdit}

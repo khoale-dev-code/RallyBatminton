@@ -27,10 +27,25 @@ const saleInputSchema = z.object({
 export type SaleInput = z.input<typeof saleInputSchema>;
 
 export type SaleResult =
-  | { ok: true; saleId: string; code: string; total: number; replayed: boolean }
+  | {
+      ok: true;
+      saleId: string;
+      code: string;
+      total: number;
+      replayed: boolean;
+      /** Chuyển khoản qua QR: nội dung RB… khách cần ghi, tiền chưa về (null = đã thu). */
+      transferCode: string | null;
+    }
   | { ok: false; error: string; code?: string };
 
-const rpcResult = z.object({ sale_id: z.uuid(), code: z.string(), total_amount: z.number(), replayed: z.boolean().optional() });
+const rpcResult = z.object({
+  sale_id: z.uuid(),
+  code: z.string(),
+  total_amount: z.number(),
+  replayed: z.boolean().optional(),
+  transfer_code: z.string().nullish(),
+  payment_status: z.string().optional(),
+});
 
 export async function recordSaleAction(input: SaleInput): Promise<SaleResult> {
   const { ctx, branch } = await requireBranchPermission('sale.record');
@@ -58,5 +73,69 @@ export async function recordSaleAction(input: SaleInput): Promise<SaleResult> {
   revalidatePath('/admin/inventory');
   revalidatePath('/admin');
   invalidatePublic('catalog');
-  return { ok: true, saleId: res.data.sale_id, code: res.data.code, total: res.data.total_amount, replayed: res.data.replayed ?? false };
+  return {
+    ok: true,
+    saleId: res.data.sale_id,
+    code: res.data.code,
+    total: res.data.total_amount,
+    replayed: res.data.replayed ?? false,
+    transferCode: res.data.payment_status === 'pending' ? (res.data.transfer_code ?? null) : null,
+  };
+}
+
+const transferStatusSchema = z.object({
+  sale_status: z.string(),
+  total_amount: z.number(),
+  paid: z.number(),
+  pending: z.object({ payment_id: z.string(), amount: z.number(), reference: z.string() }).nullable(),
+});
+export type SaleTransferStatus = z.infer<typeof transferStatusSchema>;
+
+/** Màn chờ khách quét QR hỏi lại: tiền đã về chưa (SePay ghi nhận tự động). */
+export async function saleTransferStatusAction(saleId: string): Promise<SaleTransferStatus | null> {
+  await requireBranchPermission('sale.record');
+  if (!z.uuid().safeParse(saleId).success) return null;
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc('sale_transfer_status', { p_sale_id: saleId });
+  if (error) return null;
+  const parsed = transferStatusSchema.safeParse(data);
+  return parsed.success ? parsed.data : null;
+}
+
+/** Khách đổi ý trả tiền mặt / thẻ, hoặc nhân viên đã thấy tiền về và nhập mã giao dịch. */
+export async function settlePendingSaleAction(
+  saleId: string,
+  method: 'cash' | 'bank_transfer',
+  reference?: string,
+): Promise<{ ok: true; status: SaleTransferStatus } | { ok: false; error: string }> {
+  await requireBranchPermission('sale.record');
+  const ref = reference?.trim() || null;
+  if (method === 'bank_transfer' && (!ref || ref.length < 3))
+    return { ok: false, error: 'Nhập mã giao dịch ngân hàng (tối thiểu 3 ký tự).' };
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc('settle_pending_sale', {
+    p_sale_id: saleId,
+    p_method: method,
+    p_reference: ref,
+    p_idempotency_key: `settle:${saleId}:${method}`,
+  });
+  if (error) return { ok: false, error: toUserMessage(error) };
+  const parsed = transferStatusSchema.safeParse(data);
+  if (!parsed.success) return { ok: false, error: 'Không đọc được trạng thái đơn.' };
+  revalidatePath('/admin/sales');
+  return { ok: true, status: parsed.data };
+}
+
+/** Hủy đơn đang chờ chuyển khoản (khách không chuyển): trả hàng về kho, giữ lịch sử. */
+export async function cancelPendingSaleAction(saleId: string, reason: string): Promise<{ ok: true } | { ok: false; error: string }> {
+  await requireBranchPermission('sale.record');
+  const why = reason.trim();
+  if (why.length < 3) return { ok: false, error: 'Nhập lý do hủy (tối thiểu 3 ký tự).' };
+  const supabase = await createClient();
+  const { error } = await supabase.rpc('cancel_pending_sale', { p_sale_id: saleId, p_reason: why });
+  if (error) return { ok: false, error: toUserMessage(error) };
+  revalidatePath('/admin/sales');
+  revalidatePath('/admin/inventory');
+  invalidatePublic('catalog');
+  return { ok: true };
 }

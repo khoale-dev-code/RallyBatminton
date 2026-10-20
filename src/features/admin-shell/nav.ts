@@ -18,12 +18,15 @@ export type NavIcon =
   | 'me'
   | 'receipt'
   | 'scan'
-  | 'bank';
+  | 'bank'
+  | 'cash';
 
 export interface NavItem {
   href: string;
   label: string;
   icon: NavIcon;
+  /** Số việc chờ (vd. đề nghị tăng ca chưa trả lời) — hiện chấm đỏ có số. */
+  badge?: number;
 }
 
 export type NavGroupKey = 'ops' | 'goods' | 'hr' | 'admin';
@@ -40,7 +43,7 @@ export const NAV_CLOSED_COOKIE = 'rally_nav_closed';
 export const NAV_GROUP_KEYS: NavGroupKey[] = ['ops', 'goods', 'hr', 'admin'];
 
 /** Menu chỉ hiện mục người dùng có quyền — chỉ là tiện ích; database vẫn chặn bằng RLS. */
-export function buildNav(ctx: StaffContext): NavGroup[] {
+export function buildNav(ctx: StaffContext, counts: { pendingOvertime?: number } = {}): NavGroup[] {
   const owner = isOwner(ctx);
   const can = (p: Parameters<typeof hasPermission>[1]) => owner || hasPermission(ctx, p);
   const groups: NavGroup[] = [
@@ -50,6 +53,7 @@ export function buildNav(ctx: StaffContext): NavGroup[] {
       items: [
         { href: '/admin', label: 'Tổng quan', icon: 'dashboard' as const },
         ...(can('booking.view') ? [{ href: '/admin/bookings', label: 'Lịch đặt sân', icon: 'calendar' as const }] : []),
+        ...(can('payment.record') ? [{ href: '/admin/checkout', label: 'Thu tiền sân', icon: 'cash' as const }] : []),
         ...(can('booking.view') ? [{ href: '/admin/customers', label: 'Khách hàng', icon: 'users' as const }] : []),
         ...(can('payment.record') ? [{ href: '/admin/bank', label: 'Giao dịch ngân hàng', icon: 'bank' as const }] : []),
         ...(can('sale.record') ? [{ href: '/admin/pos', label: 'Bán hàng', icon: 'cart' as const }] : []),
@@ -69,11 +73,13 @@ export function buildNav(ctx: StaffContext): NavGroup[] {
       key: 'hr',
       title: 'Nhân sự',
       items: [
-        ...(can('shift.view_branch') ? [{ href: '/admin/shifts', label: 'Lịch ca', icon: 'clock' as const }] : []),
+        ...(can('shift.view_branch') || ctx.employeeId ? [{ href: '/admin/shifts', label: 'Lịch ca', icon: 'clock' as const }] : []),
         ...(owner ? [{ href: '/admin/attendance', label: 'Mã QR chấm công', icon: 'qr' as const }] : []),
         ...(owner ? [{ href: '/admin/staff', label: 'Nhân viên', icon: 'id' as const }] : []),
         ...(owner ? [{ href: '/admin/payroll', label: 'Bảng lương', icon: 'wallet' as const }] : []),
-        ...(ctx.employeeId ? [{ href: '/admin/me', label: 'Ca & lương của tôi', icon: 'me' as const }] : []),
+        ...(ctx.employeeId
+          ? [{ href: '/admin/me', label: 'Ca & lương của tôi', icon: 'me' as const, badge: counts.pendingOvertime ?? 0 }]
+          : []),
         ...(ctx.employeeId ? [{ href: '/checkin', label: 'Quét QR chấm công', icon: 'scan' as const }] : []),
       ],
     },

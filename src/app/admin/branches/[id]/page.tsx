@@ -249,7 +249,8 @@ export default async function BranchEditPage({ params }: { params: Promise<{ id:
               ownerId={b.id}
               onUploaded={setBranchCoverAction.bind(null, b.id)}
               multiple={false}
-              label="Tải ảnh bìa"
+              replaces={Boolean(b.cover_image_path)}
+              label={b.cover_image_path ? 'Đổi ảnh bìa' : 'Tải ảnh bìa'}
             />
           </Panel>
 

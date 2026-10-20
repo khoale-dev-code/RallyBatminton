@@ -13,7 +13,12 @@ export type AlertResult =
   | { status: 'failed'; message: string };
 
 /** Gửi một email qua Resend (gọi thẳng REST, không cần thư viện). */
-async function sendEmail(to: string[], subject: string, html: string, text: string): Promise<{ ok: true } | { ok: false; message: string }> {
+async function sendEmail(
+  to: string[],
+  subject: string,
+  html: string,
+  text: string,
+): Promise<{ ok: true } | { ok: false; message: string }> {
   const { apiKey, from, apiBase } = getAlertEmailConfig();
   if (!apiKey) return { ok: false, message: 'Chưa cấu hình RESEND_API_KEY.' };
   try {
@@ -51,7 +56,12 @@ export async function sendPendingAlerts(): Promise<AlertResult> {
   if (!getAlertEmailConfig().apiKey) return { status: 'skipped', reason: 'no_api_key' };
   if (recipients.length === 0) return { status: 'skipped', reason: 'no_recipients' };
 
-  const sent = await sendEmail(recipients, alertSubject(items), alertEmailHtml(items, adminBankUrl()), alertEmailText(items, adminBankUrl()));
+  const sent = await sendEmail(
+    recipients,
+    alertSubject(items),
+    alertEmailHtml(items, adminBankUrl()),
+    alertEmailText(items, adminBankUrl()),
+  );
   if (!sent.ok) {
     console.error('[alerts] Gửi email cảnh báo lỗi:', sent.message);
     return { status: 'failed', message: sent.message };

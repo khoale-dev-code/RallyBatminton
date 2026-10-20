@@ -55,6 +55,9 @@ Vào **Supabase Dashboard → SQL Editor**, mở từng file trong `supabase/sql
 | 16 | `15_sepay_deposit.sql` | Có | Đặt cọc chuyển khoản qua SePay: mã VietQR sau khi giữ sân, tiền về là đơn tự xác nhận; trang *Giao dịch ngân hàng*; Tổng quan dòng tiền mới. Cần cấu hình SePay (mục 15). Chạy sau 14 |
 | 17 | `16_alerts_reconcile.sql` | Nên chạy | Email báo chủ sân khi có giao dịch cần xử lý; đối soát dự phòng với SePay (ghi bù giao dịch webhook bị lọt). Xem mục 16. Chạy sau 15 |
 | 18 | `17_reconcile_cron_optional.sql` | Không | Lịch đối soát mỗi 15 phút bằng Supabase Cron (cần tạo 2 secret trong Vault trước — xem đầu file). Chạy sau 16 |
+| 19 | `18_overtime.sql` | Có | Tăng ca có sự đồng ý của nhân viên: chủ sân đề nghị ở lại thêm (giá tăng ca riêng), nhân viên Đồng ý / Từ chối; bảng lương tách tiền tăng ca. Xem mục 17. Chạy sau 16 |
+| 20 | `19_staff_checkout.sql` | Có | Tổng quan riêng cho nhân viên (lương tạm tính, giờ công, đi trễ, tăng ca, thưởng/phạt); tên đồng nghiệp trên lịch ca; bán hàng chuyển khoản bằng mã QR SePay tự xác nhận. Xem mục 18. Chạy sau 18 |
+| 21 | `20_booking_extend.sql` | Có | Khách chơi thêm giờ: gia hạn đơn đang chơi theo bước 30 phút, giới hạn bởi đơn kế tiếp trên sân / giờ đóng cửa, tính tiền phần thêm theo bảng giá. Xem mục 19. Chạy sau 19 |
 
 **Đã cài Rally từ trước?** Chỉ cần chạy thêm `05_product_details.sql`, `06_product_tax.sql` rồi `07_units_options.sql` (không mất dữ liệu).
 
@@ -293,3 +296,58 @@ select vault.create_secret('<giá trị CRON_SECRET>', 'rally_cron_secret');
 Kiểm tra lịch: `select * from cron.job where jobname = 'rally-sepay-reconcile';` — kết quả từng lần chạy hiện ở thanh *Đối soát dự phòng* trong *Giao dịch ngân hàng*.
 
 **Thông báo nổi (snackbar):** mọi thao tác ở khu quản trị và nhân viên (tạo / lưu / xóa, bán hàng, cho thuê, nhân sự, đổi chi nhánh…) hiện thông báo nổi góc dưới; lỗi hiện lâu hơn và vẫn đánh dấu ô nhập sai trong form.
+
+## 17. Lịch ca mới & tăng ca (`18_overtime.sql`)
+
+**Lịch ca (kiểu Google Calendar):** cột giờ bên trái, mỗi ngày một cột, ô ca đặt đúng giờ bắt đầu – kết thúc; ca **trùng giờ** đứng cạnh nhau (cột hẹp chỉ hiện tên gọi + giờ vào). Mỗi nhân viên một màu nhận diện (bấm tên ở hàng chip để làm nổi bật ca của người đó). Ca **đang làm** tô xanh đặc; đến giờ mà **chưa vào ca** tô đỏ nhạt; ca đã qua làm mờ; tăng ca hiện phần kẻ sọc nối dưới ca. Vạch đỏ là giờ hiện tại (tự chạy mỗi 30 giây). Điện thoại: dải chọn ngày phía trên, xem một ngày đầy đủ. Dải **Đang trong ca** phía trên liệt kê ai đang làm tới mấy giờ.
+
+**Xếp ca (chủ sân):** bấm **Xếp ca mới** hoặc bấm vào ô trống trên lịch (mở sẵn ngày và giờ đó).
+
+1. *Ai làm?* — chọn một hoặc nhiều nhân viên (người chi nhánh này đứng trước; người chi nhánh khác bấm "+ N người"). Nhân viên chưa có mức lương được nhắc.
+2. *Giờ làm* — bấm mẫu ca (Ca sáng / chiều / tối và các khung giờ hay dùng ở chi nhánh) hoặc chọn giờ vào, giờ ra, phút nghỉ. Giờ ra sớm hơn giờ vào = ca qua nửa đêm. Ca tối đa 16 giờ.
+3. *Ngày nào?* — 1 ngày, cả tuần, T2–T6, cuối tuần, hoặc tự chọn khoảng ngày (tối đa 31 ngày) và các thứ lặp lại.
+4. Khung **Xem trước** liệt kê từng ca sẽ tạo, tổng giờ công, ca trùng giờ (gạch đỏ). Ca trùng với ca đã có của nhân viên (kể cả ở chi nhánh khác) **được bỏ qua, các ca còn lại vẫn xếp**; thông báo cho biết bỏ qua ngày nào.
+
+**Tăng ca:**
+
+1. *Lịch ca → bấm vào ca → Tăng ca*: chọn ở lại thêm bao lâu (30 phút → 6 giờ, ngay sau giờ ra ca), giá tăng ca (đ/giờ) và lý do. Có nút gợi ý giá theo Bộ luật Lao động 2019 Điều 98 (ngày thường 150%, ngày nghỉ hằng tuần 200%, lễ tết 300% lương thường); nhập thấp hơn 150% thì hiện cảnh báo (vẫn lưu được — chủ sân tự quyết).
+2. Nhân viên thấy đề nghị ở *Ca & lương của tôi* (menu có chấm đỏ đếm số đề nghị): giá, ở lại tới mấy giờ, nhận thêm bao nhiêu → **Đồng ý / Từ chối**, trả lời được tới hết khung tăng ca. Đã thỏa thuận miệng tại sân thì chủ sân tick **Nhân viên đã đồng ý trực tiếp** (ghi nhận ngay; ca đã qua thì chỉ dùng cách này).
+3. Nhân viên đồng ý → quét QR ra ca lúc về (hạn quét ra kéo dài theo tăng ca).
+4. **Tính lương:** phút làm **sau giờ ra ca theo lịch**, tối đa số phút đã đồng ý, tính giá tăng ca; phần còn lại giá thường như trước. Không đồng ý / chưa trả lời / đã hủy → không có giá tăng ca. Ví dụ ca 07:00–11:00 giá 25.000 đ/giờ, tăng ca 2 giờ giá 30.000 đ/giờ, quét ra 13:00 → 4 × 25.000 + 2 × 30.000 = **160.000 đ**; quét ra 12:30 → tăng ca 1g30 = 45.000 đ.
+5. Bảng lương có cột **Trong đó tăng ca**, ô tổng **Tiền tăng ca**, cảnh báo đề nghị còn chờ trả lời; file CSV thêm *Phút tăng ca*, *Lương giờ thường*, *Tiền tăng ca*. Phiếu lương nhân viên ghi riêng phần tăng ca.
+
+Đề nghị không xóa được, chỉ hủy (kèm lý do); mọi thay đổi ghi vào Nhật ký. Tháng đã chốt lương thì không đổi được tăng ca. Mức giá tăng ca chỉ chủ sân và chính nhân viên đó xem được.
+
+## 18. Tài khoản nhân viên, thu tiền sân, chuyển khoản tại quầy (`19_staff_checkout.sql`)
+
+**Tổng quan của nhân viên** (`/admin` khi đăng nhập bằng tài khoản nhân viên) — khác hẳn chủ sân: ca đang làm / ca kế tiếp, **lương tạm tính đến hôm nay**, giờ công (số ca đã làm, ca còn lại), **tăng ca** (số lần, giờ, tiền), **đi trễ** (số lần, tổng phút — tính khi quét QR vào ca muộn hơn 5 phút), **thưởng**, **phạt / khấu trừ**, vắng / nghỉ phép, bảng *Cách tính lương tháng* và các khoản thưởng / phạt kèm lý do; xem được các tháng trước. Lối tắt theo quyền: Thu tiền sân, Bán hàng, Cho thuê, Lịch đặt sân, Lịch ca.
+
+**Lịch ca cho nhân viên:** cùng giao diện với chủ sân, hiện đủ tên đồng nghiệp (chỉ tên + mã, không lộ số điện thoại / lương). Nhân viên không có quyền "Xem lịch ca chi nhánh" vẫn mở được *Lịch ca* để xem ca của chính mình.
+
+**Thu tiền sân** (*Vận hành → Thu tiền sân*, cần quyền thu tiền): danh sách đơn trong ngày, đơn đang chơi / hết giờ còn nợ lên đầu, tìm theo mã đơn / tên / SĐT. Mở đơn:
+
+- **Chuyển khoản:** mã VietQR đúng số tiền còn nợ, nội dung là mã đơn (VietinBank tự thêm `SEVQR`). Khách chuyển xong → SePay báo về → màn hình tự chuyển "Đã thu đủ" (hỏi lại 3 giây/lần). Nếu đã thấy tiền trong app ngân hàng mà chưa xác nhận: ghi tay kèm mã giao dịch.
+- **Tiền mặt:** nhập tiền khách đưa (nút nhanh 50k/100k/200k/500k) → hiện tiền thối.
+- Thu xong: **In hóa đơn** (khổ 80mm, máy in nhiệt hoặc máy in thường). Ở trang chi tiết đơn cũng có nút *Thu tiền (QR / tiền mặt)* và *In hóa đơn*. Đơn đã xác nhận có nút *Khách đã đến — nhận sân*.
+
+**Bán hàng chuyển khoản:** chọn *Chuyển khoản* và để trống mã giao dịch → bấm *Hiện mã QR* → đơn được ghi với khoản thu **chờ tiền về**, nội dung `RB…` do hệ thống cấp (cùng dạng mã đơn đặt sân nên không cần sửa cấu hình SePay). Tiền về → tự sang "Đã thu", in phiếu. Khách đổi ý → *Khách trả tiền mặt*; khách không chuyển → *Hủy đơn* (hàng tự trả về kho, nhân viên hủy được trong 24 giờ khi chưa thu tiền). Chuyển thiếu / dư → vào *Giao dịch ngân hàng* (mục Cần xử lý) và email báo chủ sân. Đơn chờ chuyển khoản chưa tính vào doanh thu ngày.
+
+**Cho thuê:** nút **In phiếu** (không bắt buộc) ở trang phiếu thuê — khổ 80mm, có đồ thuê, giờ nhận / hạn trả, vật cầm cọc, tiền, quy định trả trễ, chỗ ký.
+
+**Quản lý sản phẩm:** bỏ mục SEO khỏi form (dữ liệu SEO cũ vẫn giữ nguyên, không bị xóa).
+
+## 19. Khách chơi thêm giờ (`20_booking_extend.sql`)
+
+Ví dụ: khách vãng lai hỏi sân lúc 18:00, nhân viên đặt **18:00–19:00** tại quầy (*Thu tiền sân → Khách vãng lai — đặt tại quầy*). Sân trống tới 21:00, khách đánh tới 20:00.
+
+1. Lúc khách ra về (hoặc khi khách báo muốn đánh thêm), nhân viên mở đơn ở *Thu tiền sân*. Khung **Giờ chơi** cho biết **sân trống tới mấy giờ** (tới đơn kế tiếp hoặc giờ đóng cửa) và các nút **+30 phút, +1 giờ, +1 giờ 30…** kèm giờ kết thúc và **tiền thêm** (tính theo bảng giá của khung giờ thêm — giờ cao điểm tính giá cao điểm).
+2. Khách đã chơi quá giờ: hiện cảnh báo *"Khách đã chơi quá giờ 58 phút — gợi ý tính tới 20:00"* và nút gợi ý được tô sẵn. **Quá giờ không quá 10 phút** (thời gian dọn sân) thì không gợi ý tính thêm.
+3. Bấm nút → xác nhận *Gia hạn* → tổng tiền đơn tăng, mã QR chuyển khoản tự đổi đúng số tiền mới, khách trả 1 lần cả giờ đặt + giờ thêm. Hóa đơn in ra có từng dòng giá.
+
+Quy tắc:
+
+- Chỉ gia hạn được khi sân còn trống: có đơn kế tiếp (kể cả đơn đang giữ chỗ chưa hết hạn) thì chỉ được kéo tới giờ đơn đó bắt đầu. Hết chỗ → báo "không gia hạn được trên sân này".
+- Gia hạn theo bước của bảng giá (30 phút), tối đa **+6 giờ** mỗi lần.
+- Đơn đã tự chuyển sang *Hoàn tất* (hết giờ) vẫn tính thêm được, nhưng **chỉ tới giờ hiện tại** (khách đã chơi rồi) — không đặt trước tương lai được trên đơn đã hoàn tất.
+- Tiền cọc và giảm giá giữ nguyên; tiền đã thu không đổi, phần thêm là *Còn phải thu*.
+- Cần quyền **Vận hành đặt sân**; mọi lần gia hạn ghi vào *Lịch sử thay đổi* (lý do "extend: +N phút"). Nút cũng có ở trang chi tiết đơn (*Lịch đặt sân*).

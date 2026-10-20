@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { z } from 'zod';
 
 import { ActionButton } from '@/components/ui/action-button';
+import { buttonClass } from '@/components/ui/button';
 import { ActionForm, CheckboxField, SelectField, SubmitButton, TextField } from '@/components/ui/form';
 import { Countdown } from '@/components/ui/interactive';
 import { Badge, DescriptionList, Disclosure, PageHeader, Panel } from '@/components/ui/primitives';
@@ -17,6 +18,8 @@ import {
   voidPaymentAction,
 } from '@/features/admin-bookings/actions';
 import { getBookingDetail } from '@/features/admin-bookings/queries';
+import { ExtendPlayPanel } from '@/features/checkout/components/extend-play-panel';
+import { getExtendOptions } from '@/features/checkout/queries';
 import { requireStaff } from '@/lib/auth/guards';
 import { hasPermission, isOwner } from '@/lib/auth/permissions';
 import { formatDate, formatDateTime, formatMinutes, formatPhone, formatTime, formatVnd } from '@/lib/format';
@@ -32,7 +35,7 @@ export const metadata = { title: 'Chi tiết đơn' };
 export default async function BookingDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const ctx = await requireStaff();
   const { id } = await params;
-  const data = await getBookingDetail(id);
+  const [data, extend] = await Promise.all([getBookingDetail(id), getExtendOptions(id)]);
   if (!data) notFound();
   const { booking: b, range, payments, balance, courts, audit } = data;
   const branchInfo = b.courts?.branches;
@@ -70,6 +73,7 @@ export default async function BookingDetailPage({ params }: { params: Promise<{ 
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
         <div className="flex min-w-0 flex-col gap-6">
+          {extend && isCustomer && can('booking.operate') && <ExtendPlayPanel data={extend} tz={tz} nowMs={requestNow()} />}
           <Panel title={isCustomer ? 'Thông tin đơn' : 'Khóa sân'}>
             <DescriptionList
               items={[
@@ -104,7 +108,23 @@ export default async function BookingDetailPage({ params }: { params: Promise<{ 
           </Panel>
 
           {isCustomer && (
-            <Panel title="Tiền">
+            <Panel
+              title="Tiền"
+              actions={
+                <>
+                  {due > 0 && ['held', 'confirmed', 'checked_in', 'completed'].includes(b.status) && can('payment.record') && (
+                    <Link href={`/admin/checkout/${b.id}`} className={buttonClass('primary', 'sm')}>
+                      Thu tiền (QR / tiền mặt)
+                    </Link>
+                  )}
+                  {netPaid > 0 && (
+                    <Link href={`/admin/bookings/${b.id}/invoice`} target="_blank" className={buttonClass('outline', 'sm')}>
+                      In hóa đơn
+                    </Link>
+                  )}
+                </>
+              }
+            >
               {snapshot.success && snapshot.data.length > 0 && (
                 <ul className="mb-4 flex flex-col gap-1 text-sm">
                   {snapshot.data.map((line, i) => (

@@ -18,6 +18,7 @@ import {
   User,
   Users,
   Wallet,
+  HandCoins,
 } from 'lucide-react';
 
 import { type NavIcon } from '../nav';
@@ -41,4 +42,5 @@ export const NAV_ICONS: Record<NavIcon, LucideIcon> = {
   receipt: Receipt,
   bank: Landmark,
   scan: ScanQrCode,
+  cash: HandCoins,
 };

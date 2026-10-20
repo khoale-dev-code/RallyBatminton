@@ -62,12 +62,25 @@ export default async function PayrollPage({ searchParams }: { searchParams: Prom
           </Notice>
         </div>
       )}
+      {!closed && totals.pendingOvertime > 0 && (
+        <div className="mb-6">
+          <Notice tone="info" title="Đề nghị tăng ca chưa được trả lời">
+            {totals.pendingOvertime} đề nghị tăng ca nhân viên chưa đồng ý — chưa tính giá tăng ca. Nếu nhân viên đã đồng ý trực tiếp, hủy
+            đề nghị và ghi lại với “Nhân viên đã đồng ý trực tiếp”.
+          </Notice>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 gap-6 2xl:grid-cols-[minmax(0,1fr)_360px]">
         <div className="flex min-w-0 flex-col gap-6">
           <Panel>
-            <div className="grid grid-cols-2 gap-6">
+            <div className="grid grid-cols-2 gap-6 sm:grid-cols-3">
               <Stat label="Tổng thực lĩnh" value={<span className="font-display text-3xl tabular">{formatVnd(totals.net)}</span>} />
+              <Stat
+                label="Tiền tăng ca"
+                value={<span className="font-display text-3xl tabular">{formatVnd(totals.overtimePay)}</span>}
+                hint={totals.overtimeMinutes > 0 ? `${formatMinutes(totals.overtimeMinutes)} tăng ca` : 'Chưa có tăng ca'}
+              />
               <Stat label="Nhân viên" value={<span className="font-display text-3xl tabular">{rows.length}</span>} />
             </div>
           </Panel>
@@ -86,7 +99,7 @@ export default async function PayrollPage({ searchParams }: { searchParams: Prom
                       </Link>
                       <span className="shrink-0 font-display text-xl whitespace-nowrap tabular">{formatVnd(r.netPay)}</span>
                     </div>
-                    <dl className="mt-3 grid grid-cols-3 gap-2 text-sm">
+                    <dl className="mt-3 grid grid-cols-2 gap-2 text-sm sm:grid-cols-4">
                       <div>
                         <dt className="text-muted">Ca</dt>
                         <dd className="tabular">{r.shifts}</dd>
@@ -94,6 +107,12 @@ export default async function PayrollPage({ searchParams }: { searchParams: Prom
                       <div>
                         <dt className="text-muted">Giờ công</dt>
                         <dd className="tabular">{formatMinutes(r.paidMinutes)}</dd>
+                      </div>
+                      <div>
+                        <dt className="text-muted">Tăng ca</dt>
+                        <dd className="tabular">
+                          {r.overtimeMinutes === 0 ? '—' : `${formatMinutes(r.overtimeMinutes)} · ${formatVnd(r.overtimePay)}`}
+                        </dd>
                       </div>
                       <div>
                         <dt className="text-muted">Điều chỉnh</dt>
@@ -111,7 +130,7 @@ export default async function PayrollPage({ searchParams }: { searchParams: Prom
                 ))}
               </ul>
               <div className="scroll-x hidden rounded-panel border border-line bg-paper md:block">
-                <table className="w-full min-w-[40rem] text-left text-[0.95rem]">
+                <table className="w-full min-w-[46rem] text-left text-[0.95rem]">
                   <thead className="border-b border-line text-sm text-muted">
                     <tr>
                       <th scope="col" className="px-4 py-3 font-medium">
@@ -125,6 +144,9 @@ export default async function PayrollPage({ searchParams }: { searchParams: Prom
                       </th>
                       <th scope="col" className="px-4 py-3 text-right font-medium">
                         Lương ca
+                      </th>
+                      <th scope="col" className="px-4 py-3 text-right font-medium">
+                        Trong đó tăng ca
                       </th>
                       <th scope="col" className="px-4 py-3 text-right font-medium">
                         Điều chỉnh
@@ -150,6 +172,17 @@ export default async function PayrollPage({ searchParams }: { searchParams: Prom
                         <td className="px-4 py-3 text-right tabular">{r.shifts}</td>
                         <td className="px-4 py-3 text-right tabular">{formatMinutes(r.paidMinutes)}</td>
                         <td className="px-4 py-3 text-right tabular">{formatVnd(r.basePay)}</td>
+                        <td className="px-4 py-3 text-right tabular">
+                          {r.overtimeMinutes === 0 ? (
+                            <span className="text-muted">—</span>
+                          ) : (
+                            <>
+                              {formatVnd(r.overtimePay)}
+                              <span className="block text-xs text-muted">{formatMinutes(r.overtimeMinutes)}</span>
+                            </>
+                          )}
+                          {r.pendingOvertime > 0 && <span className="block text-xs text-amber-deep">{r.pendingOvertime} chờ đồng ý</span>}
+                        </td>
                         <td className="px-4 py-3 text-right tabular">{r.adjustments === 0 ? '—' : formatVnd(r.adjustments)}</td>
                         <td className="px-4 py-3 text-right font-display text-lg tabular">{formatVnd(r.netPay)}</td>
                       </tr>

@@ -10,9 +10,7 @@ import { sendPendingAlertsSafely } from './alerts';
 import { apiTransactionToPayload, sepayApiListSchema, sepayApiTransactionSchema, sepayDateTime } from './lib/sepay-api';
 
 export type ReconcileSource = 'cron' | 'manual' | 'vercel';
-export type ReconcileResult =
-  | { ok: true; accounts: number; fetched: number; created: number }
-  | { ok: false; message: string };
+export type ReconcileResult = { ok: true; accounts: number; fetched: number; created: number } | { ok: false; message: string };
 
 const startSchema = z.object({ run_id: z.string(), since: z.string() });
 const recordSchema = z.looseObject({ replayed: z.boolean().optional() });

@@ -412,3 +412,30 @@ Tồn kho luôn đếm theo đơn vị cơ bản (`products.unit_label`). Kiểm
 - **`17_reconcile_cron_optional.sql`**: `pg_cron` + `pg_net` gọi `POST /api/cron/sepay-reconcile` mỗi 15 phút; URL và khóa đọc từ Supabase Vault (`rally_site_url`, `rally_cron_secret`), không nằm trong file.
 - **Kiểm tra:** `99_verify_schema.sql` dòng 23.
 
+## 21. Migration `18_overtime.sql` — Tăng ca có đồng ý & lương tăng ca
+
+- **Bảng `shift_overtime`**: `shift_id`, `employee_id`, `branch_id`, `minutes` (15–480, bước 15), `hourly_rate` (giá tăng ca), `reason`, `status` `pending / accepted / declined / cancelled`, `consent` `app / in_person`, người đề nghị / trả lời + thời điểm. Một đề nghị hiệu lực mỗi ca (unique index một phần). RLS: chỉ chủ sân và chính nhân viên đọc; ghi chỉ qua RPC; cấm xóa cứng; audit + `updated_at`.
+- **RPC**: `offer_overtime(shift, minutes, rate, reason, agreed_in_person)` (chủ sân; chặn tháng đã chốt, ca vắng/hủy, trùng ca kế tiếp, tổng > 16 giờ, hỏi qua app khi khung đã qua), `respond_overtime(offer, accept, note)` (chính nhân viên, trước khi hết khung), `cancel_overtime(offer, reason)` (chủ sân).
+- **`private.overtime_worked_minutes`**: phút sau giờ ra ca theo lịch (từ lúc vào nếu vào muộn hơn), tối đa phút đã đồng ý và tổng công.
+- **`close_payroll_month` / `preview_payroll_month`** viết lại: phút tăng ca × giá tăng ca + phần còn lại × giá thường; `payroll_lines.overtime_minutes / overtime_pay` (đã gồm trong `base_pay`); preview trả thêm `overtime_minutes`, `overtime_pay`, `pending_overtime` (đổi kiểu trả về nên `drop function` trước).
+- **`scan_attendance_qr`**: hạn quét ra = giờ ra ca + 4 giờ + phút tăng ca đã đồng ý.
+- **Kiểm tra:** `99_verify_schema.sql` dòng 24.
+
+## 22. Migration `19_staff_checkout.sql` — Nhân viên & chuyển khoản tại quầy
+
+- **`shift_people(branch, from, to)`** (security definer): tên + mã nhân viên có ca ở chi nhánh trong khoảng ≤ 62 ngày, chỉ cho chủ sân hoặc người có `shift.view_branch` ở chi nhánh đó. RLS `employees` giữ nguyên (nhân viên chỉ đọc hồ sơ của mình).
+- **`my_month_summary(month)`**: tổng quan tháng của chính nhân viên (`current_employee_id`), cùng công thức lương với `close_payroll_month` (giá thường + tăng ca), cộng thưởng / trừ khấu trừ; đi trễ = vào ca muộn > 5 phút.
+- **`bank_transactions.sale_id`** + ràng buộc `bank_txn_matched_fields` cho phép khớp đơn bán.
+- **`private.new_transfer_code()`**: mã `RB` + 8 ký tự, không trùng mã đơn đặt sân và mã chuyển khoản đã cấp.
+- **`record_sale`** thay thế: `bank_transfer` không có mã giao dịch → khoản thu `pending` với `reference` = mã chuyển khoản; trả thêm `transfer_code`, `payment_status`.
+- **`private.apply_transfer_intent`** + **`record_sepay_transaction`** thay thế: mã RB không phải đơn đặt sân → tìm khoản thu chờ; đủ tiền → `succeeded` + giao dịch `matched`; thiếu / dư → `review` (email cảnh báo có mã đơn bán — `service_pending_alerts` thêm `sale_code`).
+- **`sale_transfer_status`**, **`settle_pending_sale`** (khoản chờ → `failed`, ghi khoản mới tiền mặt / chuyển khoản có mã), **`cancel_pending_sale`** (nhân viên `sale.record`, đơn chưa thu tiền, ≤ 24 giờ; trả kho, giữ lịch sử).
+- **Kiểm tra:** `99_verify_schema.sql` dòng 25.
+
+## 23. Migration `20_booking_extend.sql` — Khách chơi thêm giờ
+
+- **`private.bookings_before_write`** thay thế: giữ nguyên chặn sửa `during` / giá khi đơn không còn `held` / `confirmed`, **trừ** khi `rally.booking_extend = on` (chỉ `extend_booking` bật) và thay đổi chỉ là kéo dài giờ kết thúc (cùng sân, cùng giờ bắt đầu) của đơn `checked_in` / `completed`.
+- **`court_extend_options(booking)`** (stable, security definer; chủ sân hoặc `booking.view` ở chi nhánh): giờ trống tới (đơn kế tiếp `confirmed` / `checked_in` / `held` chưa hết hạn, hoặc giờ đóng cửa, tối đa +6 giờ; đơn `completed` chặn ở `now()`), danh sách lựa chọn theo bước giá kèm tiền (`private.quote_court_price` trên phần thêm).
+- **`extend_booking(booking, new_end, note)`** (`booking.operate`): kiểm tra bước giá, giới hạn, trùng lịch (sau `expire_overlapping_holds`; ràng buộc `bookings_no_overlap` vẫn bảo vệ đơn `checked_in`), báo giá phần thêm, gộp `price_snapshot` theo `rule_id` + giá/giờ, `subtotal += tiền thêm` (cọc, giảm giá giữ nguyên). Lỗi: `EXTEND_END_INVALID`, `EXTEND_TOO_LONG`, `EXTEND_COMPLETED_FUTURE`, `COURT_UNAVAILABLE`, `SLOT_TAKEN`. Ghi nhật ký qua `private.set_audit_reason`.
+- Không đổi RLS; hai hàm chỉ `authenticated` gọi được.
+- **Kiểm tra:** `99_verify_schema.sql` dòng 26.

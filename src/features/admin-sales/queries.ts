@@ -17,7 +17,8 @@ export async function listSalesForDay(branchId: string, dateKey: string, tz: str
     .limit(300);
   if (error) throw error;
   const sales = data ?? [];
-  const completed = sales.filter((s) => s.status === 'completed');
+  // Đơn chờ khách chuyển khoản chưa tính vào doanh thu cho tới khi tiền về.
+  const completed = sales.filter((s) => s.status === 'completed' && !s.payments.some((p) => p.status === 'pending'));
   return {
     sales,
     revenue: completed.reduce((n, s) => n + (s.total_amount ?? 0), 0),

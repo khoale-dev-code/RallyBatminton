@@ -148,6 +148,29 @@ with checks as (
          and not has_function_privilege('anon', 'public.service_reconcile_start(text)', 'execute'),
          'notification_settings (chỉ chủ sân) + reconcile_runs + hàm chỉ máy chủ gọi được'
   union all
+  select 24, 'Đã chạy 18_overtime.sql (tăng ca có đồng ý, lương tăng ca)',
+         to_regclass('public.shift_overtime') is not null
+         and to_regprocedure('public.offer_overtime(uuid,integer,integer,text,boolean)') is not null
+         and to_regprocedure('public.respond_overtime(uuid,boolean,text)') is not null
+         and exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'payroll_lines' and column_name = 'overtime_pay')
+         and not has_function_privilege('anon', 'public.offer_overtime(uuid,integer,integer,text,boolean)', 'execute'),
+         'shift_overtime + RPC đề nghị / trả lời / hủy + cột tăng ca trong phiếu lương'
+  union all
+  select 25, 'Đã chạy 19_staff_checkout.sql (tổng quan nhân viên, chuyển khoản tại quầy)',
+         to_regprocedure('public.my_month_summary(date)') is not null
+         and to_regprocedure('public.shift_people(uuid,date,date)') is not null
+         and to_regprocedure('public.sale_transfer_status(uuid)') is not null
+         and exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'bank_transactions' and column_name = 'sale_id')
+         and not has_function_privilege('anon', 'public.my_month_summary(date)', 'execute'),
+         'my_month_summary + shift_people + bán hàng chờ chuyển khoản SePay'
+  union all
+  select 26, 'Đã chạy 20_booking_extend.sql (khách chơi thêm giờ)',
+         to_regprocedure('public.court_extend_options(uuid)') is not null
+         and to_regprocedure('public.extend_booking(uuid,timestamptz,text)') is not null
+         and exists (select 1 from pg_proc where oid = 'private.bookings_before_write()'::regprocedure and prosrc like '%rally.booking_extend%')
+         and not has_function_privilege('anon', 'public.extend_booking(uuid,timestamptz,text)', 'execute'),
+         'court_extend_options + extend_booking + trigger cho phép kéo dài đơn đang chơi'
+  union all
   select 12, 'pg_cron (tùy chọn)',
          true,
          case when exists (select 1 from pg_extension where extname = 'pg_cron')

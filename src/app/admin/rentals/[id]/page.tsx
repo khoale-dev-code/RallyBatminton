@@ -1,7 +1,8 @@
-import { Phone, ShieldCheck } from 'lucide-react';
+import { Phone, Printer, ShieldCheck } from 'lucide-react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
+import { buttonClass } from '@/components/ui/button';
 import { ActionForm, SelectField, SubmitButton, TextField } from '@/components/ui/form';
 import { Badge, PageHeader, Panel } from '@/components/ui/primitives';
 import { recordRentalPaymentAction } from '@/features/admin-rentals/actions';
@@ -45,6 +46,12 @@ export default async function RentalDetailPage({ params }: { params: Promise<{ i
         back={
           <Link href="/admin/rentals" className="text-sm text-muted hover:underline">
             Cho thuê
+          </Link>
+        }
+        actions={
+          <Link href={`/admin/rentals/${r.id}/slip`} target="_blank" className={buttonClass('outline')}>
+            <Printer className="size-4" aria-hidden />
+            In phiếu
           </Link>
         }
       />

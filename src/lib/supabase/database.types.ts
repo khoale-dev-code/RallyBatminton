@@ -135,6 +135,7 @@ export type Database = {
           resolved_at: string | null
           created_at: string
           alerted_at: string | null
+          sale_id: string | null
         }
         Insert: {
           id?: string
@@ -158,6 +159,7 @@ export type Database = {
           resolved_at?: string | null
           created_at?: string
           alerted_at?: string | null
+          sale_id?: string | null
         }
         Update: {
           id?: string
@@ -181,8 +183,16 @@ export type Database = {
           resolved_at?: string | null
           created_at?: string
           alerted_at?: string | null
+          sale_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "bank_transactions_sale_id_fkey"
+            columns: ["sale_id"]
+            isOneToOne: false
+            referencedRelation: "sales"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "bank_transactions_booking_id_fkey"
             columns: ["booking_id"]
@@ -1191,6 +1201,8 @@ export type Database = {
           base_pay: number
           adjustments_total: number
           net_pay: number | null
+          overtime_minutes: number
+          overtime_pay: number
         }
         Insert: {
           period_id: string
@@ -1203,6 +1215,8 @@ export type Database = {
           base_pay: number
           adjustments_total: number
           net_pay?: never
+          overtime_minutes?: number
+          overtime_pay?: number
         }
         Update: {
           period_id?: string
@@ -1215,6 +1229,8 @@ export type Database = {
           base_pay?: number
           adjustments_total?: number
           net_pay?: never
+          overtime_minutes?: number
+          overtime_pay?: number
         }
         Relationships: [
           {
@@ -2074,6 +2090,75 @@ export type Database = {
           },
         ]
       }
+      shift_overtime: {
+        Row: {
+          id: string
+          shift_id: string
+          employee_id: string
+          branch_id: string
+          minutes: number
+          hourly_rate: number
+          reason: string
+          status: string
+          consent: string | null
+          requested_by: string | null
+          requested_at: string
+          responded_by: string | null
+          responded_at: string | null
+          response_note: string | null
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          shift_id: string
+          employee_id: string
+          branch_id: string
+          minutes: number
+          hourly_rate: number
+          reason: string
+          status?: string
+          consent?: string | null
+          requested_by?: string | null
+          requested_at?: string
+          responded_by?: string | null
+          responded_at?: string | null
+          response_note?: string | null
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          shift_id?: string
+          employee_id?: string
+          branch_id?: string
+          minutes?: number
+          hourly_rate?: number
+          reason?: string
+          status?: string
+          consent?: string | null
+          requested_by?: string | null
+          requested_at?: string
+          responded_by?: string | null
+          responded_at?: string | null
+          response_note?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shift_overtime_shift_id_fkey"
+            columns: ["shift_id"]
+            isOneToOne: false
+            referencedRelation: "shifts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shift_overtime_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       shifts: {
         Row: {
           id: string
@@ -2701,6 +2786,85 @@ export type Database = {
         }
         Returns: Json
       }
+      court_extend_options: {
+        Args: {
+          p_booking_id: string
+        }
+        Returns: Json
+      }
+      extend_booking: {
+        Args: {
+          p_booking_id: string
+          p_new_end: string
+          p_note?: string | null
+        }
+        Returns: Json
+      }
+      shift_people: {
+        Args: {
+          p_branch_id: string
+          p_from: string
+          p_to: string
+        }
+        Returns: {
+          employee_id: string
+          code: string
+          full_name: string
+        }[]
+      }
+      my_month_summary: {
+        Args: {
+          p_month: string
+        }
+        Returns: Json
+      }
+      sale_transfer_status: {
+        Args: {
+          p_sale_id: string
+        }
+        Returns: Json
+      }
+      settle_pending_sale: {
+        Args: {
+          p_sale_id: string
+          p_method: Database["public"]["Enums"]["payment_method"]
+          p_reference?: string | null
+          p_idempotency_key?: string | null
+        }
+        Returns: Json
+      }
+      cancel_pending_sale: {
+        Args: {
+          p_sale_id: string
+          p_reason: string
+        }
+        Returns: Json
+      }
+      offer_overtime: {
+        Args: {
+          p_shift_id: string
+          p_minutes: number
+          p_hourly_rate: number
+          p_reason: string
+          p_agreed_in_person?: boolean
+        }
+        Returns: Json
+      }
+      respond_overtime: {
+        Args: {
+          p_offer_id: string
+          p_accept: boolean
+          p_note?: string | null
+        }
+        Returns: Json
+      }
+      cancel_overtime: {
+        Args: {
+          p_offer_id: string
+          p_reason: string
+        }
+        Returns: Json
+      }
       preview_payroll_month: {
         Args: {
           p_month: string
@@ -2716,6 +2880,9 @@ export type Database = {
           net_pay: number
           unresolved_shifts: number
           missing_rate_shifts: number
+          overtime_minutes: number
+          overtime_pay: number
+          pending_overtime: number
         }[]
       }
       quote_booking: {

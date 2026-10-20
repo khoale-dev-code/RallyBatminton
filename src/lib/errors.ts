@@ -111,6 +111,22 @@ const CODE_MESSAGES: Record<string, string> = {
   EMPLOYEE_INACTIVE: 'Nhân viên đã nghỉ việc.',
   PAY_RATE_LOCKED_BY_CLOSED_PAYROLL: 'Mức lương này ảnh hưởng tháng đã chốt.',
   ADJUSTMENT_IMMUTABLE: 'Khoản điều chỉnh đã tạo không sửa được; hãy hủy và tạo mới.',
+  // Gia hạn giờ chơi
+  EXTEND_END_INVALID: 'Giờ kết thúc mới phải sau giờ kết thúc hiện tại.',
+  EXTEND_TOO_LONG: 'Mỗi lần chỉ gia hạn tối đa 6 giờ.',
+  EXTEND_COMPLETED_FUTURE: 'Đơn đã hoàn tất: chỉ tính thêm phần giờ khách đã chơi (tới thời điểm hiện tại).',
+  // Tăng ca
+  PAYROLL_MONTH_CLOSED: 'Tháng lương của ca này đã chốt, không thay đổi tăng ca được.',
+  OVERTIME_SHIFT_NOT_WORKED: 'Ca đã vắng / nghỉ / hủy nên không đề nghị tăng ca được.',
+  OVERTIME_INVALID_MINUTES: 'Thời gian tăng ca từ 15 phút đến 8 giờ, theo bước 15 phút.',
+  OVERTIME_INVALID_RATE: 'Giá tăng ca không hợp lệ.',
+  OVERTIME_TOO_LONG: 'Ca cộng tăng ca vượt quá 16 giờ.',
+  OVERTIME_WINDOW_PASSED: 'Khung giờ tăng ca đã qua — chọn "Nhân viên đã đồng ý trực tiếp" nếu đã thỏa thuận tại sân.',
+  OVERTIME_OVERLAPS_SHIFT: 'Giờ tăng ca trùng với ca kế tiếp của nhân viên này.',
+  OVERTIME_ALREADY_OFFERED: 'Ca này đã có đề nghị tăng ca đang hiệu lực. Hủy đề nghị cũ trước khi tạo mới.',
+  OVERTIME_NOT_FOUND: 'Không tìm thấy đề nghị tăng ca.',
+  OVERTIME_ALREADY_ANSWERED: 'Đề nghị tăng ca này đã được trả lời hoặc đã hủy.',
+  OVERTIME_EXPIRED: 'Đã quá khung giờ tăng ca, không trả lời được nữa.',
   // Quyền & cấu hình
   AUTH_REQUIRED: 'Vui lòng đăng nhập.',
   PERMISSION_DENIED: 'Bạn không có quyền thực hiện thao tác này tại chi nhánh.',

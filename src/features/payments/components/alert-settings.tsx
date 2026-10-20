@@ -15,7 +15,11 @@ interface AlertSettingsProps {
 function EnvRow({ ok, children }: { ok: boolean; children: ReactNode }) {
   return (
     <li className={cn('flex items-start gap-2', ok ? 'text-court-deep' : 'text-shuttle-deep')}>
-      {ok ? <CheckCircle2 className="mt-0.5 size-4 shrink-0" aria-hidden /> : <CircleAlert className="mt-0.5 size-4 shrink-0" aria-hidden />}
+      {ok ? (
+        <CheckCircle2 className="mt-0.5 size-4 shrink-0" aria-hidden />
+      ) : (
+        <CircleAlert className="mt-0.5 size-4 shrink-0" aria-hidden />
+      )}
       <span>{children}</span>
     </li>
   );
@@ -63,8 +67,8 @@ export function AlertSettings({ settings, ownerEmail, env, siteUrl }: AlertSetti
           Cách hoạt động
         </p>
         <p className="text-muted">
-          Ngay khi có giao dịch cần xử lý, website gửi một email có tên, số điện thoại khách và việc cần làm — không ai trực website vẫn biết
-          ngay. Mỗi giao dịch chỉ báo một lần.
+          Ngay khi có giao dịch cần xử lý, website gửi một email có tên, số điện thoại khách và việc cần làm — không ai trực website vẫn
+          biết ngay. Mỗi giao dịch chỉ báo một lần.
         </p>
         <ul className="flex flex-col gap-1.5">
           <EnvRow ok={env.resend}>

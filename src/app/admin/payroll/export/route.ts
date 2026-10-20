@@ -13,8 +13,32 @@ export async function GET(request: NextRequest) {
 
   const { period, rows } = await getPayrollMonth(month);
   const csv = toCsv(
-    ['Mã NV', 'Họ tên', 'Số ca', 'Phút công', 'Lương ca', 'Điều chỉnh', 'Thực lĩnh', 'Trạng thái'],
-    rows.map((r) => [r.code, r.name, r.shifts, r.paidMinutes, r.basePay, r.adjustments, r.netPay, period ? 'Đã chốt' : 'Tạm tính']),
+    [
+      'Mã NV',
+      'Họ tên',
+      'Số ca',
+      'Phút công',
+      'Phút tăng ca',
+      'Lương giờ thường',
+      'Tiền tăng ca',
+      'Lương ca',
+      'Điều chỉnh',
+      'Thực lĩnh',
+      'Trạng thái',
+    ],
+    rows.map((r) => [
+      r.code,
+      r.name,
+      r.shifts,
+      r.paidMinutes,
+      r.overtimeMinutes,
+      r.basePay - r.overtimePay,
+      r.overtimePay,
+      r.basePay,
+      r.adjustments,
+      r.netPay,
+      period ? 'Đã chốt' : 'Tạm tính',
+    ]),
   );
   return new NextResponse(csv, {
     headers: {

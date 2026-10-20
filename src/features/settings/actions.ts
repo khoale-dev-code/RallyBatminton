@@ -110,7 +110,14 @@ const notificationSchema = z.object({
   alert_emails: z
     .string()
     .max(500)
-    .transform((v) => [...new Set(v.split(/[\s,;]+/).map((e) => e.trim().toLowerCase()).filter(Boolean))])
+    .transform((v) => [
+      ...new Set(
+        v
+          .split(/[\s,;]+/)
+          .map((e) => e.trim().toLowerCase())
+          .filter(Boolean),
+      ),
+    ])
     .superRefine((list, ctx) => {
       const bad = list.find((e) => !z.email().safeParse(e).success);
       if (bad) ctx.addIssue({ code: 'custom', message: `Email không hợp lệ: ${bad}` });

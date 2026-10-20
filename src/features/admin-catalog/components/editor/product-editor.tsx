@@ -14,7 +14,6 @@ import { MediaPickerSection } from './media-section';
 import { PricingSection } from './pricing-section';
 import { RatesSection } from './rates-section';
 import { SaveBar } from './save-bar';
-import { SeoSection } from './seo-section';
 import { TaxSection } from './tax-section';
 import { KindCard, OrganizeCard, StatusCard } from './sidebar-cards';
 import { type EditorBranch, type EditorCategory } from './types';
@@ -31,7 +30,6 @@ export interface ProductEditorProps {
   branches: EditorBranch[];
   tagSuggestions: string[];
   canManageCategories: boolean;
-  siteHost: string;
   /** Cách tính thuế của thương hiệu và quyền đổi (chủ sân). */
   brandTax: BrandTax;
   canManageTax: boolean;
@@ -56,7 +54,6 @@ export function ProductEditor({
   branches,
   tagSuggestions,
   canManageCategories,
-  siteHost,
   brandTax,
   canManageTax,
   readOnly,
@@ -84,8 +81,6 @@ export function ProductEditor({
     return () => window.removeEventListener('keydown', onKey);
   }, [readOnly]);
 
-  const path = draft.kind === 'sale' ? 'products' : 'rentals';
-
   return (
     <div className="flex flex-col gap-5">
       {readOnly && (
@@ -108,7 +103,6 @@ export function ProductEditor({
           {draft.kind === 'sale' && <UnitsSection ed={ed} />}
           {!draft.isBundle && <VariantsSection ed={ed} mode={mode} />}
           {slots?.main}
-          <SeoSection ed={ed} siteHost={siteHost} path={path} />
         </div>
         <aside className="flex min-w-0 flex-col gap-5" aria-label="Trạng thái và phân loại">
           <StatusCard ed={ed} archived={archived} />

@@ -17,6 +17,7 @@ export const alertItemSchema = z.object({
   starts_at: z.string().nullish(),
   court_name: z.string().nullish(),
   branch_name: z.string().nullish(),
+  sale_code: z.string().nullish(),
 });
 export type AlertItem = z.infer<typeof alertItemSchema>;
 
@@ -32,6 +33,7 @@ function escapeHtml(value: string): string {
 /** Một câu tóm tắt dễ hiểu, ví dụ “Khách A chuyển 42.000 đ nhưng giờ đã có người đặt — cần liên hệ khách”. */
 export function alertHeadline(item: AlertItem): string {
   const amount = formatVnd(item.amount);
+  if (item.sale_code) return `Đơn bán ${item.sale_code}: ${item.status_note ?? `nhận ${amount} cần kiểm tra`}`;
   if (item.status === 'unmatched' || !item.booking_code) {
     const reason = item.status_note?.startsWith('Không có đơn')
       ? 'mã đơn trong nội dung không tồn tại'
@@ -71,7 +73,7 @@ export function alertEmailHtml(items: AlertItem[], adminUrl: string): string {
 ${row('Số tiền', formatVnd(item.amount))}
 ${row('Lúc', formatDateTime(item.transaction_at))}
 ${row('Nội dung CK', item.content)}
-${row('Đơn', item.booking_code)}
+${row('Đơn', item.booking_code ?? item.sale_code)}
 ${row('Sân', [item.court_name, item.branch_name].filter(Boolean).join(' · ') || null)}
 ${row('Giờ chơi', item.starts_at ? formatDateTime(item.starts_at) : null)}
 ${row('Ghi chú', item.status_note)}

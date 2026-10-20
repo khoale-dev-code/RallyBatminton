@@ -6,7 +6,6 @@ import { newProductDraft } from '@/features/admin-catalog/lib/initial-draft';
 import { listCategoriesAdmin, listTagSuggestions } from '@/features/admin-catalog/queries';
 import { requireBranchPermission } from '@/lib/auth/guards';
 import { branchesWith, isOwner } from '@/lib/auth/permissions';
-import { publicEnv } from '@/lib/env';
 import { getBrandTax } from '@/features/brand/queries';
 
 export const metadata = { title: 'Thêm sản phẩm' };
@@ -45,7 +44,6 @@ export default async function NewProductPage({ searchParams }: { searchParams: P
         branches={branches}
         tagSuggestions={tagSuggestions}
         canManageCategories={isOwner(ctx)}
-        siteHost={new URL(publicEnv.siteUrl).host}
         brandTax={brandTax}
         canManageTax={isOwner(ctx)}
       />

@@ -48,6 +48,8 @@ export interface Receipt {
   code: string;
   total: number;
   replayed: boolean;
+  /** Đang chờ khách quét QR chuyển khoản (nội dung RB…); null = đã thu. */
+  transferCode: string | null;
   soldAt: string;
   snapshot: ReceiptSnapshot;
 }
@@ -81,7 +83,8 @@ export function usePos(items: PosItem[]) {
           toast.error(res.error);
           return;
         }
-        toast.success(res.replayed ? `Đơn ${res.code} đã được ghi trước đó.` : `Đã thu ${formatVnd(res.total)} — đơn ${res.code}.`);
+        if (res.transferCode) toast.info(`Đơn ${res.code}: mời khách quét mã QR chuyển ${formatVnd(res.total)}.`);
+        else toast.success(res.replayed ? `Đơn ${res.code} đã được ghi trước đó.` : `Đã thu ${formatVnd(res.total)} — đơn ${res.code}.`);
         attemptRef.current = null;
         dispatch({ type: 'clear' });
         setReceipt({
@@ -89,6 +92,7 @@ export function usePos(items: PosItem[]) {
           code: res.code,
           total: res.total,
           replayed: res.replayed,
+          transferCode: res.transferCode,
           soldAt: new Date().toISOString(),
           snapshot,
         });
@@ -115,5 +119,16 @@ export function usePos(items: PosItem[]) {
     error,
     receipt,
     dismissReceipt: () => setReceipt(null),
+    /** Tiền chuyển khoản đã về / khách đổi sang tiền mặt: đổi phiếu sang "đã thu". */
+    markPaid: (method?: CheckoutDetails['paymentMethod']) =>
+      setReceipt((r) =>
+        r
+          ? {
+              ...r,
+              transferCode: null,
+              snapshot: method ? { ...r.snapshot, paymentMethod: method, tendered: null, change: null } : r.snapshot,
+            }
+          : r,
+      ),
   };
 }

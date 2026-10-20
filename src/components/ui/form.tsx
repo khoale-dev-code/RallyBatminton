@@ -52,9 +52,18 @@ export function ActionForm({
   hideFeedback = false,
   onSuccess,
 }: ActionFormProps) {
-  const [state, formAction, isPending] = useActionState(action, initialFormState);
-  const formRef = useRef<HTMLFormElement>(null);
   const toasts = useToastEnabled();
+  // Báo thông báo nổi ngay khi Server Action trả kết quả — kể cả khi form biến mất sau đó
+  // (vd. nút Xóa trong dòng vừa bị xóa, form đề nghị được thay bằng kết quả).
+  const [state, formAction, isPending] = useActionState(async (prev: FormState, formData: FormData) => {
+    const next = await action(prev, formData);
+    if (toasts && !hideFeedback && next.message) {
+      if (next.status === 'success') toast.success(next.message);
+      else if (next.status === 'error') toast.error(next.message);
+    }
+    return next;
+  }, initialFormState);
+  const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
     if (state.status === 'success') {
@@ -63,13 +72,6 @@ export function ActionForm({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- chỉ chạy khi có kết quả mới
   }, [state.nonce]);
-
-  // Trang quản trị: báo kết quả bằng thông báo nổi (snackbar) — mỗi kết quả mới là một đối tượng state mới.
-  useEffect(() => {
-    if (!toasts || hideFeedback || !state.message) return;
-    if (state.status === 'success') toast.success(state.message);
-    else if (state.status === 'error') toast.error(state.message);
-  }, [state, toasts, hideFeedback]);
 
   /**
    * Gửi thủ công thay vì để React tự xử lý thuộc tính action: React 19 tự xóa trắng form sau mỗi
@@ -121,9 +123,19 @@ interface SubmitButtonProps {
   className?: string;
   name?: string;
   value?: string;
+  disabled?: boolean;
 }
 
-export function SubmitButton({ children, pendingLabel, variant = 'primary', size = 'md', className, name, value }: SubmitButtonProps) {
+export function SubmitButton({
+  children,
+  pendingLabel,
+  variant = 'primary',
+  size = 'md',
+  className,
+  name,
+  value,
+  disabled = false,
+}: SubmitButtonProps) {
   const status = useFormStatus();
   const actionPending = useContext(FormPendingContext);
   const pending = status.pending || actionPending;
@@ -132,7 +144,7 @@ export function SubmitButton({ children, pendingLabel, variant = 'primary', size
       type="submit"
       name={name}
       value={value}
-      disabled={pending}
+      disabled={pending || disabled}
       aria-busy={pending}
       className={buttonClass(variant, size, className)}
     >

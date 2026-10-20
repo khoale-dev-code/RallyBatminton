@@ -25,6 +25,8 @@ import { Badge, EmptyState, PageHeader, Panel } from '@/components/ui/primitives
 import { CashFlowChart, SOURCE_STYLE } from '@/features/dashboard/components/cash-flow-chart';
 import { percentChange, shares } from '@/features/dashboard/lib/metrics';
 import { DASHBOARD_PERIODS, getDashboard, getNextShift, type Dashboard } from '@/features/dashboard/queries';
+import { StaffHome } from '@/features/me/components/staff-home';
+import { getMyMonthSummary } from '@/features/me/queries';
 import { getActiveBranch } from '@/lib/auth/context';
 import { requireStaff } from '@/lib/auth/guards';
 import { isOwner } from '@/lib/auth/permissions';
@@ -32,10 +34,11 @@ import { cn } from '@/lib/cn';
 import { formatDate, formatDateTime, formatTime, formatVariantLabel, formatVnd } from '@/lib/format';
 import { ATTENDANCE_STATUS, BOOKING_STATUS, PAYMENT_METHOD } from '@/lib/labels';
 import { type Enums } from '@/lib/supabase/database.types';
+import { monthKey, todayKey } from '@/lib/time';
 
 export const metadata = { title: 'Tổng quan' };
 
-type Search = { branch?: string; days?: string };
+type Search = { branch?: string; days?: string; month?: string };
 
 function isBookingStatus(s: string): s is Enums<'booking_status'> {
   return s in BOOKING_STATUS;
@@ -141,6 +144,16 @@ function attentionCount(d: Dashboard): number {
 export default async function DashboardPage({ searchParams }: { searchParams: Promise<Search> }) {
   const [ctx, params] = await Promise.all([requireStaff(), searchParams]);
   const owner = isOwner(ctx);
+  // Nhân viên có trang tổng quan riêng: ca của mình, lương tạm tính, giờ công, đi trễ, tăng ca, thưởng / phạt.
+  if (!owner) {
+    const currentMonth = monthKey(todayKey());
+    const month = params.month && /^\d{4}-\d{2}-01$/.test(params.month) ? params.month : currentMonth;
+    const [summary, next] = await Promise.all([
+      ctx.employeeId ? getMyMonthSummary(month) : Promise.resolve(null),
+      getNextShift(ctx.employeeId),
+    ]);
+    return <StaffHome ctx={ctx} month={month} currentMonth={currentMonth} summary={summary} nextShift={next} />;
+  }
   const days = DASHBOARD_PERIODS.find((p) => String(p) === params.days) ?? 30;
   const active = await getActiveBranch(ctx);
   // Chủ sân xem gộp mọi chi nhánh (mặc định) hoặc từng chi nhánh; nhân viên xem chi nhánh đang làm việc.

@@ -177,6 +177,8 @@ function reducer(d: ProductDraft, a: Action): ProductDraft {
   }
 }
 
+const MAX_PHOTOS = 12;
+
 export interface PendingPhoto {
   key: string;
   file: File;
@@ -242,10 +244,22 @@ export function useProductEditor(mode: 'create' | 'edit', initial: ProductDraft,
   }
 
   function addPhotos(files: FileList | File[]) {
-    const list = Array.from(files).filter((f) => f.type.startsWith('image/'));
+    const all = Array.from(files);
+    const list = all.filter((f) => f.type.startsWith('image/'));
+    const room = Math.max(0, MAX_PHOTOS - photos.length);
+    const accepted = list.slice(0, room);
+    if (accepted.length > 0) {
+      toast.info(
+        mode === 'create'
+          ? `Đã chọn ${accepted.length} ảnh — ảnh sẽ được tải lên khi bấm Tạo sản phẩm.`
+          : `Đã chọn ${accepted.length} ảnh — ảnh sẽ được tải lên khi bấm Lưu.`,
+      );
+    }
+    if (all.length > list.length) toast.error(`Bỏ qua ${all.length - list.length} tệp không phải ảnh (chỉ nhận JPG, PNG, WebP).`);
+    if (list.length > accepted.length) toast.error(`Tối đa ${MAX_PHOTOS} ảnh — bỏ qua ${list.length - accepted.length} ảnh.`);
     setPhotos((prev) => [
       ...prev,
-      ...list.slice(0, Math.max(0, 12 - prev.length)).map((file) => {
+      ...accepted.slice(0, Math.max(0, MAX_PHOTOS - prev.length)).map((file) => {
         const url = URL.createObjectURL(file);
         urlsRef.current.add(url);
         return { key: newKey('p'), file, url };
@@ -305,8 +319,10 @@ export function useProductEditor(mode: 'create' | 'edit', initial: ProductDraft,
       }
       if (mode === 'create') {
         const failed: string[] = [];
+        const loadingId = photos.length > 0 ? toast.loading(`Đã tạo sản phẩm — đang tải ảnh lên (0/${photos.length})…`) : null;
         for (const [i, photo] of photos.entries()) {
           setProgress(`Đang tải ảnh ${i + 1}/${photos.length}…`);
+          if (loadingId !== null) toast.update(loadingId, 'loading', `Đã tạo sản phẩm — đang tải ảnh lên (${i + 1}/${photos.length})…`);
           try {
             const path = await uploadMediaFile('products', res.id, photo.file);
             const stored = await addProductPhotoAction(res.id, path);
@@ -318,8 +334,14 @@ export function useProductEditor(mode: 'create' | 'edit', initial: ProductDraft,
         setProgress(null);
         setSaved(draft);
         setPhotos([]);
-        if (failed.length) toast.error(`Đã tạo sản phẩm, nhưng ${failed.length} ảnh chưa tải lên được.`);
-        else toast.success('Đã tạo sản phẩm.');
+        const uploaded = photos.length - failed.length;
+        if (failed.length) {
+          toast.update(loadingId, 'error', `Đã tạo sản phẩm, nhưng ${failed.length} ảnh chưa tải lên được — thêm lại ở mục Ảnh.`);
+        } else if (uploaded > 0) {
+          toast.update(loadingId, 'success', `Đã tạo sản phẩm và tải lên thành công ${uploaded} ảnh.`);
+        } else {
+          toast.success('Đã tạo sản phẩm.');
+        }
         router.push(`/admin/catalog/${res.id}?created=1${failed.length ? `&photo_errors=${failed.length}` : ''}`);
         return;
       }

@@ -365,14 +365,22 @@ export function CartPanel(props: CartPanelProps) {
             )}
           </div>
         ) : (
-          <input
-            value={form.reference}
-            onChange={(e) => onForm({ reference: e.target.value })}
-            maxLength={100}
-            placeholder="Mã giao dịch (không bắt buộc)"
-            aria-label="Mã giao dịch"
-            className="min-h-11 rounded-control border border-line bg-paper px-3"
-          />
+          <div className="flex flex-col gap-1.5">
+            {form.method === 'bank_transfer' && (
+              <p className="rounded-control bg-court-soft px-3 py-2 text-sm text-court-deep">
+                Bấm <strong>Thu</strong> để hiện mã QR đúng số tiền cho khách quét — tiền về sẽ tự xác nhận. Đã có mã giao dịch thì nhập bên
+                dưới.
+              </p>
+            )}
+            <input
+              value={form.reference}
+              onChange={(e) => onForm({ reference: e.target.value })}
+              maxLength={100}
+              placeholder={form.method === 'bank_transfer' ? 'Mã giao dịch (bỏ trống để hiện QR)' : 'Mã giao dịch'}
+              aria-label="Mã giao dịch"
+              className="min-h-11 rounded-control border border-line bg-paper px-3"
+            />
+          </div>
         )}
 
         {error && (
@@ -381,7 +389,13 @@ export function CartPanel(props: CartPanelProps) {
           </p>
         )}
         <button type="submit" disabled={empty || isPending || short > 0} className={buttonClass('court', 'lg', 'w-full text-lg')}>
-          {isPending ? 'Đang ghi đơn…' : empty ? 'Chưa có món' : `Thu ${formatVnd(total)}`}
+          {isPending
+            ? 'Đang ghi đơn…'
+            : empty
+              ? 'Chưa có món'
+              : form.method === 'bank_transfer' && !form.reference.trim()
+                ? `Hiện mã QR ${formatVnd(total)}`
+                : `Thu ${formatVnd(total)}`}
         </button>
         <p className="hidden text-center text-xs text-muted [@media(pointer:fine)]:block">Ctrl + Enter để thu tiền. Phím / để tìm món.</p>
       </form>
