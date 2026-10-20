@@ -49,13 +49,3 @@ export async function listAuditEvents(opts: { table?: string; page: number }) {
     count: count ?? events.length,
   };
 }
-
-/** Các trường thay đổi giữa bản cũ và mới (bỏ qua updated_at). */
-export function changedFields(oldData: unknown, newData: unknown): string[] {
-  if (!isRecord(oldData) || !isRecord(newData)) return [];
-  return Object.keys(newData).filter((k) => k !== 'updated_at' && JSON.stringify(oldData[k]) !== JSON.stringify(newData[k]));
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}

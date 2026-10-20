@@ -423,7 +423,7 @@ export function WeekCalendar({
                 onClick={() => setFocus(active ? null : p.key)}
                 className={cn(
                   'inline-flex min-h-8 items-center gap-1.5 rounded-full border px-2.5 text-xs font-medium transition-colors',
-                  active ? 'border-ink bg-ink text-paper' : 'border-line bg-paper hover:border-ink',
+                  active ? 'border-primary bg-primary text-paper' : 'border-line bg-paper hover:border-primary/50 hover:text-primary',
                   focus !== null && !active && 'opacity-60',
                 )}
               >

@@ -138,7 +138,7 @@ export function Check({
         checked={checked}
         disabled={disabled}
         onChange={(e) => onChecked(e.target.checked)}
-        className="mt-0.5 size-5 shrink-0 accent-[#2e6b1f]"
+        className="mt-0.5 size-5 shrink-0 accent-court-deep"
       />
       <span className="flex flex-col">
         <span className="leading-snug">{label}</span>

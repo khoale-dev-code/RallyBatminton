@@ -8,7 +8,7 @@ import { formatPhone } from '@/lib/format';
 const TIPS = [
   {
     icon: Smartphone,
-    tone: 'bg-court text-ink',
+    tone: 'bg-court text-on-court',
     title: 'Quên mã đơn?',
     text: 'Chọn tab Số điện thoại: xem các sân đã đặt hôm nay, sắp tới và lịch sử bằng đúng số đã dùng khi đặt.',
   },
@@ -57,7 +57,7 @@ export function LookupHelp({ hotline }: { hotline: string | null }) {
 
       <section
         aria-label="Chưa có đơn đặt sân"
-        className="relative isolate flex flex-col gap-5 overflow-hidden rounded-[1.25rem] bg-court p-6 text-ink sm:p-8 md:flex-row md:items-center md:justify-between"
+        className="relative isolate flex flex-col gap-5 overflow-hidden rounded-[1.25rem] bg-court p-6 text-on-court sm:p-8 md:flex-row md:items-center md:justify-between"
       >
         <svg aria-hidden viewBox="0 0 400 200" className="absolute top-0 right-0 -z-10 h-full w-auto text-ink opacity-[0.08]">
           <rect x="40" y="20" width="340" height="160" fill="none" stroke="currentColor" strokeWidth="4" />

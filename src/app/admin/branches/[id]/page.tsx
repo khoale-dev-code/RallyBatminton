@@ -264,7 +264,7 @@ export default async function BranchEditPage({ params }: { params: Promise<{ id:
                       name="amenities"
                       value={a.code}
                       defaultChecked={selectedAmenities.includes(a.code)}
-                      className="size-5 accent-[#2e6b1f]"
+                      className="size-5 accent-court-deep"
                     />
                     {a.label}
                   </label>

@@ -104,7 +104,9 @@ export function SidebarNav({ nav, pathname, rail, closedGroups, onToggleGroup, o
                       className={cn(
                         'flex min-h-11 items-center rounded-control text-[0.95rem] transition-colors lg:min-h-10',
                         rail ? 'justify-center' : 'gap-3 px-2',
-                        active ? 'bg-ink text-paper' : 'hover:bg-hall',
+                        active
+                          ? 'bg-primary text-paper shadow-[0_6px_16px_-10px_rgb(0_75_147/0.8)]'
+                          : 'text-ink/85 hover:bg-primary-soft hover:text-primary',
                       )}
                     >
                       <span className="relative shrink-0">

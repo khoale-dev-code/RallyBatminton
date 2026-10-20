@@ -3,17 +3,19 @@ import { type ComponentProps, type ReactNode } from 'react';
 
 import { cn } from '@/lib/cn';
 
-export type ButtonVariant = 'primary' | 'court' | 'brand' | 'outline' | 'ghost' | 'danger';
+export type ButtonVariant = 'primary' | 'court' | 'brand' | 'outline' | 'ghost' | 'danger' | 'alert';
 export type ButtonSize = 'sm' | 'md' | 'lg';
 
 const VARIANTS: Record<ButtonVariant, string> = {
-  primary: 'bg-ink text-paper hover:bg-ink/85',
-  court: 'bg-court text-ink hover:bg-[#57a83e]',
+  primary: 'bg-primary text-paper shadow-[0_1px_0_rgb(0_0_0/0.06)] hover:bg-primary-hover',
+  court: 'bg-court text-on-court hover:brightness-95',
   /** Nút hành động chính phía khách: xanh đậm chữ trắng (tương phản 5:1). */
-  brand: 'bg-court-strong text-paper shadow-[0_8px_20px_-10px_rgb(43_127_33/0.7)] hover:bg-court-deep',
+  brand: 'bg-court-strong text-paper shadow-[0_8px_20px_-10px_var(--color-court-strong)] hover:bg-court-deep',
   outline: 'border border-ink/20 bg-paper text-ink hover:border-ink',
   ghost: 'text-ink hover:bg-hall',
   danger: 'border border-shuttle-deep/40 bg-paper text-shuttle-deep hover:bg-shuttle-soft',
+  /** Nút đỏ đặc (Ra ca, kết thúc). */
+  alert: 'bg-shuttle text-paper hover:bg-shuttle-deep',
 };
 
 const SIZES: Record<ButtonSize, string> = {

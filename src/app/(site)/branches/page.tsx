@@ -94,7 +94,7 @@ export default async function BranchesPage({ searchParams }: { searchParams: Pro
         <Link
           data-reveal
           href={bookingHref(null, { date })}
-          className="group relative isolate flex items-center gap-4 overflow-hidden rounded-[1.25rem] bg-court p-5 text-ink sm:p-6"
+          className="group relative isolate flex items-center gap-4 overflow-hidden rounded-[1.25rem] bg-court p-5 text-on-court sm:p-6"
         >
           <span className="grid size-12 shrink-0 place-items-center rounded-full bg-ink text-paper">
             <CalendarDays className="size-5" aria-hidden />

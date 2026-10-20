@@ -85,7 +85,7 @@ export function NavProgress() {
           phase === 'idle'
             ? 'h-full origin-left scale-x-0 bg-court opacity-0'
             : phase === 'loading'
-              ? 'h-full origin-left scale-x-[0.82] bg-court opacity-100 shadow-[0_0_8px_rgb(98_187_70/0.7)] transition-transform duration-[8000ms] ease-[cubic-bezier(0.08,0.7,0.15,1)]'
+              ? 'h-full origin-left scale-x-[0.82] bg-court opacity-100 shadow-[0_0_8px_var(--color-court)] transition-transform duration-[8000ms] ease-[cubic-bezier(0.08,0.7,0.15,1)]'
               : 'h-full origin-left scale-x-100 bg-court opacity-0 transition-[transform,opacity] duration-300 ease-out'
         }
       />

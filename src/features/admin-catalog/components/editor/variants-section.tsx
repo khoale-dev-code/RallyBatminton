@@ -107,7 +107,7 @@ export function VariantsSection({ ed, mode }: { ed: ProductEditorState; mode: 'c
                             name="default-variant"
                             checked={v.isDefault}
                             onChange={() => dispatch({ type: 'variant-default', key: v.key })}
-                            className="size-4.5 accent-[#2e6b1f]"
+                            className="size-4.5 accent-court-deep"
                           />
                           Mặc định
                         </label>
@@ -118,7 +118,7 @@ export function VariantsSection({ ed, mode }: { ed: ProductEditorState; mode: 'c
                               checked={v.isActive}
                               disabled={v.isDefault}
                               onChange={(e) => dispatch({ type: 'variant', key: v.key, patch: { isActive: e.target.checked } })}
-                              className="size-4.5 accent-[#2e6b1f]"
+                              className="size-4.5 accent-court-deep"
                             />
                             Đang bán
                           </label>

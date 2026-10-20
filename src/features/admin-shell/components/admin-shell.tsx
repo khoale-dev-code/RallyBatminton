@@ -147,10 +147,19 @@ export function AdminShell({
         onNavigate={drawer ? () => setOpen(false) : undefined}
       />
       <div className="border-t border-line px-5 py-3 pb-safe">
-        <p className="truncate font-medium">
-          {displayName} <span className="text-sm font-normal text-muted">{roleLabel}</span>
-        </p>
-        <div className="mt-1 flex items-center gap-4 text-sm">
+        <div className="flex items-center gap-3">
+          <span
+            aria-hidden
+            className="grid size-9 shrink-0 place-items-center rounded-full bg-primary-soft font-display text-sm text-primary"
+          >
+            {initial(displayName)}
+          </span>
+          <p className="flex min-w-0 flex-col leading-tight">
+            <span className="truncate font-medium">{displayName}</span>
+            {roleLabel !== displayName && <span className="truncate text-xs text-muted">{roleLabel}</span>}
+          </p>
+        </div>
+        <div className="mt-1.5 flex items-center gap-4 text-sm">
           <Link
             href="/admin/password"
             onClick={() => setOpen(false)}
@@ -206,7 +215,7 @@ export function AdminShell({
       <div className="flex flex-col items-center gap-1 border-t border-line py-3">
         <span
           title={`${displayName} (${roleLabel})`}
-          className="grid size-9 place-items-center rounded-full bg-hall text-xs font-medium"
+          className="grid size-9 place-items-center rounded-full bg-primary-soft text-xs font-medium text-primary"
           aria-label={`${displayName}, ${roleLabel}`}
         >
           {initial(displayName)}
@@ -236,7 +245,7 @@ export function AdminShell({
   return (
     <div
       className={cn(
-        'min-h-dvh bg-hall/50 lg:grid lg:transition-[grid-template-columns] lg:duration-200 motion-reduce:transition-none',
+        'theme-admin min-h-dvh bg-hall/60 text-ink lg:grid lg:transition-[grid-template-columns] lg:duration-200 motion-reduce:transition-none',
         rail ? 'lg:grid-cols-[72px_minmax(0,1fr)]' : 'lg:grid-cols-[260px_minmax(0,1fr)]',
       )}
     >

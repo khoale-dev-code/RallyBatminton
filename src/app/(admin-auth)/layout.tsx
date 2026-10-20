@@ -9,10 +9,10 @@ export const metadata: Metadata = { robots: { index: false, follow: false } };
 /** Khung trang đăng nhập NỘI BỘ (chủ sân, nhân viên) — tách hẳn khỏi đăng nhập của khách. */
 export default function AdminAuthLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="relative isolate flex min-h-dvh flex-col items-center justify-center overflow-hidden bg-ink px-4 py-10 text-ink">
+    <div className="theme-admin relative isolate flex min-h-dvh flex-col items-center justify-center overflow-hidden bg-hall-dark px-4 py-10 text-ink">
       <div
         aria-hidden
-        className="absolute inset-0 -z-10 bg-[radial-gradient(50rem_26rem_at_50%_-10%,rgb(98_187_70/0.28),transparent_65%)]"
+        className="absolute inset-0 -z-10 bg-[radial-gradient(50rem_26rem_at_50%_-10%,rgb(0_102_204/0.45),transparent_65%),radial-gradient(30rem_18rem_at_100%_110%,rgb(237_28_36/0.18),transparent_70%)]"
       />
       <main id="main" className="w-full max-w-sm">
         <div className="mb-6 flex flex-col items-center gap-3 text-paper">
@@ -20,7 +20,7 @@ export default function AdminAuthLayout({ children }: { children: ReactNode }) {
             <Wordmark className="h-9" priority />
           </span>
           <span className="inline-flex items-center gap-1.5 text-xs font-semibold tracking-[0.2em] text-paper/70 uppercase">
-            <ShieldCheck className="size-4 text-court" aria-hidden />
+            <ShieldCheck className="size-4 text-[#7fb2e5]" aria-hidden />
             Khu vực quản trị
           </span>
         </div>

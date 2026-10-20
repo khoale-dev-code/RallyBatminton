@@ -39,7 +39,7 @@ import { type BookingSummary } from '../schemas';
 
 /** Màu nhãn trạng thái trên nền đen của cuống vé. */
 const STUB_TONE: Record<Tone, string> = {
-  green: 'bg-court text-ink',
+  green: 'bg-court text-on-court',
   amber: 'bg-amber-soft text-amber-deep',
   red: 'bg-shuttle text-paper',
   ink: 'bg-paper text-ink',
@@ -110,7 +110,7 @@ function JourneyTrack({ journey }: { journey: BookingJourney }) {
             <span
               className={cn(
                 'relative z-10 grid size-7 place-items-center rounded-full text-xs font-semibold',
-                done && 'bg-court text-ink',
+                done && 'bg-court text-on-court',
                 current && !done && 'bg-ink text-paper ring-4 ring-court/30',
                 !done && !current && 'border-2 border-line bg-paper text-muted',
               )}

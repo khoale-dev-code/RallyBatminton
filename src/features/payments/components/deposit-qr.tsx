@@ -94,7 +94,7 @@ function PaymentSuccess({
       role="alert"
       className="animate-fade flex flex-col gap-3 rounded-panel border-2 border-court bg-court-soft p-4 sm:flex-row sm:items-center sm:p-5"
     >
-      <span className="grid size-12 shrink-0 place-items-center rounded-full bg-court text-ink">
+      <span className="grid size-12 shrink-0 place-items-center rounded-full bg-court text-on-court">
         <CircleCheckBig className="size-7" aria-hidden />
       </span>
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
@@ -209,7 +209,7 @@ export function DepositQr({ booking: initial, phone, account, onUpdate, statusHr
           <QrCode className="size-5 text-court" aria-hidden />
           {depositDone ? 'Thanh toán phần còn lại' : 'Chuyển khoản đặt cọc'}
         </h3>
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-court px-2.5 py-0.5 text-xs font-semibold text-ink">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-court px-2.5 py-0.5 text-xs font-semibold text-on-court">
           <Zap className="size-3.5" aria-hidden />
           Tự xác nhận
         </span>

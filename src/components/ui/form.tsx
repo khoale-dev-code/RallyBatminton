@@ -156,7 +156,7 @@ export function SubmitButton({
 
 export const controlClass =
   'w-full rounded-control border border-line bg-paper px-3 text-[0.95rem] text-ink placeholder:text-muted/70 ' +
-  'transition-colors hover:border-ink/40 focus:border-ink focus:outline-none focus:ring-2 focus:ring-ink/10 ' +
+  'transition-colors hover:border-primary/40 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/15 ' +
   'aria-[invalid=true]:border-shuttle-deep disabled:bg-hall disabled:text-muted';
 
 interface FieldShellProps {
@@ -337,7 +337,7 @@ export function CheckboxField({ name, label, hint, className, ...props }: Checkb
   const error = useFormFieldError(name);
   return (
     <div className={cn('flex items-start gap-3', className)}>
-      <input id={id} name={name} type="checkbox" className="mt-1 size-5 shrink-0 accent-[#2e6b1f]" {...props} />
+      <input id={id} name={name} type="checkbox" className="mt-1 size-5 shrink-0 accent-court-deep" {...props} />
       <label htmlFor={id} className="flex flex-col text-[0.95rem]">
         <span className="font-medium">{label}</span>
         {(error ?? hint) && <span className={cn('text-sm', error ? 'text-shuttle-deep' : 'text-muted')}>{error ?? hint}</span>}

@@ -75,7 +75,7 @@ export function OvertimeOfferForm({ action, baseHourly, scheduledEndLabel, sched
                   aria-pressed={active}
                   className={cn(
                     'min-h-9 rounded-full border px-3 text-xs font-medium',
-                    active ? 'border-ink bg-ink text-paper' : 'border-line bg-paper hover:border-ink',
+                    active ? 'border-primary bg-primary text-paper' : 'border-line bg-paper hover:border-primary/50 hover:text-primary',
                   )}
                 >
                   {m.label} · {formatVnd(value)}

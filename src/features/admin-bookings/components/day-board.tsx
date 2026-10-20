@@ -25,7 +25,7 @@ function blockStyle(b: DayBooking): string {
     case 'held':
       return 'border-amber-deep/40 bg-amber-soft text-amber-deep';
     case 'confirmed':
-      return 'border-court bg-court text-ink';
+      return 'border-court bg-court text-on-court';
     case 'checked_in':
       return 'border-ink bg-ink text-paper';
     default:

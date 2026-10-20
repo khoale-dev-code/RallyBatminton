@@ -196,7 +196,7 @@ function PhoneBookingCard({ booking, phone, dimmed, highlight, open, onToggle, r
         <span
           className={cn(
             'flex w-16 shrink-0 flex-col items-center justify-center rounded-control py-2',
-            dimmed ? 'bg-hall text-muted' : highlight ? 'bg-court text-ink' : 'bg-ink text-paper',
+            dimmed ? 'bg-hall text-muted' : highlight ? 'bg-court text-on-court' : 'bg-ink text-paper',
           )}
         >
           <span className="text-[0.65rem] font-medium uppercase">{weekday}</span>

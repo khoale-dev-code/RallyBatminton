@@ -30,7 +30,7 @@ export function CourtTabs({ courts, selected, freeCounts, onSelect }: CourtTabsP
               onClick={() => onSelect(court.id)}
               className={cn(
                 'flex min-h-14 flex-col items-start justify-center rounded-control border px-3 py-2 text-left transition-colors',
-                active ? 'border-court bg-court text-ink' : 'border-line bg-paper hover:border-ink/50',
+                active ? 'border-court bg-court text-on-court' : 'border-line bg-paper hover:border-ink/50',
                 disabled && 'cursor-not-allowed opacity-60 hover:border-line',
               )}
             >

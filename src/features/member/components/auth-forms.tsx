@@ -152,7 +152,7 @@ export function RegisterForm({ turnstileSiteKey, next }: { turnstileSiteKey: str
   if (sentMessage) {
     return (
       <div className="animate-fade flex flex-col items-center gap-4 rounded-panel bg-court-soft p-6 text-center">
-        <span className="grid size-14 place-items-center rounded-full bg-court text-ink">
+        <span className="grid size-14 place-items-center rounded-full bg-court text-on-court">
           <MailCheck className="size-7" aria-hidden />
         </span>
         <p className="font-display text-2xl">Kiểm tra hộp thư</p>

@@ -74,7 +74,7 @@ export function buildNav(ctx: StaffContext, counts: { pendingOvertime?: number }
       title: 'Nhân sự',
       items: [
         ...(can('shift.view_branch') || ctx.employeeId ? [{ href: '/admin/shifts', label: 'Lịch ca', icon: 'clock' as const }] : []),
-        ...(owner ? [{ href: '/admin/attendance', label: 'Mã QR chấm công', icon: 'qr' as const }] : []),
+        ...(owner ? [{ href: '/admin/attendance', label: 'Mã QR', icon: 'qr' as const }] : []),
         ...(owner ? [{ href: '/admin/staff', label: 'Nhân viên', icon: 'id' as const }] : []),
         ...(owner ? [{ href: '/admin/payroll', label: 'Bảng lương', icon: 'wallet' as const }] : []),
         ...(ctx.employeeId

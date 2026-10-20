@@ -82,7 +82,7 @@ export default async function BookingPage({ searchParams }: { searchParams: Prom
                       <span
                         className={cn(
                           'grid size-6 shrink-0 place-items-center rounded-full transition-colors',
-                          active ? 'bg-court text-ink' : 'border border-line text-transparent group-hover:border-ink/40',
+                          active ? 'bg-court text-on-court' : 'border border-line text-transparent group-hover:border-ink/40',
                         )}
                       >
                         <Check className="size-3.5" strokeWidth={3} aria-hidden />

@@ -67,7 +67,7 @@ function Kpi({
       <span
         className={cn(
           'grid size-9 place-items-center rounded-full',
-          tone === 'brand' ? 'bg-court text-ink' : tone === 'alert' ? 'bg-shuttle text-paper' : 'bg-hall text-ink',
+          tone === 'brand' ? 'bg-court text-on-court' : tone === 'alert' ? 'bg-shuttle text-paper' : 'bg-hall text-on-court',
         )}
       >
         {icon}
@@ -234,7 +234,9 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
               aria-current={x.branchId === branchId ? 'page' : undefined}
               className={cn(
                 'shrink-0 rounded-full border px-3.5 py-1.5 text-sm whitespace-nowrap',
-                x.branchId === branchId ? 'border-ink bg-ink text-paper' : 'border-line bg-paper hover:border-ink',
+                x.branchId === branchId
+                  ? 'border-primary bg-primary text-paper'
+                  : 'border-line bg-paper hover:border-primary/50 hover:text-primary',
               )}
             >
               {x.name}

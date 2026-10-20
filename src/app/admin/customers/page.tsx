@@ -1,5 +1,5 @@
 import Form from 'next/form';
-import { Lock, Mail, Search, Smartphone } from 'lucide-react';
+import { ChevronRight, Lock, Mail, Search, Smartphone } from 'lucide-react';
 import Link from 'next/link';
 
 import { buttonClass } from '@/components/ui/button';
@@ -56,29 +56,51 @@ export default async function CustomersPage({ searchParams }: { searchParams: Pr
         description="Khách vãng lai được tạo tự động khi đặt sân, mua hoặc thuê. Thành viên là khách có tài khoản trên website (tích điểm, xem đơn)."
       />
 
-      <div role="tablist" aria-label="Loại khách" className="mb-4 flex w-fit gap-1 rounded-control bg-hall p-1">
-        {[
-          { key: 'customers', label: 'Tất cả khách', count: null },
-          { key: 'members', label: 'Thành viên', count: members?.summary.members ?? null },
-        ].map((t) => (
-          <Link
-            key={t.key}
-            role="tab"
-            aria-selected={tab === t.key}
-            href={t.key === 'members' ? '/admin/customers?tab=members' : '/admin/customers'}
-            className={cn(
-              'inline-flex min-h-10 items-center gap-2 rounded-[0.4rem] px-4 text-sm font-medium',
-              tab === t.key ? 'bg-paper shadow-sm' : 'text-muted hover:text-ink',
-            )}
-          >
-            {t.label}
-            {t.count !== null && (
-              <span className={cn('rounded-full px-1.5 text-xs tabular', tab === t.key ? 'bg-ink text-paper' : 'bg-paper')}>
-                {formatNumber(t.count)}
-              </span>
-            )}
-          </Link>
-        ))}
+      <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center">
+        <div role="tablist" aria-label="Loại khách" className="flex w-fit shrink-0 gap-1 rounded-control border border-line bg-paper p-1">
+          {[
+            { key: 'customers', label: 'Tất cả khách', count: null },
+            { key: 'members', label: 'Thành viên', count: members?.summary.members ?? null },
+          ].map((t) => (
+            <Link
+              key={t.key}
+              role="tab"
+              aria-selected={tab === t.key}
+              href={t.key === 'members' ? '/admin/customers?tab=members' : '/admin/customers'}
+              className={cn(
+                'inline-flex min-h-10 items-center gap-2 rounded-[0.4rem] px-4 text-sm font-medium',
+                tab === t.key ? 'bg-primary text-paper shadow-sm' : 'text-muted hover:text-primary',
+              )}
+            >
+              {t.label}
+              {t.count !== null && (
+                <span className={cn('rounded-full px-1.5 text-xs tabular', tab === t.key ? 'bg-paper/20 text-paper' : 'bg-hall')}>
+                  {formatNumber(t.count)}
+                </span>
+              )}
+            </Link>
+          ))}
+        </div>
+        <Form data-nav-progress action="/admin/customers" className="flex min-w-0 flex-1 gap-2">
+          {tab === 'members' && <input type="hidden" name="tab" value="members" />}
+          {tab === 'members' && filter !== 'all' && <input type="hidden" name="filter" value={filter} />}
+          <label htmlFor="q" className="sr-only">
+            Tìm khách
+          </label>
+          <div className="relative min-w-0 flex-1">
+            <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted" aria-hidden />
+            <input
+              id="q"
+              name="q"
+              defaultValue={q}
+              placeholder={tab === 'members' ? 'Tên, số điện thoại hoặc email' : 'Tên hoặc số điện thoại'}
+              className="min-h-11 w-full rounded-control border border-line bg-paper pr-3 pl-9"
+            />
+          </div>
+          <button type="submit" className={buttonClass('primary')}>
+            Tìm
+          </button>
+        </Form>
       </div>
 
       {tab === 'members' && members && (
@@ -90,27 +112,6 @@ export default async function CustomersPage({ searchParams }: { searchParams: Pr
         </div>
       )}
 
-      <Form data-nav-progress action="/admin/customers" className="mb-4 flex flex-col gap-2 sm:flex-row">
-        {tab === 'members' && <input type="hidden" name="tab" value="members" />}
-        {tab === 'members' && filter !== 'all' && <input type="hidden" name="filter" value={filter} />}
-        <label htmlFor="q" className="sr-only">
-          Tìm khách
-        </label>
-        <div className="relative min-w-0 flex-1">
-          <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted" aria-hidden />
-          <input
-            id="q"
-            name="q"
-            defaultValue={q}
-            placeholder={tab === 'members' ? 'Tên, số điện thoại hoặc email' : 'Tên hoặc số điện thoại'}
-            className="min-h-11 w-full rounded-control border border-line bg-paper pr-3 pl-9"
-          />
-        </div>
-        <button type="submit" className={buttonClass('primary')}>
-          Tìm
-        </button>
-      </Form>
-
       {tab === 'members' && (
         <div className="scrollbar-none mb-4 flex gap-1.5 overflow-x-auto">
           {MEMBER_FILTERS.map((f) => (
@@ -120,7 +121,7 @@ export default async function CustomersPage({ searchParams }: { searchParams: Pr
               aria-current={filter === f ? 'true' : undefined}
               className={cn(
                 'inline-flex min-h-9 shrink-0 items-center rounded-full border px-3 text-sm whitespace-nowrap',
-                filter === f ? 'border-court-strong bg-court-soft font-medium text-court-deep' : 'border-line hover:border-ink/40',
+                filter === f ? 'border-primary bg-primary text-paper' : 'border-line bg-paper hover:border-primary/50 hover:text-primary',
               )}
             >
               {FILTER_LABEL[f]}
@@ -133,24 +134,56 @@ export default async function CustomersPage({ searchParams }: { searchParams: Pr
         customers.length === 0 ? (
           <EmptyState title="Không tìm thấy khách" />
         ) : (
-          <ul className="divide-y divide-line rounded-panel border border-line bg-paper">
-            {customers.map((c) => (
-              <li key={c.id}>
-                <Link
-                  href={`/admin/customers/${c.id}`}
-                  className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 hover:bg-hall/60 sm:px-6"
-                >
-                  <span className="flex min-w-0 items-center gap-2">
-                    <span className="font-medium">{c.full_name}</span>
-                    {c.member ? <MemberTierBadge tier={c.member.tier} /> : <Badge>Vãng lai</Badge>}
-                  </span>
-                  <span className="text-sm text-muted tabular">
-                    {formatPhone(c.phone)}, từ {formatDate(c.created_at)}
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
+          <>
+            <div className="overflow-hidden rounded-panel border border-line bg-paper">
+              <div
+                aria-hidden
+                className="hidden grid-cols-[2.5rem_minmax(0,1.6fr)_minmax(0,1fr)_minmax(0,1fr)_1.25rem] gap-x-4 border-b border-line bg-hall/60 px-5 py-2.5 text-xs font-medium tracking-wide text-muted uppercase md:grid"
+              >
+                <span />
+                <span>Khách</span>
+                <span>Số điện thoại</span>
+                <span>Khách từ</span>
+                <span />
+              </div>
+              <ul className="divide-y divide-line">
+                {customers.map((c) => (
+                  <li key={c.id}>
+                    <Link
+                      href={`/admin/customers/${c.id}`}
+                      className="group grid grid-cols-[2.5rem_minmax(0,1fr)_1.25rem] items-center gap-x-3 gap-y-0.5 px-4 py-3 transition-colors hover:bg-primary-soft/50 sm:px-5 md:grid-cols-[2.5rem_minmax(0,1.6fr)_minmax(0,1fr)_minmax(0,1fr)_1.25rem] md:gap-x-4"
+                    >
+                      <span
+                        aria-hidden
+                        className={cn(
+                          'row-span-2 grid size-10 place-items-center rounded-full font-display text-sm md:row-span-1',
+                          c.member ? 'bg-primary text-paper' : 'bg-primary-soft text-primary',
+                        )}
+                      >
+                        {initialsOf(c.full_name)}
+                      </span>
+                      <span className="flex min-w-0 items-center gap-2">
+                        <span className="truncate font-medium">{c.full_name}</span>
+                        {c.member ? <MemberTierBadge tier={c.member.tier} /> : <Badge>Vãng lai</Badge>}
+                      </span>
+                      <ChevronRight
+                        className="row-span-2 size-5 text-muted transition-transform group-hover:translate-x-0.5 group-hover:text-primary md:order-last md:row-span-1"
+                        aria-hidden
+                      />
+                      <span className="col-start-2 text-sm text-muted tabular md:col-start-auto md:text-[0.95rem] md:text-ink">
+                        {formatPhone(c.phone)}
+                        <span className="md:hidden"> · từ {formatDate(c.created_at)}</span>
+                      </span>
+                      <span className="hidden text-muted tabular md:block">{formatDate(c.created_at)}</span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            {customers.length >= 50 && (
+              <p className="mt-3 text-sm text-muted">Đang hiện 50 khách mới nhất — tìm theo tên hoặc số điện thoại để thấy khách cũ hơn.</p>
+            )}
+          </>
         )
       ) : !members ? (
         <EmptyState title="Chưa xem được danh sách thành viên">
@@ -169,7 +202,7 @@ export default async function CustomersPage({ searchParams }: { searchParams: Pr
                     href={`/admin/customers/members/${m.user_id}`}
                     className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-3 gap-y-1 px-4 py-3 hover:bg-hall/60 sm:px-6 md:grid-cols-[auto_minmax(0,1.6fr)_minmax(0,1fr)_7rem_6rem]"
                   >
-                    <span className="row-span-2 grid size-10 place-items-center rounded-full bg-ink font-display text-paper md:row-span-1">
+                    <span className="row-span-2 grid size-10 place-items-center rounded-full bg-primary-soft font-display text-sm text-primary md:row-span-1">
                       {initialsOf(m.full_name)}
                     </span>
                     <span className="flex min-w-0 flex-col">

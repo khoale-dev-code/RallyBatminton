@@ -50,7 +50,7 @@ export function SlotGrid({ views, loading, onPick }: { views: SlotView[]; loadin
               onClick={() => onPick(slot.index)}
               className={cn(
                 'flex h-16 flex-col items-center justify-center rounded-control border text-center transition-colors duration-150',
-                selected && 'border-court bg-court text-ink',
+                selected && 'border-court bg-court text-on-court',
                 !selected && state === 'free' && 'border-line bg-paper hover:border-ink',
                 disabled && 'cursor-not-allowed border-transparent bg-hall text-muted',
                 state === 'busy' && 'line-through decoration-muted/60',

@@ -248,7 +248,7 @@ export function PosTerminal({
           <span className="relative">
             <ShoppingBag className="size-6" aria-hidden />
             {pos.summary.itemCount > 0 && (
-              <span className="absolute -top-2 -right-2 grid min-w-5 place-items-center rounded-full bg-court px-1 text-xs font-medium text-ink tabular">
+              <span className="absolute -top-2 -right-2 grid min-w-5 place-items-center rounded-full bg-court px-1 text-xs font-medium text-on-court tabular">
                 {pos.summary.itemCount}
               </span>
             )}

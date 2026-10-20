@@ -55,7 +55,7 @@ const AMENITY_ICON: Record<string, LucideIcon> = {
 const PROMISES = [
   {
     icon: CalendarClock,
-    tone: 'bg-court text-ink',
+    tone: 'bg-court text-on-court',
     title: 'Giờ trống thật, theo từng sân',
     text: 'Lịch cập nhật trực tiếp. Thấy trống là giữ được — không gọi điện hỏi qua lại.',
   },
@@ -127,7 +127,7 @@ export default async function AboutPage() {
           </div>
         </div>
         <Marquee
-          className="border-y border-ink bg-court py-3 font-display text-2xl tracking-wide text-ink uppercase sm:text-3xl"
+          className="border-y border-ink bg-court py-3 font-display text-2xl tracking-wide text-on-court uppercase sm:text-3xl"
           items={['Smash', 'Drop shot', 'Clear', 'Net kill', 'Rally', 'Đặt sân 1 phút', 'Chơi hết mình']}
         />
       </section>
@@ -159,7 +159,7 @@ export default async function AboutPage() {
             <span className="absolute top-6 right-6 rounded-full bg-paper px-3 py-1 text-xs font-semibold text-ink">13,4 × 6,1 m</span>
           </div>
           {totals && totals.courts > 0 && (
-            <div className="absolute -bottom-6 -left-2 rounded-[1.1rem] bg-court p-4 text-ink shadow-lift sm:-left-8 sm:p-5">
+            <div className="absolute -bottom-6 -left-2 rounded-[1.1rem] bg-court p-4 text-on-court shadow-lift sm:-left-8 sm:p-5">
               <p className="font-display text-5xl leading-none tabular">
                 <CountUp value={totals.courts} />
               </p>
@@ -243,7 +243,7 @@ export default async function AboutPage() {
                   <div
                     key={a.code}
                     data-reveal
-                    className="flex flex-col gap-3 rounded-[1.1rem] bg-paper/5 p-4 ring-1 ring-paper/10 transition-colors hover:bg-court hover:text-ink"
+                    className="flex flex-col gap-3 rounded-[1.1rem] bg-paper/5 p-4 ring-1 ring-paper/10 transition-colors hover:bg-court hover:text-on-court"
                   >
                     <Icon className="size-6" aria-hidden />
                     <span className="font-medium leading-snug">{a.label}</span>
@@ -298,7 +298,7 @@ export default async function AboutPage() {
       {/* KẾT -------------------------------------------------------------------- */}
       <section aria-labelledby="cta-title" className="pt-10 sm:pt-16">
         <ShuttleFly />
-        <div className="relative isolate flex flex-col items-start gap-6 overflow-hidden rounded-[1.75rem] bg-court p-7 text-ink sm:p-12 lg:flex-row lg:items-end lg:justify-between">
+        <div className="relative isolate flex flex-col items-start gap-6 overflow-hidden rounded-[1.75rem] bg-court p-7 text-on-court sm:p-12 lg:flex-row lg:items-end lg:justify-between">
           <CourtDraw className="absolute -top-24 -right-10 -z-10 h-[150%] rotate-90 text-ink/10" />
           <div className="flex flex-col gap-3">
             <SplitHeading id="cta-title" onScroll className="text-5xl leading-[0.95] sm:text-7xl">

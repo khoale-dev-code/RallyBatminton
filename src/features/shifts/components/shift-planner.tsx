@@ -45,7 +45,7 @@ function Chip({ active, onClick, children, className }: { active: boolean; onCli
       onClick={onClick}
       className={cn(
         'inline-flex min-h-10 items-center gap-1.5 rounded-full border px-3 text-sm transition-colors',
-        active ? 'border-ink bg-ink text-paper' : 'border-line bg-paper hover:border-ink',
+        active ? 'border-primary bg-primary text-paper' : 'border-line bg-paper hover:border-primary/50 hover:text-primary',
         className,
       )}
     >
@@ -339,7 +339,9 @@ export function ShiftPlanner({
                             onClick={() => toggleWeekday(d)}
                             className={cn(
                               'min-h-10 rounded-control border text-sm font-medium',
-                              active ? 'border-ink bg-ink text-paper' : 'border-line bg-paper text-muted hover:border-ink',
+                              active
+                                ? 'border-primary bg-primary text-paper'
+                                : 'border-line bg-paper text-muted hover:border-primary/50 hover:text-primary',
                             )}
                           >
                             {w.label}
