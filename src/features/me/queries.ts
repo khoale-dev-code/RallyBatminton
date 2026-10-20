@@ -13,7 +13,7 @@ export async function getMyOverview(employeeId: string, fromDate: string) {
     supabase
       .from('shifts')
       .select(
-        'id, work_date, scheduled_start, scheduled_end, status, checked_in_at, checked_out_at, paid_minutes, branches(name, timezone), shift_overtime(id, minutes, hourly_rate, reason, status, requested_at)',
+        'id, work_date, scheduled_start, scheduled_end, status, checked_in_at, checked_out_at, scanned_in_at, scanned_out_at, in_source, out_source, actual_time_decision, paid_minutes, branches(name, timezone), shift_overtime(id, minutes, hourly_rate, reason, status, requested_at), attendance_fix_requests(id, kind, status, claimed_at, reason, decision_note, created_at)',
       )
       .eq('employee_id', employeeId)
       .is('deleted_at', null)
@@ -61,6 +61,10 @@ const summarySchema = z.object({
   paid_minutes: z.number(),
   late_count: z.number(),
   late_minutes: z.number(),
+  late_grace_minutes: z.number().catch(5),
+  forgot_count: z.number().catch(0),
+  pending_fixes: z.number().catch(0),
+  forgot_checkout_count: z.number().catch(0),
   overtime_count: z.number(),
   overtime_minutes: z.number(),
   overtime_pay: z.number(),

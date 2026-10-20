@@ -4,10 +4,13 @@
 -- Chạy trong SQL Editor: mọi dòng cột "ok" phải là true.
 -- =============================================================================
 with checks as (
-  select 1 as n, 'Đủ bảng nghiệp vụ trong public (34, thêm product_units sau 07 là 35)' as check_name,
+  select 1 as n, 'Đủ bảng nghiệp vụ trong public (34 của 00 + bảng của các file sau đã chạy)' as check_name,
          (select count(*) from pg_class c join pg_namespace s on s.oid = c.relnamespace
            where s.nspname = 'public' and c.relkind = 'r')
-           = 34 + (case when to_regclass('public.product_units') is null then 0 else 1 end) as ok,
+           = 34 + (select count(*) from unnest(array['product_units', 'member_profiles', 'member_point_ledger', 'bank_transactions',
+                     'notification_settings', 'reconcile_runs', 'shift_overtime', 'attendance_settings',
+                     'attendance_fix_requests', 'attendance_kiosks']) t(name)
+                   where to_regclass('public.' || t.name) is not null) as ok,
          (select count(*)::text from pg_class c join pg_namespace s on s.oid = c.relnamespace
            where s.nspname = 'public' and c.relkind = 'r') as detail
   union all
@@ -32,9 +35,9 @@ with checks as (
                         and not exists (select 1 from unnest(coalesce(p.proconfig, '{}')) cfg where cfg like 'search_path=%')),
          'ok'
   union all
-  select 5, 'anon chỉ gọi được 4 RPC đọc công khai',
+  select 5, 'anon chỉ gọi được 4 RPC đọc công khai (+ kiosk_issue_qr sau 21)',
          (select array_agg(p.proname order by p.proname) from pg_proc p join pg_namespace s on s.oid = p.pronamespace
-           where s.nspname = 'public' and p.prokind = 'f' and has_function_privilege('anon', p.oid, 'execute'))
+           where s.nspname = 'public' and p.prokind = 'f' and has_function_privilege('anon', p.oid, 'execute') and p.proname <> 'kiosk_issue_qr')
          = array['get_branch_busy_slots', 'list_catalog', 'list_published_branches', 'quote_booking']::name[],
          (select string_agg(p.proname, ', ') from pg_proc p join pg_namespace s on s.oid = p.pronamespace
            where s.nspname = 'public' and p.prokind = 'f' and has_function_privilege('anon', p.oid, 'execute'))
@@ -170,6 +173,15 @@ with checks as (
          and exists (select 1 from pg_proc where oid = 'private.bookings_before_write()'::regprocedure and prosrc like '%rally.booking_extend%')
          and not has_function_privilege('anon', 'public.extend_booking(uuid,timestamptz,text)', 'execute'),
          'court_extend_options + extend_booking + trigger cho phép kéo dài đơn đang chơi'
+  union all
+  select 27, 'Đã chạy 21_attendance_rules.sql (quy tắc chấm công, sửa giờ, máy quầy)',
+         to_regclass('public.attendance_settings') is not null
+         and to_regclass('public.attendance_fix_requests') is not null
+         and to_regprocedure('public.request_attendance_fix(uuid,text,timestamptz,text)') is not null
+         and to_regprocedure('public.kiosk_issue_qr(text,text)') is not null
+         and exists (select 1 from pg_trigger where tgname = 'shifts_zz_paid' and tgrelid = 'public.shifts'::regclass)
+         and not has_function_privilege('anon', 'public.decide_attendance_fix(uuid,boolean,text)', 'execute'),
+         'attendance_settings + yêu cầu sửa giờ + công theo khung ca + máy quầy không cần đăng nhập'
   union all
   select 12, 'pg_cron (tùy chọn)',
          true,

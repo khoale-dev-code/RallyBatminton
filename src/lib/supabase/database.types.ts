@@ -37,27 +37,147 @@ export type Database = {
         Relationships: [
         ]
       }
+      attendance_fix_requests: {
+        Row: {
+          id: string
+          shift_id: string
+          employee_id: string
+          branch_id: string
+          kind: string
+          claimed_at: string
+          recorded_at: string | null
+          reason: string
+          status: string
+          created_at: string
+          decided_by: string | null
+          decided_at: string | null
+          decision_note: string | null
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          shift_id: string
+          employee_id: string
+          branch_id: string
+          kind: string
+          claimed_at: string
+          recorded_at?: string | null
+          reason: string
+          status?: string
+          created_at?: string
+          decided_by?: string | null
+          decided_at?: string | null
+          decision_note?: string | null
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          shift_id?: string
+          employee_id?: string
+          branch_id?: string
+          kind?: string
+          claimed_at?: string
+          recorded_at?: string | null
+          reason?: string
+          status?: string
+          created_at?: string
+          decided_by?: string | null
+          decided_at?: string | null
+          decision_note?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendance_fix_requests_shift_id_fkey"
+            columns: ["shift_id"]
+            isOneToOne: false
+            referencedRelation: "shifts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendance_fix_requests_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendance_fix_requests_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      attendance_kiosks: {
+        Row: {
+          id: string
+          branch_id: string
+          name: string
+          token_hash: string
+          created_by: string | null
+          created_at: string
+          last_seen_at: string | null
+          revoked_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          branch_id: string
+          name: string
+          token_hash: string
+          created_by?: string | null
+          created_at?: string
+          last_seen_at?: string | null
+          revoked_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          branch_id?: string
+          name?: string
+          token_hash?: string
+          created_by?: string | null
+          created_at?: string
+          last_seen_at?: string | null
+          revoked_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendance_kiosks_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       attendance_qr_tokens: {
         Row: {
           token_hash: string
           branch_id: string
           expires_at: string
-          created_by: string
+          created_by: string | null
           created_at: string
+          kiosk_id: string | null
         }
         Insert: {
           token_hash: string
           branch_id: string
           expires_at: string
-          created_by: string
+          created_by?: string | null
           created_at?: string
+          kiosk_id?: string | null
         }
         Update: {
           token_hash?: string
           branch_id?: string
           expires_at?: string
-          created_by?: string
+          created_by?: string | null
           created_at?: string
+          kiosk_id?: string | null
         }
         Relationships: [
           {
@@ -68,6 +188,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      attendance_settings: {
+        Row: {
+          id: boolean
+          late_grace_minutes: number
+          late_out_review_minutes: number
+          fix_request_hours: number
+          forgot_warn_count: number
+          qr_ttl_seconds: number
+          auto_close_forgotten: boolean
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          id?: boolean
+          late_grace_minutes?: number
+          late_out_review_minutes?: number
+          fix_request_hours?: number
+          forgot_warn_count?: number
+          qr_ttl_seconds?: number
+          auto_close_forgotten?: boolean
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          id?: boolean
+          late_grace_minutes?: number
+          late_out_review_minutes?: number
+          fix_request_hours?: number
+          forgot_warn_count?: number
+          qr_ttl_seconds?: number
+          auto_close_forgotten?: boolean
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
       }
       audit_events: {
         Row: {
@@ -2173,7 +2329,12 @@ export type Database = {
           checked_in_at: string | null
           checked_out_at: string | null
           actual_break_minutes: number
-          paid_minutes: number | null
+          paid_minutes: number
+          scanned_in_at: string | null
+          scanned_out_at: string | null
+          in_source: string | null
+          out_source: string | null
+          actual_time_decision: string | null
           note: string | null
           created_by: string | null
           created_at: string
@@ -2193,7 +2354,12 @@ export type Database = {
           checked_in_at?: string | null
           checked_out_at?: string | null
           actual_break_minutes?: number
-          paid_minutes?: never
+          paid_minutes?: number
+          scanned_in_at?: string | null
+          scanned_out_at?: string | null
+          in_source?: string | null
+          out_source?: string | null
+          actual_time_decision?: string | null
           note?: string | null
           created_by?: string | null
           created_at?: string
@@ -2213,7 +2379,12 @@ export type Database = {
           checked_in_at?: string | null
           checked_out_at?: string | null
           actual_break_minutes?: number
-          paid_minutes?: never
+          paid_minutes?: number
+          scanned_in_at?: string | null
+          scanned_out_at?: string | null
+          in_source?: string | null
+          out_source?: string | null
+          actual_time_decision?: string | null
           note?: string | null
           created_by?: string | null
           created_at?: string
@@ -2797,6 +2968,31 @@ export type Database = {
           p_booking_id: string
           p_new_end: string
           p_note?: string | null
+        }
+        Returns: Json
+      }
+      attendance_review_counts: { Args: never; Returns: Json }
+      attendance_review_queue: { Args: never; Returns: Json }
+      cancel_attendance_fix: { Args: { p_request_id: string }; Returns: undefined }
+      close_forgotten_shifts: { Args: never; Returns: Json }
+      create_attendance_kiosk: { Args: { p_branch_id: string; p_name: string; p_token_hash: string }; Returns: string }
+      decide_actual_time: { Args: { p_decision: string | null; p_reason: string; p_shift_id: string }; Returns: Json }
+      decide_attendance_fix: { Args: { p_approve: boolean; p_note?: string | null; p_request_id: string }; Returns: Json }
+      kiosk_issue_qr: { Args: { p_device_token: string; p_token_hash: string }; Returns: Json }
+      request_attendance_fix: {
+        Args: { p_claimed_at: string; p_kind: string; p_reason: string; p_shift_id: string }
+        Returns: Json
+      }
+      revoke_attendance_kiosk: { Args: { p_kiosk_id: string }; Returns: undefined }
+      service_close_forgotten_shifts: { Args: never; Returns: Json }
+      update_attendance_settings: {
+        Args: {
+          p_auto_close_forgotten: boolean
+          p_fix_request_hours: number
+          p_forgot_warn_count: number
+          p_late_grace_minutes: number
+          p_late_out_review_minutes: number
+          p_qr_ttl_seconds: number
         }
         Returns: Json
       }

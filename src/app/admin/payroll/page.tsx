@@ -9,6 +9,7 @@ import { ActionForm, SelectField, SubmitButton, TextField } from '@/components/u
 import { Notice } from '@/components/ui/notice';
 import { Badge, Disclosure, EmptyState, PageHeader, Panel } from '@/components/ui/primitives';
 import { addAdjustmentAction, closePayrollAction, voidAdjustmentAction } from '@/features/payroll/actions';
+import { getReviewQueue } from '@/features/attendance/queries';
 import { initialsOf } from '@/features/member/lib/initials';
 import { getPayrollMonth, listEmployeesForPayroll } from '@/features/payroll/queries';
 import { requireOwner, withGuard } from '@/lib/auth/guards';
@@ -58,9 +59,12 @@ export default async function PayrollPage({ searchParams }: { searchParams: Prom
   const { month: raw } = await searchParams;
   const currentMonth = monthKey(todayKey());
   const month = raw && /^\d{4}-\d{2}-01$/.test(raw) ? raw : addMonths(currentMonth, -1);
-  const [, [{ period, rows, adjustments, totals }, employees]] = await withGuard(requireOwner(), () =>
-    Promise.all([getPayrollMonth(month), listEmployeesForPayroll()]),
+  const [, [{ period, rows, adjustments, totals }, employees, review]] = await withGuard(requireOwner(), () =>
+    Promise.all([getPayrollMonth(month), listEmployeesForPayroll(), getReviewQueue()]),
   );
+  // Việc chấm công chờ chủ sân (yêu cầu sửa giờ chặn chốt lương; ca ra trễ chỉ nhắc).
+  const pendingFixes = review?.fixes.length ?? 0;
+  const lateOuts = review?.late_outs.length ?? 0;
   const closed = period !== null;
   const canClose = !closed && month < currentMonth;
   const sum = rows.reduce(
@@ -110,6 +114,23 @@ export default async function PayrollPage({ searchParams }: { searchParams: Prom
             {totals.missingRate > 0 && (
               <span className="block">{totals.missingRate} ca có mặt nhưng nhân viên chưa có mức lương áp dụng.</span>
             )}
+          </Notice>
+        </div>
+      )}
+      {!closed && (pendingFixes > 0 || lateOuts > 0) && (
+        <div className="mb-6">
+          <Notice tone="warning" title="Chấm công cần duyệt">
+            {pendingFixes > 0 && (
+              <span className="block">{pendingFixes} yêu cầu sửa giờ chưa duyệt — phải xử lý trước khi chốt lương.</span>
+            )}
+            {lateOuts > 0 && (
+              <span className="block">
+                {lateOuts} ca ra trễ hơn khung: công đang tính tới hết khung ca, xem lại nếu nhân viên ở lại làm thật.
+              </span>
+            )}
+            <Link href="/admin/timesheet" className="mt-1 inline-block font-medium underline underline-offset-4">
+              Mở Duyệt chấm công
+            </Link>
           </Notice>
         </div>
       )}

@@ -1,8 +1,13 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
+import { ActionButton } from '@/components/ui/action-button';
 import { ActionForm, SelectField, SubmitButton, TextField } from '@/components/ui/form';
 import { Badge, DescriptionList, Disclosure, PageHeader, Panel } from '@/components/ui/primitives';
+import { decideActualTimeAction } from '@/features/attendance/actions';
+import { ActualTimeDecision, FixDecision } from '@/features/attendance/components/review-actions';
+import { FIX_STATUS, lateMinutes, lateOutMinutes, paidWindow, SOURCE_LABEL } from '@/features/attendance/lib/rules';
+import { getAttendanceSettings } from '@/features/attendance/queries';
 import { adjustAttendanceAction, rescheduleShiftAction } from '@/features/shifts/actions';
 import { OvertimePanel } from '@/features/shifts/components/overtime-panel';
 import { overtimeEndsAt } from '@/features/shifts/lib/overtime';
@@ -24,14 +29,30 @@ function toLocalInput(value: string | null, tz: string): string {
 export default async function ShiftDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   if (!isUuid(id)) notFound();
-  const [, data] = await withGuard(requireOwner(), () => getShift(id));
+  const [, [data, rules]] = await withGuard(requireOwner(), () => Promise.all([getShift(id), getAttendanceSettings()]));
   if (!data) notFound();
-  const { shift: s, history, overtime, rate, monthClosed } = data;
+  const { shift: s, history, overtime, fixes, rate, monthClosed } = data;
   const tz = s.branches?.timezone ?? DEFAULT_TZ;
   const started = s.checked_in_at !== null;
   const acceptedOt = overtime.find((o) => o.status === 'accepted');
   // Có tăng ca đã đồng ý thì giờ ra gợi ý = hết khung tăng ca.
   const expectedOut = acceptedOt ? overtimeEndsAt(s.scheduled_end, acceptedOt.minutes).toISOString() : s.scheduled_end;
+  const otMinutes = acceptedOt?.minutes ?? 0;
+  const paidSpan = paidWindow(s, otMinutes);
+  const late = lateMinutes(s, rules.late_grace_minutes);
+  const lateOut = lateOutMinutes(s, otMinutes);
+  const timeWithSource = (at: string | null, scanned: string | null, source: string | null) =>
+    at ? (
+      <span className="flex flex-col">
+        <span>{formatDateTime(at, tz)}</span>
+        <span className="text-sm font-normal text-muted">
+          {source ? (SOURCE_LABEL[source] ?? source) : ''}
+          {scanned && scanned !== at ? ` · quét QR lúc ${formatTime(scanned, tz)}` : ''}
+        </span>
+      </span>
+    ) : (
+      '—'
+    );
 
   return (
     <>
@@ -59,8 +80,27 @@ export default async function ShiftDetailPage({ params }: { params: Promise<{ id
                   value: `${formatTime(s.scheduled_start, tz)}–${formatTime(s.scheduled_end, tz)}, nghỉ ${s.break_minutes} phút`,
                 },
                 { label: 'Dự kiến', value: formatMinutes(plannedMinutes(s.scheduled_start, s.scheduled_end, s.break_minutes)) },
-                { label: 'Vào ca', value: s.checked_in_at ? formatDateTime(s.checked_in_at, tz) : '—' },
-                { label: 'Ra ca', value: s.checked_out_at ? formatDateTime(s.checked_out_at, tz) : '—' },
+                { label: 'Vào ca', value: timeWithSource(s.checked_in_at, s.scanned_in_at, s.in_source) },
+                { label: 'Ra ca', value: timeWithSource(s.checked_out_at, s.scanned_out_at, s.out_source) },
+                {
+                  label: 'Khung tính công',
+                  value: paidSpan ? (
+                    <span className="flex flex-col">
+                      <span className="tabular">
+                        {formatTime(new Date(paidSpan.start), tz)}–{formatTime(new Date(paidSpan.end), tz)}
+                      </span>
+                      <span className="text-sm font-normal text-muted">
+                        {s.actual_time_decision === 'approved'
+                          ? 'Trả theo giờ thực tế (chủ sân đã duyệt)'
+                          : paidSpan.capped
+                            ? 'Đã giới hạn trong khung ca + tăng ca đã đồng ý'
+                            : 'Trong khung ca'}
+                      </span>
+                    </span>
+                  ) : (
+                    '—'
+                  ),
+                },
                 {
                   label: 'Công tính lương',
                   value: <span className="font-display text-xl tabular">{formatMinutes(s.paid_minutes ?? 0)}</span>,
@@ -69,6 +109,76 @@ export default async function ShiftDetailPage({ params }: { params: Promise<{ id
               ]}
             />
           </Panel>
+          {(late > 0 || s.out_source === 'auto' || lateOut > 0 || s.actual_time_decision) && (
+            <Panel title="Cần chú ý">
+              <ul className="flex flex-col gap-3">
+                {late > 0 && (
+                  <li className="flex flex-wrap items-center gap-2">
+                    <Badge tone="amber">Đi trễ {late} phút</Badge>
+                    <span className="text-sm text-muted">Ân hạn {rules.late_grace_minutes} phút. Chỉ để theo dõi, không tự trừ tiền.</span>
+                  </li>
+                )}
+                {s.out_source === 'auto' && (
+                  <li className="flex flex-wrap items-center gap-2">
+                    <Badge tone="amber">Quên quét ra — tự đóng theo lịch</Badge>
+                    <span className="text-sm text-muted">Nhân viên có thể gửi yêu cầu sửa giờ ra nếu ở lại muộn hơn.</span>
+                  </li>
+                )}
+                {lateOut > 0 && (
+                  <li className="flex flex-col gap-2">
+                    <span className="flex flex-wrap items-center gap-2">
+                      <Badge tone={s.actual_time_decision === 'approved' ? 'green' : 'neutral'}>
+                        Ra muộn hơn khung {formatMinutes(lateOut)}
+                      </Badge>
+                      <span className="text-sm text-muted">
+                        {s.actual_time_decision === 'approved'
+                          ? 'Đang trả theo giờ thực tế.'
+                          : s.actual_time_decision === 'kept'
+                            ? 'Đã xem — giữ công theo khung ca.'
+                            : 'Công đang tính tới hết khung. Trả thêm chỉ khi nhân viên ở lại làm thật.'}
+                      </span>
+                    </span>
+                    {!monthClosed && s.status === 'present' && (
+                      <div className="flex flex-wrap items-center gap-2">
+                        {s.actual_time_decision !== 'approved' && s.actual_time_decision !== 'kept' && (
+                          <ActualTimeDecision shiftId={s.id} />
+                        )}
+                        {s.actual_time_decision && (
+                          <ActionButton
+                            action={decideActualTimeAction.bind(null, s.id, null)}
+                            label="Bỏ quyết định"
+                            variant="ghost"
+                            hidden={{ reason: 'Xem lại quyết định giờ thực tế' }}
+                          />
+                        )}
+                      </div>
+                    )}
+                  </li>
+                )}
+              </ul>
+            </Panel>
+          )}
+          {fixes.length > 0 && (
+            <Panel title="Yêu cầu sửa giờ của nhân viên">
+              <ul className="divide-y divide-line">
+                {fixes.map((f) => (
+                  <li key={f.id} className="flex flex-col gap-2 py-3">
+                    <span className="flex flex-wrap items-center gap-2">
+                      <Badge tone={FIX_STATUS[f.status]?.tone ?? 'neutral'}>{FIX_STATUS[f.status]?.label ?? f.status}</Badge>
+                      <span>
+                        Giờ {f.kind === 'in' ? 'vào' : 'ra'}: {f.recorded_at ? formatTime(f.recorded_at, tz) : 'chưa có'} →{' '}
+                        <strong className="tabular">{formatTime(f.claimed_at, tz)}</strong>
+                      </span>
+                      <span className="text-sm text-muted">gửi {formatDateTime(f.created_at, tz)}</span>
+                    </span>
+                    <span className="text-sm">“{f.reason}”</span>
+                    {f.decision_note && <span className="text-sm text-muted">Chủ sân: {f.decision_note}</span>}
+                    {f.status === 'pending' && !monthClosed && <FixDecision requestId={f.id} />}
+                  </li>
+                ))}
+              </ul>
+            </Panel>
+          )}
           <Panel title="Nhật ký thay đổi" description="Mọi lần quét QR và chỉnh công đều được ghi lại cùng lý do.">
             {history.length === 0 ? (
               <p className="text-muted">Chưa có thay đổi.</p>

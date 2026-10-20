@@ -19,7 +19,8 @@ export type NavIcon =
   | 'receipt'
   | 'scan'
   | 'bank'
-  | 'cash';
+  | 'cash'
+  | 'review';
 
 export interface NavItem {
   href: string;
@@ -43,7 +44,7 @@ export const NAV_CLOSED_COOKIE = 'rally_nav_closed';
 export const NAV_GROUP_KEYS: NavGroupKey[] = ['ops', 'goods', 'hr', 'admin'];
 
 /** Menu chỉ hiện mục người dùng có quyền — chỉ là tiện ích; database vẫn chặn bằng RLS. */
-export function buildNav(ctx: StaffContext, counts: { pendingOvertime?: number } = {}): NavGroup[] {
+export function buildNav(ctx: StaffContext, counts: { pendingOvertime?: number; attendanceReview?: number } = {}): NavGroup[] {
   const owner = isOwner(ctx);
   const can = (p: Parameters<typeof hasPermission>[1]) => owner || hasPermission(ctx, p);
   const groups: NavGroup[] = [
@@ -74,6 +75,9 @@ export function buildNav(ctx: StaffContext, counts: { pendingOvertime?: number }
       title: 'Nhân sự',
       items: [
         ...(can('shift.view_branch') || ctx.employeeId ? [{ href: '/admin/shifts', label: 'Lịch ca', icon: 'clock' as const }] : []),
+        ...(owner
+          ? [{ href: '/admin/timesheet', label: 'Duyệt chấm công', icon: 'review' as const, badge: counts.attendanceReview ?? 0 }]
+          : []),
         ...(owner ? [{ href: '/admin/attendance', label: 'Mã QR', icon: 'qr' as const }] : []),
         ...(owner ? [{ href: '/admin/staff', label: 'Nhân viên', icon: 'id' as const }] : []),
         ...(owner ? [{ href: '/admin/payroll', label: 'Bảng lương', icon: 'wallet' as const }] : []),

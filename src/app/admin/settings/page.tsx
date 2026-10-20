@@ -1,7 +1,9 @@
-import { Bell, CheckCircle2, CircleAlert, Gauge, Landmark, Palette, Receipt, Webhook } from 'lucide-react';
+import { Bell, CheckCircle2, CircleAlert, ClockCheck, Gauge, Landmark, Palette, Receipt, Webhook } from 'lucide-react';
 
 import { ActionForm, CheckboxField, SelectField, SubmitButton, TextareaField, TextField } from '@/components/ui/form';
 import { PageHeader } from '@/components/ui/primitives';
+import { updateAttendanceSettingsAction } from '@/features/attendance/actions';
+import { getAttendanceSettings } from '@/features/attendance/queries';
 import { AlertSettings } from '@/features/payments/components/alert-settings';
 import { BankFields } from '@/features/payments/components/bank-fields';
 import { updateBankSettingsAction, updateBrandAction, updateTaxSettingsAction } from '@/features/settings/actions';
@@ -20,12 +22,13 @@ export const metadata = { title: 'Cài đặt thương hiệu' };
 
 export default async function SettingsPage() {
   const supabase = await createClient();
-  const [, [{ data: brand }, { data: lastTxn }, { data: notify }, { data: auth }]] = await withGuard(requireOwner(), () =>
+  const [, [{ data: brand }, { data: lastTxn }, { data: notify }, { data: auth }, rules]] = await withGuard(requireOwner(), () =>
     Promise.all([
       supabase.from('brand_settings').select('*').maybeSingle(),
       supabase.from('bank_transactions').select('created_at').order('created_at', { ascending: false }).limit(1).maybeSingle(),
       supabase.from('notification_settings').select('alert_emails, alert_on_review, alert_on_unmatched').maybeSingle(),
       supabase.auth.getUser(),
+      getAttendanceSettings(),
     ]),
   );
   const sepay = getSepayWebhookAuth();
@@ -239,6 +242,88 @@ export default async function SettingsPage() {
               </div>
               <div>
                 <SubmitButton pendingLabel="Đang lưu…">Lưu cài đặt thuế</SubmitButton>
+              </div>
+            </ActionForm>
+          </SettingsSection>
+
+          <SettingsSection
+            id="cham-cong"
+            icon={ClockCheck}
+            title="Chấm công"
+            description="Công chỉ tính trong khung ca (+ tăng ca đã đồng ý). Phần ngoài khung, quên quét, đi trễ… xử lý theo các quy tắc dưới đây."
+            aside={
+              <div className={helpBox}>
+                <p className="font-medium">Cách tính công một ca</p>
+                <ul className="ml-4 flex list-disc flex-col gap-1.5 text-muted">
+                  <li>Đến sớm: công tính từ giờ bắt đầu ca.</li>
+                  <li>Ra muộn: công tính tới hết ca (+ tăng ca đã đồng ý). Muộn hơn ngưỡng thì vào Duyệt chấm công.</li>
+                  <li>Quên quét: nhân viên gửi yêu cầu sửa giờ, chủ sân duyệt / từ chối.</li>
+                  <li>Đi trễ chỉ để theo dõi — không tự trừ tiền.</li>
+                </ul>
+              </div>
+            }
+          >
+            <ActionForm action={updateAttendanceSettingsAction}>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <TextField
+                  name="late_grace_minutes"
+                  label="Ân hạn đi trễ (phút)"
+                  type="number"
+                  inputMode="numeric"
+                  min={0}
+                  max={60}
+                  defaultValue={rules.late_grace_minutes}
+                  hint="Vào trễ trong khoảng này không tính là đi trễ."
+                />
+                <TextField
+                  name="late_out_review_minutes"
+                  label="Ra ca trễ cần xem lại sau (phút)"
+                  type="number"
+                  inputMode="numeric"
+                  min={5}
+                  max={240}
+                  defaultValue={rules.late_out_review_minutes}
+                  hint="Quét ra muộn hơn khung ca từng này phút sẽ hiện ở Duyệt chấm công."
+                />
+                <TextField
+                  name="fix_request_hours"
+                  label="Hạn gửi yêu cầu sửa giờ (giờ)"
+                  type="number"
+                  inputMode="numeric"
+                  min={1}
+                  max={168}
+                  defaultValue={rules.fix_request_hours}
+                  hint="Tính từ giờ kết thúc ca. 24 = trong ngày hôm sau."
+                />
+                <TextField
+                  name="forgot_warn_count"
+                  label="Cảnh báo hay quên từ lần thứ"
+                  type="number"
+                  inputMode="numeric"
+                  min={1}
+                  max={31}
+                  defaultValue={rules.forgot_warn_count}
+                  hint="Số lần quên chấm công (được duyệt) trong tháng."
+                />
+                <TextField
+                  name="qr_ttl_seconds"
+                  label="Mã QR hết hạn sau (giây)"
+                  type="number"
+                  inputMode="numeric"
+                  min={20}
+                  max={180}
+                  defaultValue={rules.qr_ttl_seconds}
+                  hint="Ngắn hơn thì khó gửi mã cho người ở xa chấm hộ. Nên 30–60."
+                />
+              </div>
+              <CheckboxField
+                name="auto_close_forgotten"
+                label="Tự đóng ca quên quét ra"
+                hint="Quá hạn quét ra (4 giờ sau hết ca) thì đóng ca đúng giờ kết thúc theo lịch, để không chặn chốt lương."
+                defaultChecked={rules.auto_close_forgotten}
+              />
+              <div>
+                <SubmitButton pendingLabel="Đang lưu…">Lưu quy tắc chấm công</SubmitButton>
               </div>
             </ActionForm>
           </SettingsSection>

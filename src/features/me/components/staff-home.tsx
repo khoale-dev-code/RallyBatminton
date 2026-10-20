@@ -11,6 +11,7 @@ import {
   KeyRound,
   QrCode,
   ReceiptText,
+  ScanQrCode,
   ShoppingCart,
   Timer,
   UserX,
@@ -227,7 +228,22 @@ export function StaffHome({
                   icon={<AlarmClock className="size-4" aria-hidden />}
                   label="Đi trễ"
                   value={`${s.late_count} lần`}
-                  hint={s.late_count > 0 ? `Tổng ${formatMinutes(s.late_minutes)} (trễ quá 5 phút)` : 'Đúng giờ cả tháng'}
+                  hint={
+                    s.late_count > 0 ? `Tổng ${formatMinutes(s.late_minutes)} (trễ quá ${s.late_grace_minutes} phút)` : 'Đúng giờ cả tháng'
+                  }
+                />
+                <Stat
+                  tone={s.forgot_count + s.forgot_checkout_count > 0 ? 'bad' : 'default'}
+                  icon={<ScanQrCode className="size-4" aria-hidden />}
+                  label="Quên chấm công"
+                  value={`${s.forgot_count + s.forgot_checkout_count} lần`}
+                  hint={
+                    s.pending_fixes > 0
+                      ? `${s.pending_fixes} yêu cầu sửa giờ đang chờ duyệt`
+                      : s.forgot_checkout_count > 0
+                        ? `${s.forgot_checkout_count} lần quên quét ra (tự đóng theo lịch)`
+                        : 'Nhớ quét QR khi vào và ra ca'
+                  }
                 />
                 <Stat
                   tone={s.bonus > 0 ? 'good' : 'default'}

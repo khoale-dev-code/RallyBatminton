@@ -1,6 +1,6 @@
 'use client';
 
-import { Bell, Gauge, Landmark, Palette, Receipt } from 'lucide-react';
+import { Bell, ClockCheck, Gauge, Landmark, Palette, Receipt } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 import { cn } from '@/lib/cn';
@@ -10,6 +10,7 @@ export const SETTINGS_SECTIONS = [
   { id: 'chuyen-khoan', label: 'Chuyển khoản SePay', icon: Landmark },
   { id: 'thong-bao', label: 'Email cảnh báo', icon: Bell },
   { id: 'thue', label: 'Thuế', icon: Receipt },
+  { id: 'cham-cong', label: 'Chấm công', icon: ClockCheck },
   { id: 'toc-do', label: 'Tốc độ máy chủ', icon: Gauge },
 ] as const;
 

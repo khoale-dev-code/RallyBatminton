@@ -1,5 +1,10 @@
+import { ActionButton } from '@/components/ui/action-button';
 import { LinkButton } from '@/components/ui/button';
-import { Badge, EmptyState, PageHeader, Panel } from '@/components/ui/primitives';
+import { Badge, Disclosure, EmptyState, PageHeader, Panel } from '@/components/ui/primitives';
+import { cancelFixAction } from '@/features/attendance/actions';
+import { FixRequestForm } from '@/features/attendance/components/fix-request-form';
+import { canRequestFix, FIX_STATUS, lateMinutes, lateOutMinutes } from '@/features/attendance/lib/rules';
+import { getAttendanceSettings } from '@/features/attendance/queries';
 import { getMyOverview } from '@/features/me/queries';
 import { OvertimeRequestCard } from '@/features/shifts/components/overtime-request-card';
 import { requireStaff } from '@/lib/auth/guards';
@@ -20,7 +25,10 @@ export default async function MyPage() {
     );
   }
   const today = todayKey();
-  const { employee, shifts, payslips, rate, adjustments } = await getMyOverview(ctx.employeeId, today);
+  const [{ employee, shifts, payslips, rate, adjustments }, rules] = await Promise.all([
+    getMyOverview(ctx.employeeId, today),
+    getAttendanceSettings(),
+  ]);
   const upcoming = shifts.filter((s) => s.work_date >= today);
   const past = shifts.filter((s) => s.work_date < today).reverse();
   const now = requestNow();
@@ -34,31 +42,84 @@ export default async function MyPage() {
   const shiftRow = (s: (typeof shifts)[number]) => {
     const tz = s.branches?.timezone;
     const info = describeDateKey(s.work_date);
+    const ot = s.shift_overtime.find((o) => o.status === 'accepted')?.minutes ?? 0;
+    const late = lateMinutes(s, rules.late_grace_minutes);
+    const lateOut = s.out_source === 'qr' && !s.actual_time_decision ? lateOutMinutes(s, ot) : 0;
+    const fixes = [...s.attendance_fix_requests].sort((a, b) => b.created_at.localeCompare(a.created_at));
+    const pendingKinds = new Set(fixes.filter((f) => f.status === 'pending').map((f) => f.kind));
+    const started = new Date(s.scheduled_start).getTime() - 60 * 60_000 <= now;
+    const fixable = started && (s.status === 'scheduled' || s.status === 'present') && canRequestFix(s, rules.fix_request_hours, now);
+    // Đã có giờ vào thì chỉ khai được giờ vào SỚM hơn hoặc giờ ra; chưa có giờ vào thì khai giờ vào trước.
+    const kinds = (['in', 'out'] as const).filter(
+      (k) =>
+        !pendingKinds.has(k) &&
+        (k === 'in' ||
+          ((s.checked_in_at !== null || pendingKinds.has('in')) &&
+            (s.checked_out_at !== null || new Date(s.scheduled_end).getTime() <= now))),
+    );
     return (
-      <li key={s.id} className="flex items-center justify-between gap-3 py-3">
-        <span className="flex min-w-0 flex-col">
-          <span className="font-medium">
-            {info.weekdayShort} {info.dayMonth}
-            <span className="font-normal tabular">
-              {' '}
-              {formatTime(s.scheduled_start, tz)}–{formatTime(s.scheduled_end, tz)}
-            </span>
-          </span>
-          <span className="text-sm text-muted">
-            {s.branches?.name}
-            {s.status === 'present' ? `, công ${formatMinutes(s.paid_minutes ?? 0)}` : ''}
-          </span>
-          {s.shift_overtime
-            .filter((o) => o.status === 'accepted')
-            .map((o) => (
-              <span key={o.id} className="text-sm text-court-deep">
-                Tăng ca +{formatMinutes(o.minutes)}, {formatVnd(o.hourly_rate)}/giờ
+      <li key={s.id} className="flex flex-col gap-2 py-3">
+        <div className="flex items-center justify-between gap-3">
+          <span className="flex min-w-0 flex-col">
+            <span className="font-medium">
+              {info.weekdayShort} {info.dayMonth}
+              <span className="font-normal tabular">
+                {' '}
+                {formatTime(s.scheduled_start, tz)}–{formatTime(s.scheduled_end, tz)}
               </span>
+            </span>
+            <span className="text-sm text-muted">
+              {s.branches?.name}
+              {s.checked_in_at ? ` · vào ${formatTime(s.checked_in_at, tz)}` : ''}
+              {s.checked_out_at ? ` · ra ${formatTime(s.checked_out_at, tz)}` : ''}
+              {s.status === 'present' ? ` · công ${formatMinutes(s.paid_minutes)}` : ''}
+            </span>
+            {s.shift_overtime
+              .filter((o) => o.status === 'accepted')
+              .map((o) => (
+                <span key={o.id} className="text-sm text-court-deep">
+                  Tăng ca +{formatMinutes(o.minutes)}, {formatVnd(o.hourly_rate)}/giờ
+                </span>
+              ))}
+          </span>
+          <Badge tone={ATTENDANCE_STATUS[s.status].tone}>
+            {s.status === 'scheduled' && s.checked_in_at ? 'Đang làm' : ATTENDANCE_STATUS[s.status].label}
+          </Badge>
+        </div>
+        {(late > 0 || s.out_source === 'auto' || lateOut > 0) && (
+          <p className="flex flex-wrap gap-1.5 text-xs">
+            {late > 0 && <Badge tone="amber">Trễ {late} phút</Badge>}
+            {s.out_source === 'auto' && <Badge tone="amber">Quên ra ca — đã tự đóng theo lịch</Badge>}
+            {lateOut > 0 && <Badge tone="neutral">Ra muộn {formatMinutes(lateOut)} — công tính tới hết khung ca</Badge>}
+          </p>
+        )}
+        {fixes.length > 0 && (
+          <ul className="flex flex-col gap-1.5">
+            {fixes.map((f) => (
+              <li key={f.id} className="flex flex-wrap items-center gap-2 rounded-control bg-hall/70 px-3 py-2 text-sm">
+                <Badge tone={FIX_STATUS[f.status]?.tone ?? 'neutral'}>{FIX_STATUS[f.status]?.label ?? f.status}</Badge>
+                <span>
+                  Sửa giờ {f.kind === 'in' ? 'vào' : 'ra'} thành <strong className="tabular">{formatTime(f.claimed_at, tz)}</strong>
+                </span>
+                {f.decision_note && <span className="text-muted">— {f.decision_note}</span>}
+                {f.status === 'pending' && (
+                  <span className="ml-auto">
+                    <ActionButton action={cancelFixAction.bind(null, f.id)} label="Rút yêu cầu" variant="ghost" />
+                  </span>
+                )}
+              </li>
             ))}
-        </span>
-        <Badge tone={ATTENDANCE_STATUS[s.status].tone}>
-          {s.status === 'scheduled' && s.checked_in_at ? 'Đang làm' : ATTENDANCE_STATUS[s.status].label}
-        </Badge>
+          </ul>
+        )}
+        {fixable && kinds.length > 0 && (
+          <Disclosure summary="Quên chấm công? Gửi yêu cầu sửa giờ">
+            <FixRequestForm
+              shiftId={s.id}
+              kinds={[...kinds]}
+              defaults={{ in: formatTime(s.scheduled_start, tz), out: formatTime(s.scheduled_end, tz) }}
+            />
+          </Disclosure>
+        )}
       </li>
     );
   };

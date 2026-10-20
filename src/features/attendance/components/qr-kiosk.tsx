@@ -6,7 +6,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { Countdown } from '@/components/ui/interactive';
 import { cn } from '@/lib/cn';
 
-import { useRotatingQr } from '../hooks/use-rotating-qr';
+import { useRotatingQr, type QrSource } from '../hooks/use-rotating-qr';
 import { type QrMode } from '../lib/qr-mode';
 
 const KINDS = {
@@ -74,14 +74,14 @@ function QrCard({
  * Màn hình quầy: mã QR VÀO CA (xanh) và RA CA (đỏ), đổi liên tục. Nhân viên quét đúng mã là ghi đúng việc —
  * không phải chọn lại trên điện thoại. Hai mã dùng chung một token (đổi 75 giây/lần), chỉ khác loại.
  */
-export function QrKiosk({ branchId, branchName, mode }: { branchId: string; branchName: string; mode: QrMode }) {
-  const { url, expiresAt, error } = useRotatingQr(branchId);
+export function QrKiosk({ source, branchName, mode }: { source: QrSource; branchName?: string; mode: QrMode }) {
+  const { url, expiresAt, error, branchName: issuedFor } = useRotatingQr(source);
   const kinds = mode === 'both' ? (['checkin', 'checkout'] as const) : ([mode] as const);
   return (
     <section className="flex flex-col items-center gap-6 rounded-panel border border-line bg-paper px-4 py-8 text-center sm:px-8">
       <div>
         <p className="text-sm text-muted">Chấm công tại</p>
-        <h2 className="text-3xl">{branchName}</h2>
+        <h2 className="text-3xl">{branchName ?? issuedFor ?? '…'}</h2>
       </div>
       <div className={cn('grid w-full justify-items-center gap-6', mode === 'both' && 'md:grid-cols-2 md:gap-8')}>
         {kinds.map((kind) => (

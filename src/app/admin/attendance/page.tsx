@@ -2,8 +2,10 @@ import { LogIn, LogOut, QrCode } from 'lucide-react';
 import Link from 'next/link';
 
 import { PageHeader } from '@/components/ui/primitives';
+import { KioskPanel } from '@/features/attendance/components/kiosk-panel';
 import { QrKiosk } from '@/features/attendance/components/qr-kiosk';
 import { parseQrMode, type QrMode } from '@/features/attendance/lib/qr-mode';
+import { listKiosks } from '@/features/attendance/queries';
 import { requireBranchPermission, requireOwner } from '@/lib/auth/guards';
 import { cn } from '@/lib/cn';
 
@@ -17,7 +19,7 @@ const TABS: Array<{ mode: QrMode; param: string | null; label: string; icon: typ
 
 export default async function AttendanceQrPage({ searchParams }: { searchParams: Promise<{ loai?: string }> }) {
   await requireOwner();
-  const [{ branch }, { loai }] = await Promise.all([requireBranchPermission('shift.view_branch'), searchParams]);
+  const [{ branch }, { loai }, kiosks] = await Promise.all([requireBranchPermission('shift.view_branch'), searchParams, listKiosks()]);
   const mode = parseQrMode(loai);
   return (
     <>
@@ -44,11 +46,25 @@ export default async function AttendanceQrPage({ searchParams }: { searchParams:
           );
         })}
       </nav>
-      <QrKiosk branchId={branch.branchId} branchName={branch.name} mode={mode} />
+      <QrKiosk source={{ kind: 'owner', branchId: branch.branchId }} branchName={branch.name} mode={mode} />
       <p className="mt-3 text-sm text-muted">
-        Mỗi chi nhánh chỉ mở <strong className="text-ink">một</strong> màn hình mã QR: mở thêm màn hình thứ hai sẽ làm mã ở màn hình kia hết
-        hiệu lực. Cần cả vào ca và ra ca thì chọn “Cả hai mã”.
+        Mở được nhiều màn hình mã QR cùng lúc (ví dụ cửa vào và cửa ra). Máy đặt ở quầy nên dùng{' '}
+        <strong className="text-ink">Máy quầy</strong> bên dưới thay vì đăng nhập tài khoản chủ sân.
       </p>
+      <KioskPanel
+        branchId={branch.branchId}
+        branchName={branch.name}
+        kiosks={kiosks
+          .filter((k) => k.branch_id === branch.branchId)
+          .map((k) => ({
+            id: k.id,
+            name: k.name,
+            branchName: k.branches?.name ?? branch.name,
+            createdAt: k.created_at,
+            lastSeenAt: k.last_seen_at,
+            revokedAt: k.revoked_at,
+          }))}
+      />
     </>
   );
 }

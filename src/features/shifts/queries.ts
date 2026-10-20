@@ -65,7 +65,7 @@ export async function listSchedulableEmployees() {
 export async function getShift(id: string) {
   const supabase = await createClient();
   // Nhật ký + tăng ca chỉ cần id ca → chạy cùng lượt với truy vấn ca (bớt 1 lượt mạng).
-  const [{ data }, { data: history }, { data: overtime }] = await Promise.all([
+  const [{ data }, { data: history }, { data: overtime }, { data: fixes }] = await Promise.all([
     supabase.from('shifts').select('*, employees(id, code, full_name), branches(id, name, timezone)').eq('id', id).maybeSingle(),
     supabase
       .from('audit_events')
@@ -79,6 +79,11 @@ export async function getShift(id: string) {
       .select('id, minutes, hourly_rate, reason, status, consent, requested_at, responded_at, response_note')
       .eq('shift_id', id)
       .order('requested_at', { ascending: false }),
+    supabase
+      .from('attendance_fix_requests')
+      .select('id, kind, claimed_at, recorded_at, reason, status, created_at, decided_at, decision_note')
+      .eq('shift_id', id)
+      .order('created_at', { ascending: false }),
   ]);
   if (!data) return null;
   const [{ data: rates }, { data: closed }] = await Promise.all([
@@ -99,6 +104,7 @@ export async function getShift(id: string) {
     shift: data,
     history: history ?? [],
     overtime: overtime ?? [],
+    fixes: fixes ?? [],
     rate: rates?.[0] ?? null,
     monthClosed: Boolean(closed),
   };

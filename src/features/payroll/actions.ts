@@ -56,6 +56,8 @@ export async function closePayrollAction(month: string, _prev: FormState): Promi
   await requireOwner();
   if (!zMonth().safeParse(month).success) return formError('Tháng không hợp lệ.');
   const supabase = await createClient();
+  // Đóng các ca quên quét ra đã quá hạn (theo lịch) để không bị chặn chốt vì "ca chưa xử lý". Chưa chạy SQL 21 → bỏ qua.
+  await supabase.rpc('close_forgotten_shifts');
   const { error } = await supabase.rpc('close_payroll_month', { p_month: month });
   if (error) return formDbError(error);
   revalidatePath('/admin/payroll');

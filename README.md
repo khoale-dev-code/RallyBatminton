@@ -58,6 +58,7 @@ Vào **Supabase Dashboard → SQL Editor**, mở từng file trong `supabase/sql
 | 19 | `18_overtime.sql` | Có | Tăng ca có sự đồng ý của nhân viên: chủ sân đề nghị ở lại thêm (giá tăng ca riêng), nhân viên Đồng ý / Từ chối; bảng lương tách tiền tăng ca. Xem mục 17. Chạy sau 16 |
 | 20 | `19_staff_checkout.sql` | Có | Tổng quan riêng cho nhân viên (lương tạm tính, giờ công, đi trễ, tăng ca, thưởng/phạt); tên đồng nghiệp trên lịch ca; bán hàng chuyển khoản bằng mã QR SePay tự xác nhận. Xem mục 18. Chạy sau 18 |
 | 21 | `20_booking_extend.sql` | Có | Khách chơi thêm giờ: gia hạn đơn đang chơi theo bước 30 phút, giới hạn bởi đơn kế tiếp trên sân / giờ đóng cửa, tính tiền phần thêm theo bảng giá. Xem mục 19. Chạy sau 19 |
+| 22 | `21_attendance_rules.sql` | **BẮT BUỘC** | Quy tắc chấm công: công chỉ tính trong khung ca (+ tăng ca đã đồng ý), quên quét thì nhân viên gửi yêu cầu sửa giờ để chủ sân duyệt, tự đóng ca quên quét ra, trang *Duyệt chấm công*, máy quầy hiện mã QR không cần đăng nhập. Xem mục 20. Chạy sau 20 |
 
 **Đã cài Rally từ trước?** Chỉ cần chạy thêm `05_product_details.sql`, `06_product_tax.sql` rồi `07_units_options.sql` (không mất dữ liệu).
 
@@ -97,7 +98,7 @@ Sao chép `.env.example` thành `.env.local`, điền theo **Project Settings �
 | `SEPAY_WEBHOOK_SECRET` / `SEPAY_WEBHOOK_API_KEY` | Khóa bảo mật webhook SePay (mục 15) |
 | `SEPAY_API_TOKEN` | API Token ở SePay → API Access, để đối soát dự phòng (mục 16) |
 | `RESEND_API_KEY`, `ALERT_EMAIL_FROM` | Gửi email cảnh báo cho chủ sân qua Resend (mục 16) |
-| `CRON_SECRET` | Khóa bảo vệ đường dẫn chạy định kỳ `/api/cron/sepay-reconcile` |
+| `CRON_SECRET` | Khóa bảo vệ đường dẫn chạy định kỳ `/api/cron/sepay-reconcile` và `/api/cron/attendance` (tự đóng ca quên quét ra mỗi đêm) |
 
 Lưu ý về khóa bí mật:
 
@@ -354,3 +355,32 @@ Quy tắc:
 - Đơn đã tự chuyển sang *Hoàn tất* (hết giờ) vẫn tính thêm được, nhưng **chỉ tới giờ hiện tại** (khách đã chơi rồi) — không đặt trước tương lai được trên đơn đã hoàn tất.
 - Tiền cọc và giảm giá giữ nguyên; tiền đã thu không đổi, phần thêm là *Còn phải thu*.
 - Cần quyền **Vận hành đặt sân**; mọi lần gia hạn ghi vào *Lịch sử thay đổi* (lý do "extend: +N phút"). Nút cũng có ở trang chi tiết đơn (*Lịch đặt sân*).
+
+## 20. Quy tắc chấm công (`21_attendance_rules.sql`)
+
+**Công tính theo khung ca.** Ca 6:00–14:00 thì công chỉ tính trong 6:00–14:00 (cộng phần tăng ca nhân viên đã *Đồng ý*). Giờ quét QR thật luôn được lưu riêng để đối chiếu.
+
+| Tình huống | Hệ thống xử lý |
+| --- | --- |
+| Đến sớm 5:40 | Công tính từ 6:00. Muốn trả từ 5:40 thì chủ sân bấm *Trả theo giờ thực tế* ở chi tiết ca |
+| Đến 6:08 (ân hạn 10 phút) | Không tính là đi trễ; công tính từ 6:08 |
+| Đến 6:15, khai *"đến đúng giờ nhưng quên quét"* | Trang chấm công hiện *Bạn vào ca lúc 6:15 — trễ 15 phút* kèm ô **gửi yêu cầu sửa giờ** (giờ thật + lý do). Chủ sân duyệt → giờ vào đổi thành 6:00, công tính lại; từ chối (bắt buộc ghi lý do) → giữ 6:15 |
+| Quên quét ra, về nhà, tối quay lại quét | Công vẫn chỉ tính tới 14:00 (+ tăng ca đã đồng ý). Quét ra muộn hơn khung từ 30 phút → hiện ở *Duyệt chấm công → Ra ca trễ cần xem lại*; chỉ trả thêm khi chủ sân bấm *Trả theo giờ thực tế* |
+| Quên quét ra hẳn | Quá 4 giờ sau giờ kết thúc ca (+ tăng ca), hệ thống **tự đóng ca** đúng giờ kết thúc theo lịch (không chặn chốt lương). Ở lại muộn thật thì nhân viên gửi yêu cầu sửa giờ ra |
+| Tăng ca chưa trả lời mà đã qua giờ | Đề nghị tự hủy — không ai được tiền tăng ca nếu chưa đồng ý |
+
+**Nhân viên** (*Tổng quan của tôi* và trang sau khi quét): danh sách yêu cầu sửa giờ (*Chờ duyệt / Đã duyệt / Từ chối*, có nút *Rút yêu cầu*), số lần quên chấm công trong tháng. Hạn gửi: **24 giờ** sau giờ kết thúc ca. Đang trong ca mà chưa quét ra thì phải quét mã RA CA, không gửi yêu cầu.
+
+**Chủ sân** — mục **Duyệt chấm công** ở thanh bên (có số việc chờ):
+- *Yêu cầu sửa giờ*: so giờ đang ghi với giờ khai, đọc lý do → **Duyệt** hoặc **Từ chối** (ghi lý do).
+- *Ra ca trễ cần xem lại*: **Trả theo giờ thực tế** / **Giữ theo khung ca**.
+- *Tự đóng ca* trong 14 ngày, và cảnh báo người **hay quên** (từ lần thứ 3 trong tháng). Hệ thống không tự trừ tiền — muốn phạt thì ghi khoản phạt ở *Bảng lương*.
+- Còn yêu cầu sửa giờ *Chờ duyệt* thì **không chốt được lương** tháng đó (báo ở trang *Bảng lương*).
+
+**Đổi quy tắc:** *Cài đặt → Chấm công* — ân hạn đi trễ, ngưỡng ra ca trễ cần xem lại, hạn gửi yêu cầu, ngưỡng cảnh báo hay quên, thời gian sống của mã QR (mặc định 45 giây), bật/tắt tự đóng ca.
+
+**Máy quầy (không cần đăng nhập chủ sân):** *Mã QR → Máy quầy → Tạo máy quầy* → nhận một link `/kiosk/...` (chỉ hiện **1 lần**) — mở link trên máy tính bảng ở quầy và lưu dấu trang. Link chỉ hiện mã VÀO CA / RA CA của chi nhánh đó, không xem được gì khác; mất máy thì bấm **Thu hồi**. Mở nhiều màn hình mã cùng lúc vẫn chạy (mã cũ không bị hủy khi màn hình khác tạo mã mới).
+
+**Tự đóng ca mỗi đêm:** `vercel.json` có lịch `/api/cron/attendance` (2:30 sáng giờ Việt Nam) dùng `CRON_SECRET`. Không cài cron thì hệ thống vẫn tự đóng khi chủ sân mở *Duyệt chấm công* hoặc *Bảng lương*, và trước khi chốt lương.
+
+Sau khi chạy SQL: các tháng **chưa chốt lương** được tính lại công theo khung ca (tháng đã chốt giữ nguyên). Kiểm tra bằng `supabase/tests/99_verify_schema.sql` dòng 27.
