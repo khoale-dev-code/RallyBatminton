@@ -1,26 +1,14 @@
-import { BadgeCheck, MapPinned, ReceiptText } from 'lucide-react';
+// RALLY_PRODUCT_SHOWCASE_V6: products route only
 import { type Metadata } from 'next';
 
-import { CatalogPage, type CatalogSearchParams } from '@/features/catalog/components/catalog-page';
+import { RallyProductShowcase, type ProductSearchParams } from '@/features/catalog/components/rally-product-showcase';
+import '@/features/catalog/rally-product-showcase.css';
 
 export const metadata: Metadata = {
-  title: 'Vật phẩm',
-  description: 'Nước uống, cầu, phụ kiện cầu lông bán tại quầy các chi nhánh Rally.',
+  title: 'Vật phẩm cầu lông tại Rally',
+  description: 'Khám phá cầu lông, vợt, giày, phụ kiện và đồ uống tại Rally. Xem giá và tình trạng hàng theo chi nhánh, mua và nhận tại quầy.',
 };
 
-export default async function ProductsPage({ searchParams }: { searchParams: Promise<CatalogSearchParams> }) {
-  return (
-    <CatalogPage
-      kind="sale"
-      title="Đồ uống &"
-      accent="vật phẩm"
-      description="Mua tại quầy khi đến chơi. Giá và tình trạng còn hàng theo từng chi nhánh."
-      highlights={[
-        { icon: BadgeCheck, title: 'Hàng chính hãng', text: 'Đa dạng thương hiệu' },
-        { icon: ReceiptText, title: 'Giá rõ ràng', text: 'Mua tại quầy tiện lợi' },
-        { icon: MapPinned, title: 'Theo từng chi nhánh', text: 'Xem còn hàng trước khi đến' },
-      ]}
-      searchParams={await searchParams}
-    />
-  );
+export default async function ProductsPage({ searchParams }: { searchParams: Promise<ProductSearchParams> }) {
+  return <RallyProductShowcase searchParams={await searchParams} />;
 }

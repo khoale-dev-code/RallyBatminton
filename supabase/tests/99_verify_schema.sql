@@ -9,7 +9,8 @@ with checks as (
            where s.nspname = 'public' and c.relkind = 'r')
            = 34 + (select count(*) from unnest(array['product_units', 'member_profiles', 'member_point_ledger', 'bank_transactions',
                      'notification_settings', 'reconcile_runs', 'shift_overtime', 'attendance_settings',
-                     'attendance_fix_requests', 'attendance_kiosks']) t(name)
+                     'attendance_fix_requests', 'attendance_kiosks', 'legal_documents', 'privacy_consents',
+                     'data_subject_requests', 'data_retention_policies', 'payment_webhook_events']) t(name)
                    where to_regclass('public.' || t.name) is not null) as ok,
          (select count(*)::text from pg_class c join pg_namespace s on s.oid = c.relnamespace
            where s.nspname = 'public' and c.relkind = 'r') as detail
@@ -182,6 +183,18 @@ with checks as (
          and exists (select 1 from pg_trigger where tgname = 'shifts_zz_paid' and tgrelid = 'public.shifts'::regclass)
          and not has_function_privilege('anon', 'public.decide_attendance_fix(uuid,boolean,text)', 'execute'),
          'attendance_settings + yêu cầu sửa giờ + công theo khung ca + máy quầy không cần đăng nhập'
+  union all
+  select 28, 'Đã chạy 22_privacy_security.sql (bảo vệ dữ liệu cá nhân & bảo mật)',
+         to_regclass('public.legal_documents') is not null
+         and to_regclass('public.privacy_consents') is not null
+         and to_regclass('public.data_subject_requests') is not null
+         and to_regprocedure('public.create_guest_booking_hold_v2(uuid,timestamptz,timestamptz,text,text,text,text,text,boolean,text,text,text)') is not null
+         and to_regprocedure('public.anonymize_customer(uuid,uuid,text)') is not null
+         and exists (select 1 from public.legal_documents where code = 'privacy')
+         and not has_function_privilege('anon', 'public.service_submit_data_request(text,text,text,text,text,text,uuid,text)', 'execute')
+         and not has_table_privilege('anon', 'public.privacy_consents', 'SELECT')
+         and not has_table_privilege('anon', 'public.customers', 'INSERT'),
+         'văn bản pháp lý có phiên bản + bằng chứng đồng ý + yêu cầu dữ liệu + ẩn danh hóa + anon không ghi bảng'
   union all
   select 12, 'pg_cron (tùy chọn)',
          true,

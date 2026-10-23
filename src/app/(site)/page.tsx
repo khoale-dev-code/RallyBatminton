@@ -1,216 +1,243 @@
-import { ArrowRight, CalendarCheck2, CalendarDays, CircleCheckBig, MapPin, MapPinned, UserRoundCheck, Zap } from 'lucide-react';
+/* Rally Athletic v5: giao dien moi, du lieu va booking that. */
+import {
+  ArrowDownRight,
+  ArrowRight,
+  CalendarDays,
+  Check,
+  Clock3,
+  MapPin,
+  ShieldCheck,
+} from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 
-import { LoadErrorNotice, SetupNotice } from '@/components/layout/setup-notice';
+import { MediaImage } from '@/components/brand/media-image';
+import { SetupNotice, LoadErrorNotice } from '@/components/layout/setup-notice';
 import { EmptyState } from '@/components/ui/primitives';
-import { BranchCarousel } from '@/features/home/components/branch-carousel';
+import { bookingHref } from '@/features/booking/lib/links';
+import { Community3D } from '@/features/home/components/community-3d';
 import { QuickSearch } from '@/features/home/components/quick-search';
-import { getHomeBranches } from '@/features/home/queries';
-import { cn } from '@/lib/cn';
+import { getHomeBranches, type HomeBranch } from '@/features/home/queries';
+import { GUIDES } from '@/features/guide/content';
 import { formatVnd } from '@/lib/format';
+import { shortTime } from '@/lib/time';
+
+import '@/features/home/community-3d.css';
+import '@/features/home/home-athletic-v5.css';
 
 export const revalidate = 60;
 
-const FEATURES = [
-  { icon: Zap, title: 'Đặt sân nhanh', text: 'Chỉ khoảng 1 phút' },
-  { icon: CalendarDays, title: 'Xem lịch trực tiếp', text: 'Giờ trống cập nhật liên tục' },
-  { icon: MapPinned, title: 'Nhiều chi nhánh', text: 'Chọn nơi gần bạn nhất' },
-  { icon: UserRoundCheck, title: 'Không cần tài khoản', text: 'Chỉ cần tên và số điện thoại' },
-];
-
-const STEPS = [
+const HOW = [
   {
+    id: '01',
     icon: MapPin,
-    tone: 'bg-court-soft text-court-deep',
-    title: 'Chọn chi nhánh',
-    text: 'Xem địa chỉ, vị trí sân và bảng giá theo khung giờ.',
+    title: 'Tìm sân phù hợp',
+    description: 'Chọn chi nhánh thuận tiện và xem thông tin sân rõ ràng.',
+    href: '/branches',
+    action: 'Khám phá chi nhánh',
   },
   {
-    icon: CalendarCheck2,
-    tone: 'bg-shuttle-soft text-shuttle-deep',
-    title: 'Chọn sân và giờ',
-    text: 'Lịch trống cập nhật trực tiếp, chạm giờ bắt đầu và kết thúc.',
+    id: '02',
+    icon: CalendarDays,
+    title: 'Chọn ngày, chọn giờ',
+    description: 'Kiểm tra khung giờ còn sân và chọn lịch chơi mong muốn.',
+    href: '/booking',
+    action: 'Xem lịch sân',
   },
   {
-    icon: CircleCheckBig,
-    tone: 'bg-court-soft text-court-deep',
-    title: 'Giữ sân',
-    text: 'Nhập tên, số điện thoại. Chi nhánh xác nhận và bạn sẵn sàng ra sân.',
+    id: '03',
+    icon: Check,
+    title: 'Gửi yêu cầu đặt sân',
+    description: 'Để lại thông tin liên hệ và nhận xác nhận từ chi nhánh.',
+    href: '/booking',
+    action: 'Đặt sân ngay',
   },
 ];
 
-const COUNTER = [
+const SERVICES = [
   {
+    index: '01',
+    tag: 'GIẢI KHÁT',
+    title: 'Nước uống & vật phẩm',
+    description: 'Đồ uống, cầu lông và vật phẩm cần thiết ngay tại quầy.',
     href: '/products',
-    title: 'Đồ uống & vật phẩm',
-    text: 'Nước, nước điện giải, cầu, quấn cán và phụ kiện — giá và tình trạng còn hàng ở từng chi nhánh.',
     image: '/images/counter-drinks.webp',
+    alt: 'Đồ uống giải khát tại quầy Rally',
   },
   {
+    index: '02',
+    tag: 'THIẾT BỊ',
+    title: 'Thuê vợt & giày',
+    description: 'Tìm hiểu dịch vụ thuê vợt và giày tại các chi nhánh.',
     href: '/rentals',
-    title: 'Thuê vợt, giày',
-    text: 'Quên đồ? Thuê ngay tại quầy: theo giờ, hết trận hoặc mang về, có combo vợt + giày.',
     image: '/images/counter-rentals.webp',
+    alt: 'Vợt và giày cầu lông cho thuê',
   },
   {
+    index: '03',
+    tag: 'TIỆN ÍCH',
+    title: 'Tiện ích tại sân',
+    description: 'Xem khu nghỉ ngơi và các tiện ích sẵn có tại sân.',
     href: '/branches',
-    title: 'Dịch vụ & tiện ích',
-    text: 'Bãi giữ xe, tủ đồ, phòng tắm, máy lạnh, khu nghỉ ngơi — xem theo từng chi nhánh.',
     image: '/images/counter-amenities.webp',
+    alt: 'Tiện ích phục vụ người chơi tại sân cầu lông',
   },
 ];
+
+function BranchCard({ branch }: { branch: HomeBranch }) {
+  const address = [branch.addressLine, branch.district].filter(Boolean).join(', ');
+  const firstSlot = branch.slots.find((slot) => slot.freeCourts > 0)?.start;
+  return (
+    <article className="rx-branch-card">
+      <Link className="rx-branch-photo" href={`/branches/${branch.slug}`} aria-label={`Xem chi tiết ${branch.name}`}>
+        {branch.coverImagePath ? (
+          <MediaImage path={branch.coverImagePath} alt={branch.name} className="rx-photo-fill" sizes="(min-width: 1100px) 580px, (min-width: 680px) 60vw, 100vw" />
+        ) : (
+          <Image src="/images/hero-court.webp" alt="Không gian sân cầu lông Rally" fill sizes="(min-width: 1100px) 580px, 100vw" className="object-cover" />
+        )}
+        <span className="rx-court-count">{branch.courtCount} sân cầu lông</span>
+      </Link>
+      <div className="rx-branch-info">
+        <div className="rx-branch-heading">
+          <div>
+            <p className="rx-overline rx-overline-inverse">CHI NHÁNH RALLY</p>
+            <h3><Link href={`/branches/${branch.slug}`}>{branch.name}</Link></h3>
+          </div>
+          <span className="rx-status"><span aria-hidden="true" className={branch.isOpen ? 'rx-dot-open' : 'rx-dot-closed'} />{branch.isOpen ? 'Đang mở cửa' : 'Ngoài giờ mở cửa'}</span>
+        </div>
+        <p className="rx-location"><MapPin size={15} aria-hidden="true" />{address || 'Xem địa chỉ chi nhánh'}</p>
+        <div className="rx-branch-details">
+          <div><span>Giá tham khảo từ</span><strong>{branch.minPrice === null ? 'Liên hệ' : formatVnd(branch.minPrice)}{branch.minPrice !== null && <small> / giờ</small>}</strong></div>
+          <div><span>Giờ hoạt động</span><strong>{shortTime(branch.opensAt)} – {shortTime(branch.closesAt)}</strong></div>
+        </div>
+        <div className="rx-branch-slots">
+          <p>{branch.slotsIsToday ? 'Giờ gợi ý hôm nay' : 'Giờ gợi ý ngày mai'}</p>
+          {branch.slots.length ? (
+            <div className="rx-slot-grid">
+              {branch.slots.map((slot) => slot.freeCourts > 0 ? (
+                <Link key={slot.start} href={bookingHref(branch.slug, { date: branch.slotsDate, time: slot.start })} title={`Còn ${slot.freeCourts} sân`} className="rx-slot">{slot.start}</Link>
+              ) : (
+                <span key={slot.start} className="rx-slot rx-slot-off" title="Hết sân">{slot.start}</span>
+              ))}
+            </div>
+          ) : (
+            <p className="rx-empty-slot">Chọn ngày để xem lịch trống</p>
+          )}
+        </div>
+        <Link className="rx-branch-cta" href={bookingHref(branch.slug, { date: branch.slotsDate, time: firstSlot })}>Xem lịch & đặt sân <ArrowRight size={19} aria-hidden="true" /></Link>
+      </div>
+    </article>
+  );
+}
 
 export default async function HomePage() {
   const result = await getHomeBranches(new Date());
   const branches = result.ok ? result.data : [];
-  const minPrice = branches.reduce<number | null>(
-    (min, b) => (b.minPrice !== null && (min === null || b.minPrice < min) ? b.minPrice : min),
-    null,
-  );
+  const minPrice = branches.reduce<number | null>((min, b) => b.minPrice !== null && (min === null || b.minPrice < min) ? b.minPrice : min, null);
+  const featuredGuides = GUIDES.slice(0, 3);
 
   return (
-    <>
-      {/* HERO -------------------------------------------------------------- */}
-      <section id="dat-san" aria-labelledby="hero-title" className="full-bleed relative isolate overflow-hidden bg-hall-dark">
-        <Image src="/images/hero-court.webp" alt="" fill priority sizes="100vw" className="-z-20 object-cover object-[55%_78%]" />
-        {/* Lớp phủ xanh đậm phía trái/dưới để chữ trắng luôn đọc rõ trên ảnh */}
-        <div
-          aria-hidden
-          className="absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgb(4_24_15/0.82)_0%,rgb(4_24_15/0.62)_45%,rgb(4_24_15/0.88)_100%)] md:bg-[linear-gradient(90deg,rgb(4_24_15/0.9)_0%,rgb(4_24_15/0.74)_38%,rgb(4_24_15/0.2)_70%,rgb(4_24_15/0.05)_100%)]"
-        />
-        <div
-          aria-hidden
-          className="absolute inset-x-0 bottom-0 -z-10 hidden h-48 bg-gradient-to-t from-[rgb(4_24_15/0.7)] to-transparent md:block"
-        />
-        <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 pt-10 pb-8 sm:px-6 sm:pt-16 lg:pt-20 lg:pb-12">
-          <div className="flex max-w-2xl flex-col gap-4 text-paper sm:gap-5">
-            <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-paper/12 px-3 py-1 text-[0.7rem] font-semibold tracking-wide text-paper uppercase ring-1 ring-paper/25 backdrop-blur-sm sm:text-xs">
-              <Zap className="size-3.5 text-court" aria-hidden />
-              Đặt sân online 24/7
-            </span>
-            <h1 id="hero-title" className="text-[2.6rem] leading-[1.08] font-semibold drop-shadow-sm sm:text-6xl lg:text-[4.5rem]">
-              Đặt sân cầu lông
-              <br />
-              trong <span className="text-court">một phút.</span>
-            </h1>
-            <p className="max-w-lg text-[0.95rem] text-paper/85 sm:text-lg">
-              Xem giờ trống tại mọi chi nhánh Rally, chọn sân và giữ chỗ ngay — không cần tạo tài khoản.
-              {minPrice !== null && (
-                <>
-                  {' '}
-                  Giá từ <span className="font-semibold text-paper tabular">{formatVnd(minPrice)}/giờ</span>.
-                </>
-              )}
-            </p>
+    <div className="rx-home rx-v5">
+      <section id="dat-san" aria-labelledby="rx-hero-title" className="rx-hero full-bleed">
+        <Image src="/images/hero-court.webp" alt="" fill priority sizes="100vw" className="rx-hero-image" />
+        <div className="rx-hero-overlay" aria-hidden="true" />
+        <div className="rx-container rx-hero-content">
+          <div className="rx-hero-copy">
+            <span className="rx-hero-kicker"><span className="rx-kicker-square" />RALLY BADMINTON  /  ĐẶT SÂN TRỰC TUYẾN</span>
+            <h1 id="rx-hero-title">Đặt sân nhanh.<span>Chơi hết sức.</span></h1>
+            <p>Tìm sân đúng khung giờ, kiểm tra chỗ trống và gửi yêu cầu đặt sân chỉ trong vài thao tác.{minPrice !== null && <> Giá sân tham khảo từ <strong>{formatVnd(minPrice)}/giờ</strong>.</>}</p>
+            <div className="rx-actions">
+              <Link href="/booking" className="rx-btn rx-btn-red">Đặt sân ngay <ArrowRight size={20} aria-hidden="true" /></Link>
+              <Link href="#chi-nhanh" className="rx-btn rx-btn-ghost">Xem các chi nhánh <ArrowDownRight size={19} aria-hidden="true" /></Link>
+            </div>
           </div>
-          <QuickSearch
-            className="mt-2 lg:mt-8"
-            branches={branches.map((b) => ({ slug: b.slug, name: b.name, opensAt: b.opensAt, closesAt: b.closesAt }))}
-          />
+          <div className="rx-hero-badge" aria-hidden="true"><span>RALLY</span><strong>PLAY<br/>MORE.</strong><small>BADMINTON CLUB</small></div>
         </div>
       </section>
 
-      {/* LỢI ÍCH ----------------------------------------------------------- */}
-      <section aria-label="Vì sao đặt sân ở Rally" className="full-bleed border-b border-line bg-paper">
-        <ul className="mx-auto grid max-w-7xl grid-cols-2 gap-x-4 gap-y-5 px-4 py-6 sm:px-6 lg:grid-cols-4 lg:divide-x lg:divide-line lg:py-7">
-          {FEATURES.map((f) => (
-            <li key={f.title} className="flex items-center gap-3 lg:px-6 lg:first:pl-0">
-              <f.icon className="size-7 shrink-0 text-court-strong" aria-hidden strokeWidth={1.8} />
-              <span className="flex min-w-0 flex-col">
-                <span className="text-sm font-semibold sm:text-[0.95rem]">{f.title}</span>
-                <span className="text-xs text-muted sm:text-sm">{f.text}</span>
-              </span>
-            </li>
-          ))}
-        </ul>
+      <section className="rx-find-band full-bleed" aria-label="Đặt sân nhanh">
+        <div className="rx-container">
+          <div className="rx-search-frame">
+            <div className="rx-search-intro"><span className="rx-overline">ĐẶT SÂN TRỰC TUYẾN</span><strong>Chọn lịch. Giữ sân.</strong></div>
+            <QuickSearch branches={branches.map((b) => ({ slug: b.slug, name: b.name, opensAt: b.opensAt, closesAt: b.closesAt }))} />
+          </div>
+          <div className="rx-perks" aria-label="Điểm nổi bật khi đặt sân">
+            <span><Check size={16} aria-hidden="true" />Không cần tạo tài khoản</span>
+            <span><Clock3 size={16} aria-hidden="true" />Chủ động chọn khung giờ</span>
+            <span><ShieldCheck size={16} aria-hidden="true" />Thông tin sân rõ ràng</span>
+          </div>
+        </div>
       </section>
 
-      {/* CHI NHÁNH --------------------------------------------------------- */}
-      <section aria-labelledby="branches-title" className="pt-12 sm:pt-16">
-        {!result.ok && result.reason === 'not_configured' && <SetupNotice />}
-        {!result.ok && result.reason === 'error' && <LoadErrorNotice />}
-        {result.ok && branches.length === 0 && (
-          <EmptyState title="Chưa có chi nhánh mở đặt sân">
-            Chi nhánh sẽ xuất hiện ở đây sau khi chủ sân công bố trong trang quản trị.
-          </EmptyState>
-        )}
-        {branches.length > 0 && (
-          <BranchCarousel
-            branches={branches}
-            heading={
-              <h2 id="branches-title" className="text-2xl sm:text-3xl">
-                Khám phá chi nhánh
-              </h2>
-            }
-            action={
-              <Link href="/branches" className="inline-flex items-center gap-1 text-sm font-medium text-muted hover:text-ink">
-                Xem tất cả
-                <ArrowRight className="size-4" aria-hidden />
+      <section id="chi-nhanh" className="rx-section rx-branches-section full-bleed" aria-labelledby="rx-branches-title">
+        <div className="rx-container">
+          <div className="rx-section-header">
+            <div><p className="rx-overline">01 / TÌM ĐỊA ĐIỂM</p><h2 id="rx-branches-title">Chọn sân phù hợp.</h2><p>Xem hình ảnh sân, mức giá và thời gian còn trống tại từng chi nhánh.</p></div>
+            <Link href="/branches" className="rx-text-link">Tất cả chi nhánh <ArrowRight size={19} aria-hidden="true" /></Link>
+          </div>
+          {!result.ok && result.reason === 'not_configured' && <SetupNotice />}
+          {!result.ok && result.reason === 'error' && <LoadErrorNotice />}
+          {result.ok && branches.length === 0 && <EmptyState title="Chưa có chi nhánh mở đặt sân">Chi nhánh sẽ xuất hiện khi chủ sân công bố thông tin trong trang quản trị.</EmptyState>}
+          {branches.length > 0 && (
+            <div className={`rx-branch-list ${branches.length === 1 ? 'rx-single' : ''}`}>
+              {branches.slice(0, 3).map((branch) => <BranchCard key={branch.id} branch={branch} />)}
+            </div>
+          )}
+        </div>
+      </section>
+
+      <section id="cach-dat" className="rx-section rx-steps-section full-bleed" aria-labelledby="rx-steps-title">
+        <div className="rx-container">
+          <div className="rx-section-header"><div><p className="rx-overline">02 / ĐẶT SÂN ĐƠN GIẢN</p><h2 id="rx-steps-title">Đặt sân trong 3 bước.</h2><p>Đơn giản từ lúc chọn sân đến khi gửi yêu cầu đặt chỗ.</p></div></div>
+          <ol className="rx-steps">
+            {HOW.map((step) => (
+              <li className="rx-step" key={step.id}>
+                <div className="rx-step-top"><span className="rx-step-number">{step.id}</span><step.icon size={25} strokeWidth={1.8} aria-hidden="true" /></div>
+                <h3>{step.title}</h3>
+                <p>{step.description}</p>
+                <Link href={step.href}>{step.action} <ArrowRight size={17} aria-hidden="true" /></Link>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </section>
+
+      <section className="rx-section rx-services-section full-bleed" aria-labelledby="rx-services-title">
+        <div className="rx-container">
+          <div className="rx-section-header"><div><p className="rx-overline">03 / DỊCH VỤ TẠI SÂN</p><h2 id="rx-services-title">Trang bị cho cuộc chơi.</h2><p>Từ vợt, giày đến nước uống: Rally chuẩn bị những gì bạn cần.</p></div></div>
+          <div className="rx-services-grid">
+            {SERVICES.map((service) => (
+              <Link key={service.index} href={service.href} className="rx-service-card">
+                <div className="rx-service-photo"><Image src={service.image} fill alt={service.alt} sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw" /></div>
+                <div className="rx-service-copy"><span>{service.tag} / {service.index}</span><h3>{service.title}</h3><p>{service.description}</p><strong>Khám phá dịch vụ <ArrowRight size={18} aria-hidden="true" /></strong></div>
               </Link>
-            }
-          />
-        )}
+            ))}
+          </div>
+        </div>
       </section>
 
-      {/* 3 BƯỚC ------------------------------------------------------------- */}
-      <section id="cach-dat" aria-labelledby="steps-title" className="scroll-mt-20 pt-12 sm:pt-16">
-        <h2 id="steps-title" className="mb-5 text-2xl sm:text-3xl">
-          Đặt sân trong ba bước
-        </h2>
-        <ol className="grid grid-cols-3 gap-2 sm:gap-4">
-          {STEPS.map((s, i) => (
-            <li
-              key={s.title}
-              className="flex flex-col items-center gap-2 rounded-panel border border-line bg-paper p-3 text-center sm:p-4 lg:flex-row lg:items-start lg:gap-4 lg:p-5 lg:text-left"
-            >
-              <span className={cn('grid size-11 shrink-0 place-items-center rounded-full lg:size-14', s.tone)}>
-                <s.icon className="size-5 lg:size-7" aria-hidden />
-              </span>
-              <span className="flex min-w-0 flex-col gap-0.5">
-                <span className="hidden font-display text-sm text-court-strong tabular sm:block">{String(i + 1).padStart(2, '0')}</span>
-                <span className="text-xs leading-snug font-semibold sm:text-sm lg:text-base">{s.title}</span>
-                <span className="hidden text-xs text-muted sm:block lg:text-sm">{s.text}</span>
-              </span>
-            </li>
-          ))}
-        </ol>
-      </section>
+      <div className="rx-community-frame full-bleed"><Community3D /></div>
 
-      {/* TẠI QUẦY ----------------------------------------------------------- */}
-      <section aria-labelledby="counter-title" className="pt-12 sm:pt-16">
-        <h2 id="counter-title" className="mb-5 text-2xl sm:text-3xl">
-          Tại quầy
-        </h2>
-        <ul className="grid grid-cols-3 gap-2 sm:gap-4">
-          {COUNTER.map((c) => (
-            <li key={c.title}>
-              <Link
-                href={c.href}
-                className="group flex h-full flex-col overflow-hidden rounded-panel border border-line bg-paper transition-shadow hover:shadow-lift lg:flex-row lg:items-stretch"
-              >
-                <span className="relative order-1 aspect-[4/3] bg-[radial-gradient(circle_at_50%_60%,#ffffff_0%,var(--color-hall)_75%)] sm:aspect-[16/10] lg:order-2 lg:aspect-auto lg:min-h-44 lg:w-[46%] lg:shrink-0 lg:bg-none">
-                  <Image
-                    src={c.image}
-                    alt=""
-                    fill
-                    sizes="(min-width: 1024px) 200px, 33vw"
-                    className="object-contain p-2 transition-transform duration-300 group-hover:scale-105 motion-reduce:transition-none lg:p-3"
-                  />
-                </span>
-                <span className="order-2 flex min-w-0 flex-1 flex-col justify-center gap-1 p-3 sm:p-4 lg:order-1 lg:p-5 lg:pr-0">
-                  <span className="text-xs leading-snug font-semibold sm:text-sm lg:text-lg">{c.title}</span>
-                  <span className="hidden text-xs text-muted sm:line-clamp-2 lg:line-clamp-3 lg:text-sm">{c.text}</span>
-                  <span className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-court-strong sm:text-sm">
-                    Xem chi tiết
-                    <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" aria-hidden />
-                  </span>
-                </span>
+      <section className="rx-section rx-guides-section full-bleed" aria-labelledby="rx-guides-title">
+        <div className="rx-container">
+          <div className="rx-section-header"><div><p className="rx-overline">05 / CẨM NANG CẦU LÔNG</p><h2 id="rx-guides-title">Thêm kỹ năng. Thêm tự tin.</h2><p>Kiến thức thiết thực trước khi vào sân và sau mỗi trận đấu.</p></div><Link href="/guide" className="rx-text-link">Xem tất cả bài viết <ArrowRight size={19} aria-hidden="true" /></Link></div>
+          <div className="rx-guide-grid">
+            {featuredGuides.map((guide, index) => (
+              <Link href={`/guide/${guide.slug}`} key={guide.slug} className="rx-guide-card">
+                <div className="rx-guide-top"><span>0{index + 1} / CẨM NANG</span><guide.icon size={24} strokeWidth={1.75} aria-hidden="true" /></div>
+                <h3>{guide.title}</h3><p>{guide.summary}</p><strong>Đọc bài viết <ArrowRight size={18} aria-hidden="true" /></strong>
               </Link>
-            </li>
-          ))}
-        </ul>
+            ))}
+          </div>
+        </div>
       </section>
-    </>
+
+      <section className="rx-bottom-cta full-bleed" aria-labelledby="rx-bottom-title">
+        <div className="rx-container rx-bottom-inner">
+          <div><p className="rx-overline">SẴN SÀNG CHO TRẬN TIẾP THEO?</p><h2 id="rx-bottom-title">Hẹn nhau trên sân.</h2><p>Xem lịch trống và giữ chỗ cho trận cầu tiếp theo của bạn.</p></div>
+          <Link href="/booking" className="rx-btn rx-btn-red">Đặt sân ngay <ArrowRight size={20} aria-hidden="true" /></Link>
+        </div>
+      </section>
+    </div>
   );
 }

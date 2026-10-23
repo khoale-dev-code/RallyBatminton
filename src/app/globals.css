@@ -239,3 +239,24 @@
     font-size: 11pt;
   }
 }
+
+/* Hộp thoại đọc bài Cẩm nang: nền mờ dần khi mở / đóng. */
+.guide-dialog::backdrop {
+  background: rgb(0 0 0 / 0.55);
+  backdrop-filter: blur(4px);
+  animation: guide-backdrop 0.3s ease-out;
+}
+.guide-dialog[data-closing]::backdrop {
+  opacity: 0;
+  transition: opacity 0.22s ease-in;
+}
+@keyframes guide-backdrop {
+  from {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .guide-dialog::backdrop {
+    animation: none;
+  }
+}

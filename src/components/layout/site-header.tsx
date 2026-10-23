@@ -1,12 +1,13 @@
+// RALLY_PUBLIC_NAV_V7: shared header for every /(site) page
 import { Logo } from '@/components/brand/logo';
 
 import { SiteNav } from './site-nav';
 
 export function SiteHeader() {
   return (
-    <header className="sticky top-0 z-30 border-b border-line bg-paper/95 backdrop-blur supports-[backdrop-filter]:bg-paper/85">
-      <div className="relative mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6">
-        <Logo />
+    <header className="sticky top-0 z-50 w-full border-b border-[#e5eae6] bg-white/95 backdrop-blur-xl supports-[backdrop-filter]:bg-white/90">
+      <div className="relative mx-auto flex h-[70px] w-full max-w-7xl items-center justify-between gap-5 px-4 sm:px-6">
+        <Logo className="shrink-0" />
         <SiteNav />
       </div>
     </header>

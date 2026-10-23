@@ -4,6 +4,8 @@ import { type ReactNode } from 'react';
 
 import { Wordmark } from '@/components/brand/logo';
 import { getBrandInfo } from '@/features/brand/queries';
+import { DATA_REQUEST_HREF, LEGAL_CODES, LEGAL_PAGES, legalHref } from '@/features/privacy/consent-text';
+import { getLegalValues } from '@/features/privacy/queries';
 import { formatPhone } from '@/lib/format';
 
 const COLUMNS: Array<{ title: string; links: Array<{ href: string; label: string }> }> = [
@@ -27,6 +29,7 @@ const COLUMNS: Array<{ title: string; links: Array<{ href: string; label: string
     title: 'Hỗ trợ',
     links: [
       { href: '/#cach-dat', label: 'Hướng dẫn đặt sân' },
+      { href: '/guide', label: 'Cẩm nang cầu lông' },
       { href: '/booking/lookup', label: 'Tra cứu đơn' },
       { href: '/register', label: 'Đăng ký thành viên' },
     ],
@@ -56,7 +59,7 @@ function SocialLink({ href, label, children }: { href: string; label: string; ch
 }
 
 export async function SiteFooter() {
-  const brand = await getBrandInfo();
+  const [brand, legal] = await Promise.all([getBrandInfo(), getLegalValues()]);
   const year = new Date().getFullYear();
   return (
     <footer className="mt-16 border-t border-line bg-paper sm:mt-20">
@@ -115,9 +118,30 @@ export async function SiteFooter() {
         </div>
       </div>
       <div className="border-t border-line">
-        <p className="mx-auto max-w-7xl px-4 py-4 text-xs text-muted sm:px-6">
-          © {year} {brand.name}. Đặt sân trực tuyến không cần tài khoản.
-        </p>
+        <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-4 text-xs text-muted sm:px-6 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex flex-col gap-1">
+            <p>
+              © {year} {brand.name}. Đặt sân trực tuyến không cần tài khoản.
+            </p>
+            {(legal.ten_phap_ly ?? legal.ma_so_thue) && (
+              <p>
+                {legal.ten_phap_ly}
+                {legal.ten_phap_ly && legal.ma_so_thue ? ' · ' : ''}
+                {legal.ma_so_thue ? `MST ${legal.ma_so_thue}` : ''}
+              </p>
+            )}
+          </div>
+          <nav aria-label="Chính sách và điều khoản" className="flex flex-wrap gap-x-4 gap-y-1.5">
+            {LEGAL_CODES.map((code) => (
+              <Link key={code} href={legalHref(code)} className="hover:text-ink hover:underline">
+                {LEGAL_PAGES[code].short}
+              </Link>
+            ))}
+            <Link href={DATA_REQUEST_HREF} className="font-medium text-court-deep hover:underline">
+              Yêu cầu về dữ liệu cá nhân
+            </Link>
+          </nav>
+        </div>
       </div>
     </footer>
   );

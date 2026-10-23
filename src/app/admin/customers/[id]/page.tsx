@@ -6,9 +6,11 @@ import { Badge, DescriptionList, PageHeader, Panel, Stat } from '@/components/ui
 import { updateCustomerAction } from '@/features/admin-customers/actions';
 import { MemberTierBadge } from '@/features/admin-customers/components/member-tier-badge';
 import { getCustomer } from '@/features/admin-customers/queries';
+import { AnonymizePanel, ExportCustomerData } from '@/features/privacy/components/admin-privacy';
+import { listConsents } from '@/features/privacy/queries';
 import { requireStaff, withGuard } from '@/lib/auth/guards';
 import { isOwner } from '@/lib/auth/permissions';
-import { formatDate, formatNumber, formatPhone, formatTime, formatVnd } from '@/lib/format';
+import { formatDate, formatDateTime, formatNumber, formatPhone, formatTime, formatVnd } from '@/lib/format';
 import { BOOKING_STATUS, RENTAL_STATUS } from '@/lib/labels';
 
 export default async function CustomerPage({ params }: { params: Promise<{ id: string }> }) {
@@ -16,11 +18,13 @@ export default async function CustomerPage({ params }: { params: Promise<{ id: s
   const [ctx, data] = await withGuard(requireStaff(), () => getCustomer(id));
   if (!data) notFound();
   const { customer: c, member, bookings, rentals, sales, stats } = data;
+  const owner = isOwner(ctx);
+  const consents = owner ? await listConsents({ customerId: c.id, userId: c.auth_user_id ?? undefined }, 10) : null;
   return (
     <>
       <PageHeader
         title={c.full_name}
-        description={formatPhone(c.phone)}
+        description={c.anonymized_at ? `Đã ẩn danh hóa lúc ${formatDate(c.anonymized_at)}` : formatPhone(c.phone)}
         back={
           <Link href="/admin/customers" className="text-sm text-muted hover:underline">
             Khách hàng
@@ -140,8 +144,39 @@ export default async function CustomerPage({ params }: { params: Promise<{ id: s
               <p className="text-sm text-muted">Khách vãng lai — chưa có tài khoản trên website.</p>
             )}
           </Panel>
+          {owner && (
+            <Panel title="Quyền riêng tư" description="Bằng chứng xác nhận / đồng ý và yêu cầu về dữ liệu của khách.">
+              <div className="flex flex-col gap-4">
+                {consents && consents.length > 0 ? (
+                  <ul className="flex flex-col gap-2 text-sm">
+                    {consents.map((x) => (
+                      <li key={x.id} className="flex items-start justify-between gap-3">
+                        <span>
+                          {x.purpose === 'marketing' ? 'Nhận tin khuyến mãi' : 'Xác nhận điều khoản'}
+                          {x.bookings?.code ? <span className="text-muted"> · {x.bookings.code}</span> : null}
+                          <span className="block text-xs text-muted">
+                            {formatDateTime(x.created_at)}
+                            {x.privacy?.version ? ` · chính sách v${x.privacy.version}` : ''}
+                          </span>
+                        </span>
+                        <Badge tone={x.granted ? 'green' : 'neutral'}>{x.granted ? 'Đồng ý' : 'Rút lại'}</Badge>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-sm text-muted">Chưa có bằng chứng xác nhận (đơn tạo trước khi bật tính năng hoặc đặt tại quầy).</p>
+                )}
+                {!c.anonymized_at && (
+                  <>
+                    <ExportCustomerData customerId={c.id} requestId={null} />
+                    <AnonymizePanel customerId={c.id} requestId={null} />
+                  </>
+                )}
+              </div>
+            </Panel>
+          )}
           <Panel title="Thông tin">
-            {isOwner(ctx) ? (
+            {owner && !c.anonymized_at ? (
               <ActionForm action={updateCustomerAction.bind(null, c.id)}>
                 <TextField name="full_name" label="Họ tên" defaultValue={c.full_name} required />
                 <TextField name="email" label="Email" type="email" defaultValue={c.email ?? ''} optional />

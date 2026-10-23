@@ -1,0 +1,103 @@
+/* Rally Home Refresh v1 | Scoped styles: chi anh huong trang chu. */
+.rally-home {
+  --rally-accent: #b8f55d;
+  --rally-green: #167e40;
+  color: #17271d;
+}
+
+.rally-home-display,
+.rally-home-section-title {
+  font-family: 'Oswald Variable', 'Oswald', 'Arial Narrow', ui-sans-serif, sans-serif;
+  font-weight: 600;
+  text-wrap: balance;
+}
+
+.rally-home-hero {
+  min-height: 38rem;
+}
+
+.rally-home-hero-image {
+  filter: saturate(1.13) contrast(1.08);
+  transform: scale(1.035);
+}
+
+.rally-home-hero-shade {
+  background:
+    linear-gradient(90deg, rgb(4 25 17 / 0.96) 0%, rgb(4 25 17 / 0.88) 37%, rgb(4 25 17 / 0.41) 70%, rgb(4 25 17 / 0.18) 100%),
+    linear-gradient(0deg, rgb(5 26 18 / 0.85) 0%, transparent 40%);
+}
+
+.rally-home-hero-glow {
+  background: radial-gradient(ellipse at 100% 90%, rgb(126 255 96 / 0.16), transparent 48%);
+}
+
+.rally-home-pill,
+.rally-home-glass {
+  border: 1px solid rgb(255 255 255 / 0.2);
+  background: rgb(255 255 255 / 0.08);
+}
+
+.rally-home-hero-button {
+  background: var(--rally-accent);
+  box-shadow: 0 15px 34px -18px rgb(163 255 95 / 0.8);
+}
+
+.rally-home-hero-button:hover {
+  background: #d3ff8a;
+}
+
+.rally-home-eyebrow {
+  color: var(--rally-green);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  line-height: 1.5;
+}
+
+.rally-home-interlude {
+  isolation: isolate;
+  background:
+    radial-gradient(ellipse at 100% 0%, rgb(95 211 91 / 0.24), transparent 51%),
+    linear-gradient(116deg, #08271b 0%, #12452f 100%);
+}
+
+.rally-home-community-grid {
+  opacity: 0.28;
+  background-image:
+    linear-gradient(rgb(198 255 208 / 0.16) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(198 255 208 / 0.16) 1px, transparent 1px);
+  background-size: 88px 88px;
+  mask-image: radial-gradient(ellipse at 75% 50%, black, transparent 75%);
+}
+
+.rally-home-branch-card,
+.rally-home-step,
+.rally-home-service,
+.rally-home-guide-card {
+  will-change: auto;
+}
+
+.rally-home :focus-visible {
+  outline: 3px solid #80cf6b;
+  outline-offset: 3px;
+}
+
+@media (max-width: 768px) {
+  .rally-home-hero-shade {
+    background:
+      linear-gradient(90deg, rgb(4 25 17 / 0.9) 0%, rgb(4 25 17 / 0.68) 100%),
+      linear-gradient(0deg, rgb(4 25 17 / 0.94), transparent 70%);
+  }
+  .rally-home-hero-image {
+    object-position: 58% center;
+  }
+  .rally-home-hero {
+    min-height: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rally-home-hero-image {
+    transform: none;
+  }
+}

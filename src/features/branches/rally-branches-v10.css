@@ -1,0 +1,149 @@
+/* Rally Branches V10 - scoped to /branches only. */
+.rly-branches-v10 {
+  --rb-green:#006341;--rb-red:#E31837;--rb-ink:#2B2B2B;
+  --rb-muted:#606a67;--rb-stroke:#e4e8e5;--rb-paper:#fff;
+  color:var(--rb-ink);
+  padding-bottom:clamp(50px,7vw,100px);
+}
+.rly-branches-v10 *, .rly-branches-v10 *::before,.rly-branches-v10 *::after{box-sizing:border-box}
+.rly-branches-v10 a:focus-visible{outline:3px solid var(--rb-red);outline-offset:3px}
+.rly-branches-hero{
+  min-height:490px;position:relative;isolation:isolate;overflow:hidden;
+  background:#003e2d url('/images/rally-branches-hero.webp') center center/cover no-repeat;
+  color:#fff;
+}
+.rly-branches-hero::after{
+  content:"";position:absolute;inset:0;z-index:-1;
+  background:linear-gradient(90deg,rgba(0,44,30,.30) 0%,rgba(0,53,36,.10) 64%,transparent 100%);
+  pointer-events:none;
+}
+.rly-branches-hero-inner{width:min(1200px,calc(100% - 48px));margin-inline:auto;min-height:490px;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;padding-block:65px 54px}
+.rly-branches-eyebrow{display:inline-flex;align-items:center;gap:9px;letter-spacing:.15em;font-size:.73rem;font-weight:750;color:#fff;margin:0 0 22px}
+.rly-branches-eyebrow span{width:8px;height:8px;border-radius:50%;background:var(--rb-red)}
+.rly-branches-hero h1{color:#fff;font-family:var(--font-display),'Oswald',sans-serif;font-weight:600;font-size:clamp(3.2rem,5.6vw,5.8rem);line-height:1.13;letter-spacing:-.015em;max-width:820px;margin:0;text-wrap:balance}
+.rly-branches-hero-desc{margin:18px 0 0;max-width:480px;color:#f1f7f4;font-size:clamp(.98rem,1.4vw,1.1rem);line-height:1.8}
+.rly-branches-hero-cta{display:flex;flex-wrap:wrap;gap:12px;margin-top:28px}
+.rly-btn{display:inline-flex;justify-content:center;align-items:center;gap:12px;min-height:49px;padding:12px 22px;text-decoration:none;border-radius:9px;font-size:.94rem;line-height:1.3;font-weight:750;transition:transform .2s ease,background .2s ease,border .2s ease;white-space:nowrap}
+.rly-btn:hover{transform:translateY(-2px)}
+.rly-btn-red{background:var(--rb-red);color:#fff;border:1px solid var(--rb-red)}
+.rly-btn-red:hover{background:#c5122f;color:#fff}
+.rly-btn-outline-light{color:#fff;border:1px solid rgba(255,255,255,.58);background:rgba(0,40,25,.22)}
+.rly-btn-outline-light:hover{background:rgba(255,255,255,.16);color:#fff}
+.rly-branches-hero-stats{display:flex;flex-wrap:wrap;gap:0;margin:34px 0 0;border-top:1px solid rgba(255,255,255,.25);padding-top:20px}
+.rly-branches-hero-stats>div{display:flex;flex-direction:column;gap:4px;min-width:125px;padding:0 26px 0 0;margin:0 26px 0 0;border-right:1px solid rgba(255,255,255,.24)}
+.rly-branches-hero-stats>div:last-child{border:0;padding-right:0;margin-right:0}
+.rly-branches-hero-stats strong{font-family:var(--font-display),'Oswald',sans-serif;color:#fff;font-size:clamp(1.7rem,3vw,2.25rem);font-weight:600;line-height:1.2;white-space:nowrap}
+.rly-branches-hero-stats span{color:#e1eee8;font-size:.76rem}
+.rly-branches-directory{scroll-margin-top:90px;padding-top:70px}
+.rly-branches-section-head{display:flex;align-items:end;justify-content:space-between;gap:28px;margin:0 0 28px}
+.rly-branches-section-head>div{min-width:0}
+.rly-branches-kicker{margin:0 0 12px;color:var(--rb-green);letter-spacing:.13em;font-size:.71rem;font-weight:850}
+.rly-branches-section-head h2{color:var(--rb-ink);font-size:clamp(2rem,3.4vw,3.2rem);line-height:1.25;margin:0;font-weight:600}
+.rly-branches-section-head p:not(.rly-branches-kicker){margin:9px 0 0;color:var(--rb-muted);font-size:.96rem;line-height:1.7;max-width:600px}
+.rly-branches-text-link{display:inline-flex;align-items:center;gap:7px;flex-shrink:0;min-height:42px;color:var(--rb-green);font-weight:750;font-size:.92rem;text-decoration:none}
+.rly-branches-text-link:hover{text-decoration:underline}
+.rly-branch-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px}
+.rly-branch-card{min-width:0;display:flex;flex-direction:column;border:1px solid var(--rb-stroke);border-radius:21px;overflow:hidden;background:#fff;box-shadow:0 6px 28px rgba(0,35,22,.065);transition:transform .2s ease,box-shadow .2s ease}
+.rly-branch-card:hover{box-shadow:0 18px 34px rgba(0,35,22,.11);transform:translateY(-2px)}
+.rly-branch-card.is-featured{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1.12fr) minmax(0,1fr)}
+.rly-branch-photo{position:relative;min-height:230px;isolation:isolate;background:#003f2c;overflow:hidden}
+.rly-branch-card.is-featured .rly-branch-photo{min-height:430px}
+.rly-branch-photo-link{position:absolute;inset:0;display:block;overflow:hidden}
+.rly-branch-photo-link::after{content:"";position:absolute;inset:0;background:linear-gradient(0deg,rgba(0,22,15,.22),transparent 50%);pointer-events:none}
+.rly-branch-cover{position:absolute!important;inset:0;width:100%;height:100%;transition:transform .4s ease}
+.rly-branch-cover>img{object-fit:cover}
+.rly-branch-cover-img{object-fit:cover;transition:transform .4s ease}
+.rly-branch-card:hover .rly-branch-cover-img,.rly-branch-card:hover .rly-branch-cover{transform:scale(1.035)}
+.rly-branch-open,.rly-branch-count{position:absolute;top:16px;z-index:2;display:inline-flex;align-items:center;gap:7px;min-height:29px;padding:6px 11px;border-radius:100px;font-size:.76rem;font-weight:750;line-height:1.2;pointer-events:none}
+.rly-branch-open{left:16px;background:#fff;color:var(--rb-ink)}
+.rly-branch-open>span{width:8px;height:8px;background:#88918d;border-radius:50%}
+.rly-branch-open.is-open>span{background:#2faa49}
+.rly-branch-count{right:16px;background:rgba(0,34,22,.84);color:#fff}
+.rly-branch-content{display:flex;flex-direction:column;gap:16px;min-width:0;padding:clamp(20px,2.5vw,32px)}
+.rly-branch-small{color:var(--rb-green);font-size:.69rem;font-weight:850;letter-spacing:.16em;margin:0}
+.rly-branch-content h3{font-size:clamp(1.75rem,3vw,2.7rem);line-height:1.2;font-weight:600;margin:-4px 0 0;color:var(--rb-ink)}
+.rly-branch-content h3 a{color:inherit;text-decoration:none}
+.rly-branch-content h3 a:hover{color:var(--rb-green)}
+.rly-branch-address{display:flex;gap:8px;align-items:start;margin:-7px 0 0;font-size:.86rem;color:var(--rb-muted);line-height:1.65}
+.rly-branch-address svg{flex:0 0 16px;margin-top:3px;color:var(--rb-green)}
+.rly-branch-facts{display:grid;grid-template-columns:1fr 1fr;gap:14px;border-top:1px solid var(--rb-stroke);border-bottom:1px solid var(--rb-stroke);padding:16px 0}
+.rly-branch-facts>div{min-width:0;display:flex;flex-direction:column;gap:5px}
+.rly-branch-facts span{font-size:.74rem;color:var(--rb-muted)}
+.rly-branch-facts strong{display:inline-flex;align-items:center;gap:5px;font-size:clamp(.98rem,1.3vw,1.2rem);font-weight:800;color:var(--rb-ink);white-space:nowrap}
+.rly-branch-facts strong small{font-weight:500;font-size:.7rem;color:var(--rb-muted)}
+.rly-branch-timebox{min-width:0}
+.rly-branch-timebox>p{margin:0 0 9px;color:var(--rb-muted);font-size:.81rem}
+.rly-branch-times{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.rly-branch-times>a,.rly-branch-times>span{display:grid;place-items:center;min-height:43px;border-radius:8px;border:1px solid #d8e2dd;text-align:center;font-size:.85rem;font-weight:700;color:var(--rb-green);text-decoration:none;background:#fff;font-variant-numeric:tabular-nums}
+.rly-branch-times>a:hover{background:var(--rb-green);border-color:var(--rb-green);color:white}
+.rly-branch-times>.is-full{color:#b0b8b4;text-decoration:line-through;background:#f7f8f7;border-style:dashed}
+.rly-branch-times-empty{color:var(--rb-muted);font-size:.85rem}
+.rly-branch-actions{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;margin-top:auto}
+.rly-branch-actions .rly-btn{min-height:46px;padding-inline:13px;font-size:.86rem}
+.rly-btn-secondary{border:1px solid #d7e0dc;background:#fff;color:var(--rb-ink)}
+.rly-btn-secondary:hover{background:#f3f7f5}
+.rly-branches-steps{padding-top:clamp(65px,7vw,105px);padding-bottom:clamp(65px,7vw,105px)}
+.rly-branches-steps .rly-branches-section-head>p{max-width:330px;flex:0 1 330px}
+.rly-branches-step-grid{list-style:none;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;padding:0;margin:0}
+.rly-branches-step-grid li{position:relative;min-width:0;min-height:200px;padding:25px;background:#fff;border:1px solid var(--rb-stroke);border-top:3px solid var(--rb-green);border-radius:14px}
+.rly-branches-step-grid li>span{display:block;font-family:var(--font-display),sans-serif;font-size:2.9rem;color:var(--rb-green);font-weight:600;line-height:1}
+.rly-branches-step-grid li>svg{position:absolute;top:25px;right:25px;color:var(--rb-green)}
+.rly-branches-step-grid h3{font-size:1.35rem;line-height:1.3;font-weight:600;margin:22px 0 8px;color:var(--rb-ink)}
+.rly-branches-step-grid p{margin:0;font-size:.86rem;line-height:1.65;color:var(--rb-muted)}
+.rly-branches-bottom-cta{display:flex;align-items:center;justify-content:space-between;gap:22px;background:var(--rb-green);border-radius:20px;padding:clamp(26px,4vw,46px);color:#fff}
+.rly-branches-bottom-cta .rly-branches-kicker{color:#c7ecdb;margin-bottom:8px}
+.rly-branches-bottom-cta h2{font-size:clamp(2rem,3vw,3rem);color:#fff;margin:0;line-height:1.2}
+.rly-branches-bottom-cta p:not(.rly-branches-kicker){color:#e3f2ea;font-size:.9rem;margin:8px 0 0}
+.rly-branches-bottom-cta>.rly-btn{flex-shrink:0}
+@media(max-width:900px){
+ .rly-branches-hero{min-height:450px;background-position:58% 50%}
+ .rly-branches-hero-inner{min-height:450px}
+ .rly-branch-card.is-featured{grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr)}
+ .rly-branch-card.is-featured .rly-branch-photo{min-height:430px}
+ .rly-branch-facts{grid-template-columns:1fr}
+ .rly-branch-actions{grid-template-columns:1fr 1fr}
+ .rly-branch-times{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:720px){
+ .rly-branches-hero{min-height:initial;background-position:62% center}
+ .rly-branches-hero::after{background:linear-gradient(90deg,rgba(0,44,30,.54),rgba(0,44,30,.44))}
+ .rly-branches-hero-inner{width:calc(100% - 36px);min-height:450px;padding-block:47px 42px}
+ .rly-branches-hero h1{font-size:clamp(2.7rem,9vw,4.2rem);max-width:500px}
+ .rly-branches-hero-desc{max-width:450px}
+ .rly-branches-hero-stats{gap:18px 0}
+ .rly-branches-hero-stats>div{min-width:0;flex:1 1 33%;margin:0;padding-inline:10px;border:0}
+ .rly-branches-hero-stats>div:first-child{padding-left:0}
+ .rly-branches-section-head{align-items:flex-start;flex-direction:column;gap:10px}
+ .rly-branches-directory{padding-top:48px}
+ .rly-branch-grid{grid-template-columns:1fr}
+ .rly-branch-card,.rly-branch-card.is-featured{display:flex;flex-direction:column;grid-column:auto}
+ .rly-branch-card.is-featured .rly-branch-photo,.rly-branch-photo{min-height:0;aspect-ratio:16/10}
+ .rly-branch-content{gap:14px}
+ .rly-branch-facts{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .rly-branch-times{grid-template-columns:repeat(4,minmax(0,1fr))}
+ .rly-branches-steps .rly-branches-section-head>p{flex:auto}
+ .rly-branches-step-grid{grid-template-columns:1fr;gap:12px}
+ .rly-branches-step-grid li{min-height:0;padding:22px}
+ .rly-branches-step-grid h3{margin-top:12px}
+ .rly-branches-bottom-cta{flex-direction:column;align-items:stretch}
+ .rly-branches-bottom-cta>.rly-btn{width:100%}
+}
+@media(max-width:420px){
+ .rly-branches-hero h1{font-size:clamp(2.5rem,9.7vw,3rem)}
+ .rly-branches-hero-cta{width:100%;gap:9px}
+ .rly-branches-hero-cta .rly-btn{flex:1 1 100%;width:100%;font-size:.9rem}
+ .rly-branches-hero-stats strong{font-size:1.5rem}
+ .rly-branches-hero-stats span{font-size:.68rem}
+ .rly-branches-hero-stats>div{flex-basis:33%}
+ .rly-branch-content{padding:19px}
+ .rly-branch-actions{grid-template-columns:1fr}
+ .rly-branch-facts{gap:10px}
+ .rly-branch-facts strong{font-size:.93rem}
+ .rly-branch-facts strong svg{display:none}
+ .rly-branch-times{gap:5px}
+ .rly-branch-times>a,.rly-branch-times>span{min-height:39px;font-size:.77rem}
+}
+@media(prefers-reduced-motion:reduce){
+ .rly-branches-v10 .rly-btn,.rly-branches-v10 .rly-branch-card,.rly-branches-v10 .rly-branch-cover-img{transition:none}
+ .rly-branches-v10 .rly-btn:hover,.rly-branches-v10 .rly-branch-card:hover,.rly-branches-v10 .rly-branch-card:hover .rly-branch-cover-img{transform:none}
+}

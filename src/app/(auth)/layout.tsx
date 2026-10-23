@@ -1,9 +1,10 @@
+// RALLY_PUBLIC_NAV_V7: customer authentication uses the same site-wide navbar
 import { ArrowLeft, CalendarCheck2, Gift, History, Zap } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { type ReactNode } from 'react';
 
-import { Logo } from '@/components/brand/logo';
+import { SiteHeader } from '@/components/layout/site-header';
 import { MEMBER_TIERS } from '@/features/member/lib/tiers';
 import { cn } from '@/lib/cn';
 import { formatNumber } from '@/lib/format';
@@ -25,10 +26,12 @@ const TIER_DOT: Record<string, string> = {
 /** Khung trang tài khoản KHÁCH: đăng nhập, đăng ký, quên mật khẩu (tách khỏi đăng nhập quản trị). */
 export default function AuthLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="grid min-h-dvh lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)]">
+    <>
+      <SiteHeader />
+      <div className="grid min-h-[calc(100dvh-70px)] lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)]">
       <div className="flex flex-col px-5 py-5 sm:px-10">
         <div className="flex items-center justify-between gap-4">
-          <Logo />
+          <span className="font-display text-xl font-semibold text-[#2b2b2b]">Tài khoản Rally</span>
           <Link href="/" className="inline-flex items-center gap-1.5 text-sm text-muted transition-colors hover:text-ink">
             <ArrowLeft className="size-4" aria-hidden />
             Về trang chủ
@@ -86,6 +89,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
           </ol>
         </div>
       </aside>
-    </div>
+      </div>
+    </>
   );
 }

@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { useId, useState, type FormEvent } from 'react';
 
 import { useMember } from '@/features/member/hooks/use-member';
+import { ConsentChecks } from '@/features/privacy/components/consent-checks';
 import { formatPhone } from '@/lib/format';
 
 import { buttonClass } from '@/components/ui/button';
@@ -18,6 +19,8 @@ export interface GuestFormValues {
   phone: string;
   note?: string;
   turnstileToken: string;
+  termsAccepted: boolean;
+  marketing: boolean;
 }
 
 interface GuestFormProps {
@@ -39,15 +42,24 @@ export function GuestForm({ turnstileSiteKey, holdMinutes, pending, error, field
   const member = useMember();
   const pathname = usePathname();
   const profile = member.status === 'member' ? member.profile : null;
+  const [termsError, setTermsError] = useState<string | null>(null);
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
+    const termsAccepted = data.get('terms') === 'on';
+    if (!termsAccepted) {
+      setTermsError('Vui lòng đánh dấu ô xác nhận để giữ sân.');
+      return;
+    }
+    setTermsError(null);
     onSubmit({
       contactName: String(data.get('contactName') ?? ''),
       phone: String(data.get('phone') ?? ''),
       note: String(data.get('note') ?? '') || undefined,
       turnstileToken: token ?? '',
+      termsAccepted,
+      marketing: data.get('marketing') === 'on',
     });
   }
 
@@ -114,7 +126,8 @@ export function GuestForm({ turnstileSiteKey, holdMinutes, pending, error, field
         </label>
         <input id={`${id}-note`} name="note" maxLength={300} placeholder="Ví dụ: cần thuê thêm 2 vợt" className={inputClass} />
       </div>
-      {turnstileSiteKey && <Turnstile siteKey={turnstileSiteKey} onToken={setToken} resetSignal={turnstileReset} />}
+      <ConsentChecks kind="booking" termsError={termsError ?? fieldErrors.termsAccepted} />
+      {turnstileSiteKey && <Turnstile siteKey={turnstileSiteKey} onToken={setToken} resetSignal={turnstileReset} action="booking_hold" />}
       {fieldErrors.turnstileToken && <p className="text-sm text-shuttle-deep">{fieldErrors.turnstileToken}</p>}
       {error && (
         <p role="alert" className="rounded-control bg-shuttle-soft px-3 py-2 text-sm text-shuttle-deep">

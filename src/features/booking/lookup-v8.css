@@ -1,0 +1,115 @@
+/* RALLY_LOOKUP_V8: public booking lookup only. No admin/global token changes. */
+.rally-lookup-shell{--rl-green:#006341;--rl-red:#e31837;--rl-ink:#2b2b2b;--rl-mist:#f5f8f6;background:var(--rl-mist);color:var(--rl-ink);position:relative;padding-bottom:72px}
+.rally-lookup-container{max-width:1180px;padding-inline:clamp(16px,3.5vw,32px);margin-inline:auto;width:100%}
+.rally-lookup-top{position:relative;overflow:hidden;background:#006341;color:white;min-height:362px}
+.rally-lookup-top:before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at 84% 38%,rgba(255,255,255,.09),transparent 42%),linear-gradient(120deg,#004b32,#006341 65%,#005436)}
+.rally-lookup-top-grid{position:relative;min-height:362px;display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,.7fr);align-items:center;gap:32px;padding-block:54px 100px}
+.rally-lookup-intro{max-width:720px;position:relative;z-index:1}
+.rally-lookup-kicker{font-size:11px;font-weight:750;letter-spacing:.16em;display:flex;align-items:center;gap:11px;color:#d9f1e3;text-transform:uppercase;margin:0 0 18px}
+.rally-lookup-pulse{height:9px;width:9px;flex:none;border-radius:999px;background:#e31837;box-shadow:0 0 0 5px rgba(227,24,55,.15)}
+.rally-lookup-intro h1{color:#fff;font-family:var(--font-display),'Oswald',sans-serif;font-weight:600;font-size:clamp(35px,4.4vw,61px);line-height:1.14;letter-spacing:-.016em;max-width:790px;text-wrap:pretty;margin:0}
+.rally-lookup-lead{font-size:clamp(14px,1.25vw,17px);line-height:1.75;color:#ebf7f1;max-width:610px;margin-top:16px}
+.rally-lookup-perks{display:flex;flex-wrap:wrap;gap:12px 19px;margin-top:24px;color:#f5fffa;font-size:12px;font-weight:600}
+.rally-lookup-perks li{display:inline-flex;align-items:center;gap:7px}
+.rally-lookup-perks svg{color:#fff}
+.rally-lookup-privacy{display:none}
+.rally-lookup-court-graphic{position:relative;align-self:stretch;min-height:220px;display:flex;align-items:center;justify-content:center;color:#9ed4b5}
+.rally-lookup-court-graphic svg{width:min(100%,440px);opacity:.58;filter:drop-shadow(0 8px 25px rgba(0,0,0,.16))}
+.rally-lookup-graphic-tag,.rally-lookup-graphic-foot{position:absolute;color:#d3ebda;font-size:10px;letter-spacing:.2em;font-weight:700}
+.rally-lookup-graphic-tag{top:15px;right:2px}
+.rally-lookup-graphic-foot{bottom:30px;left:0}
+.rally-lookup-formposition{position:relative;margin-top:-65px;z-index:2}
+.rally-lookup-card{display:grid;grid-template-columns:minmax(0,1.42fr) minmax(260px,.78fr);overflow:hidden;border-radius:22px;background:white;border:1px solid #e3e8e4;box-shadow:0 23px 55px -31px rgba(0,32,23,.35);min-width:0}
+.rally-lookup-formarea{min-width:0;padding:clamp(22px,3.5vw,38px)}
+.rally-lookup-formhead{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:22px}
+.rally-lookup-smalllabel{display:block;color:#006341;font-size:10px;font-weight:800;letter-spacing:.16em;line-height:1.5;text-transform:uppercase}
+.rally-lookup-formhead h2{margin-top:5px;font-size:clamp(24px,2.2vw,30px);color:#2b2b2b;font-weight:600;line-height:1.2}
+.rally-lookup-secure{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;color:#5e7467;font-size:11px;padding-top:7px}
+.rally-lookup-tabs{border-radius:12px!important;background:#f1f5f2!important;margin-bottom:22px}
+.rally-lookup-tabs button{min-height:44px;border-radius:9px!important;font-size:13px}
+.rally-lookup-tabs button[aria-selected="true"]{background:#006341!important;color:#fff!important;box-shadow:0 3px 12px rgba(0,99,65,.13)}
+.rally-lookup-formarea form{max-width:720px}
+.rally-lookup-formarea form[hidden]{display:none!important}
+.rally-lookup-formarea form label{font-size:13px;font-weight:650;color:#2b2b2b}
+.rally-lookup-formarea input{border-radius:11px;background:#fff;border-color:#d8e3dc;min-height:52px;font-family:var(--font-sans),sans-serif;font-size:16px;letter-spacing:normal}
+.rally-lookup-formarea input:focus-visible{border-color:#006341;outline-color:#006341}
+.rally-lookup-formarea form button[type="submit"]{border-radius:11px;background:#e31837!important;color:#fff!important;font-weight:750;min-height:52px}
+.rally-lookup-formarea form button[type="submit"]:hover:not(:disabled){background:#bc0e2a!important}
+.rally-lookup-formarea form button[type="submit"]:disabled{opacity:.55}
+.rally-lookup-formarea form p{line-height:1.55}
+.rally-lookup-aside{background:linear-gradient(145deg,#f1f7f3,#e6f0ea);border-left:1px solid #e0eae2;display:flex;flex-direction:column;gap:19px;padding:clamp(24px,3.5vw,40px);min-width:0}
+.rally-lookup-aside h3{font-size:clamp(25px,2.2vw,33px);color:#173a2b;line-height:1.22;max-width:320px;font-weight:600}
+.rally-lookup-aside-steps{display:flex;flex-direction:column;gap:18px;margin-top:2px}
+.rally-lookup-aside-steps li{display:flex;align-items:flex-start;gap:13px}
+.rally-lookup-step-index{width:36px;height:36px;display:grid;place-items:center;flex:none;border:1px solid #b7d3c2;border-radius:10px;color:#006341;font-family:var(--font-display),sans-serif;font-weight:600;font-size:19px;background:white}
+.rally-lookup-aside-steps strong{font-size:13px;color:#244a38;display:block;margin-top:1px}
+.rally-lookup-aside-steps p{font-size:12px;line-height:1.65;margin-top:4px;color:#526b5e}
+.rally-lookup-aside-note{margin-top:auto;border-top:1px solid #cbded0;padding-top:20px;display:flex;gap:11px;color:#006341}
+.rally-lookup-aside-note p{font-size:12px;line-height:1.65}
+.rally-lookup-results{--rl-green:#006341;--rl-red:#e31837;padding-top:52px;padding-bottom:82px;min-width:0;color:#2b2b2b}
+.rally-lookup-listhead{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:4px}
+.rally-lookup-listhead h2{font-size:clamp(25px,2.5vw,34px);font-weight:600;line-height:1.25;margin:6px 0;color:#2b2b2b}
+.rally-lookup-listhead p:not(.rally-lookup-smalllabel){color:#606d62;font-size:13px;line-height:1.7}
+.rally-lookup-recent-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+.rally-lookup-order{border-radius:14px;background:#fff;min-height:93px;border:1px solid #dfe7e1;box-shadow:0 6px 20px -18px rgba(0,20,12,.35);min-width:0}
+.rally-lookup-order:hover{border-color:#006341;box-shadow:0 9px 24px -17px rgba(0,99,65,.28)}
+.rally-lookup-order .rally-lookup-date{border-radius:9px;background:#eaf4ed;color:#006341}
+.rally-lookup-recent-item{min-width:0}
+.rally-lookup-help{margin-top:16px}
+.rally-lookup-tip{min-height:182px;box-shadow:0 8px 23px -25px #101f15;border-radius:15px;gap:12px;border-color:#e0e6e2}
+.rally-lookup-tip:hover{border-color:#a9caba}
+.rally-lookup-tip .text-hall{color:#e7ede8}
+.rally-lookup-help-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+.rally-lookup-bottom-cta{background:#006341!important;color:white!important;padding:clamp(24px,4vw,40px);min-height:165px;border-radius:18px}
+.rally-lookup-bottom-cta .rally-lookup-cta-button{background:#e31837!important;color:white!important}
+.rally-lookup-bottom-cta .rally-lookup-cta-button:hover{background:#c1102e!important}
+.rally-lookup-bottom-cta > svg{opacity:.45}
+@media(max-width:1000px){.rally-lookup-top-grid{grid-template-columns:minmax(0,1fr) 250px}.rally-lookup-perks{gap:9px 14px}.rally-lookup-card{grid-template-columns:minmax(0,1fr) 270px}.rally-lookup-aside{padding:24px}.rally-lookup-recent-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:760px){.rally-lookup-shell{padding-bottom:46px}.rally-lookup-top{min-height:0}.rally-lookup-top-grid{min-height:0;display:block;padding-block:45px 85px}.rally-lookup-intro h1{max-width:610px}.rally-lookup-court-graphic{display:none}.rally-lookup-formposition{margin-top:-47px}.rally-lookup-card{grid-template-columns:1fr;border-radius:17px}.rally-lookup-aside{border-left:0;border-top:1px solid #e0eae2;display:grid;grid-template-columns:1fr 1fr;column-gap:16px;padding:21px}.rally-lookup-aside h3{font-size:22px}.rally-lookup-aside-steps{grid-column:2;grid-row:1 / span 3;gap:12px}.rally-lookup-aside-note{margin-top:0;grid-column:1 / -1;padding-top:12px}.rally-lookup-recent-grid,.rally-lookup-help-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.rally-lookup-results{padding-top:38px;padding-bottom:60px}}
+@media(max-width:580px){.rally-lookup-top-grid{padding-block:39px 73px}.rally-lookup-kicker{font-size:10px;line-height:1.5}.rally-lookup-intro h1{font-size:clamp(31px,8.1vw,43px);line-height:1.17;letter-spacing:0}.rally-lookup-lead{font-size:14px;line-height:1.65}.rally-lookup-perks{display:grid;gap:9px;font-size:12px;margin-top:19px}.rally-lookup-formarea{padding:20px 17px 22px}.rally-lookup-formhead{margin-bottom:16px}.rally-lookup-formhead h2{font-size:25px}.rally-lookup-secure{font-size:10px}.rally-lookup-aside{display:block;padding:20px}.rally-lookup-aside h3{font-size:23px;max-width:100%;margin-top:5px}.rally-lookup-aside-steps{margin-top:17px;gap:12px}.rally-lookup-aside-note{margin-top:16px;padding-top:13px}.rally-lookup-results{padding-top:32px}.rally-lookup-recent-grid,.rally-lookup-help-grid{grid-template-columns:1fr}.rally-lookup-listhead h2{font-size:27px}.rally-lookup-tip{min-height:auto;padding:18px}.rally-lookup-bottom-cta{gap:16px;flex-direction:column;align-items:stretch}.rally-lookup-bottom-cta .flex.flex-col.gap-2{width:100%}.rally-lookup-bottom-cta a{width:100%}.rally-lookup-formarea form button[type="submit"]{white-space:normal}.rally-lookup-order{min-height:83px}}
+@media(max-width:350px){.rally-lookup-formarea{padding:16px 12px}.rally-lookup-secure{display:none}.rally-lookup-tabs button{font-size:12px;gap:4px}.rally-lookup-intro h1{font-size:30px}.rally-lookup-container{padding-inline:12px}}
+@media(prefers-reduced-motion:reduce){.rally-lookup-shell *{scroll-behavior:auto}}
+
+/* RALLY_LOOKUP_HERO_IMAGE_V9: image-backed lookup hero */
+.rally-lookup-top {
+  background-color: #004b32;
+  background-image:
+    linear-gradient(90deg, rgba(0, 32, 24, .93) 0%, rgba(0, 41, 30, .81) 37%, rgba(0, 40, 29, .29) 65%, rgba(0, 43, 31, .07) 100%),
+    url('/images/lookup-badminton-hero.webp');
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+.rally-lookup-top::before { display: none; }
+.rally-lookup-top-grid {
+  grid-template-columns: minmax(0, 1fr);
+  isolation: isolate;
+}
+.rally-lookup-intro {
+  max-width: 650px;
+  text-shadow: 0 1px 12px rgba(0, 20, 15, .14);
+}
+.rally-lookup-court-graphic { display: none; }
+@media (max-width: 1000px) {
+  .rally-lookup-top-grid { grid-template-columns: minmax(0, 1fr); }
+  .rally-lookup-intro { max-width: 590px; }
+  .rally-lookup-top {
+    background-image:
+      linear-gradient(90deg, rgba(0, 35, 25, .94) 0%, rgba(0, 42, 30, .8) 50%, rgba(0, 42, 30, .30) 100%),
+      url('/images/lookup-badminton-hero.webp');
+    background-position: 63% center;
+  }
+}
+@media (max-width: 760px) {
+  .rally-lookup-intro { max-width: 100%; }
+  .rally-lookup-top {
+    background-image:
+      linear-gradient(100deg, rgba(0, 37, 27, .94) 0%, rgba(0, 44, 32, .84) 66%, rgba(0, 44, 32, .66) 100%),
+      url('/images/lookup-badminton-hero.webp');
+    background-position: 63% center;
+  }
+}
+@media (max-width: 480px) {
+  .rally-lookup-top { background-position: 66% center; }
+  .rally-lookup-intro { text-shadow: 0 1px 10px rgba(0, 20, 15, .20); }
+}

@@ -57,6 +57,8 @@ export const guestHoldSchema = z.object({
   note: zOptionalText(300),
   turnstileToken: z.string().min(1, 'Vui lòng hoàn tất bước xác minh chống spam'),
   idempotencyKey: zIdempotencyKey(),
+  termsAccepted: z.boolean().refine((v) => v, 'Vui lòng đánh dấu ô xác nhận để giữ sân.'),
+  marketing: z.boolean().default(false),
 });
 
 export type GuestHoldInput = z.input<typeof guestHoldSchema>;

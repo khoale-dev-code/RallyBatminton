@@ -1,0 +1,131 @@
+/* RALLY_RENTAL_EXPERIENCE_V7 — scoped public rentals experience */
+.rally-rental-page{--rr-green:#006341;--rr-dark:#003f30;--rr-ink:#2b2b2b;--rr-red:#e31837;--rr-line:#e5ece7;--rr-muted:#64726b;color:var(--rr-ink);padding-bottom:12px}
+.rally-rental-page *{box-sizing:border-box}
+.rally-rental-page h1,.rally-rental-page h2,.rally-rental-page h3{letter-spacing:0;text-wrap:pretty}
+.rally-rental-hero{overflow:hidden;background:linear-gradient(118deg,#003327 0%,#00573c 72%,#006341 100%);color:#fff}
+.rally-rental-hero-inner{position:relative;display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:clamp(20px,4vw,64px);max-width:1280px;min-height:470px;margin:auto;padding:64px 24px 58px;align-items:center}
+.rally-rental-hero-inner:after{position:absolute;right:-150px;bottom:-280px;width:620px;height:620px;content:"";pointer-events:none;border:1px solid rgba(255,255,255,.13);border-radius:50%}
+.rally-rental-hero-copy{position:relative;z-index:2;max-width:640px}
+.rally-rental-kicker{display:inline-flex;align-items:center;gap:10px;margin-bottom:25px;font-size:11px;font-weight:800;letter-spacing:.17em;color:#e2f3e9}
+.rally-rental-kicker span{width:7px;height:7px;background:var(--rr-red);border-radius:50%}
+.rally-rental-hero h1{max-width:620px;font-family:var(--font-display,'Oswald',sans-serif);font-size:clamp(48px,5.6vw,82px);line-height:1.11;font-weight:600;color:#fff}
+.rally-rental-hero-copy>p{max-width:555px;margin-top:20px;font-size:clamp(15px,1.42vw,18px);line-height:1.8;color:#e1eee7}
+.rally-rental-hero-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:28px}
+.rally-rental-primary,.rally-rental-secondary{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:50px;padding:0 20px;border-radius:7px;font-size:14px;font-weight:750;transition:background .2s,transform .2s;text-decoration:none}
+.rally-rental-primary{background:#fff;color:var(--rr-green)}
+.rally-rental-secondary{border:1px solid rgba(255,255,255,.42);color:#fff}
+.rally-rental-primary:hover{background:#e3f2e9;transform:translateY(-1px)}
+.rally-rental-secondary:hover{background:rgba(255,255,255,.09)}
+.rally-rental-hero-points{display:flex;flex-wrap:wrap;gap:13px 18px;margin-top:28px;padding:0;list-style:none}
+.rally-rental-hero-points li{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:#d9e7df}
+.rally-rental-hero-points svg{color:#fff}
+.rally-rental-hero-art{position:relative;z-index:1;display:flex;align-items:center;justify-content:center;min-height:370px}
+.rally-rental-art-photo{position:relative;width:min(100%,570px);aspect-ratio:1.17;overflow:hidden;border:7px solid rgba(255,255,255,.15);border-radius:28px;background:#f6f8f4;box-shadow:0 28px 55px rgba(0,25,14,.35);transform:rotate(-4deg)}
+.rally-rental-art-image{object-fit:contain;object-position:center}
+.rally-rental-art-sup{position:absolute;z-index:2;top:7px;left:-10px;border-radius:5px;background:#e31837;padding:9px 12px;font-size:10px;font-weight:850;letter-spacing:.11em;color:white;transform:rotate(-4deg)}
+.rally-rental-art-caption{position:absolute;z-index:2;right:-9px;bottom:8px;font-family:var(--font-display,'Oswald',sans-serif);font-size:43px;font-weight:650;letter-spacing:.045em;color:white;text-shadow:0 5px 15px #003126}
+.rally-rental-benefits{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;max-width:1232px;margin:0 auto;border-bottom:1px solid var(--rr-line)}
+.rally-rental-benefits>div{display:flex;align-items:center;justify-content:center;gap:13px;padding:25px 14px}
+.rally-rental-benefits>div+div{border-left:1px solid var(--rr-line)}
+.rally-rental-benefits svg{color:var(--rr-green);flex:none}
+.rally-rental-benefits span{display:flex;flex-direction:column;gap:2px}
+.rally-rental-benefits b{font-size:13px;font-weight:750}
+.rally-rental-benefits small{font-size:11px;line-height:1.45;color:var(--rr-muted)}
+.rally-rental-catalog{max-width:1232px;margin:auto;padding:70px 0 72px}
+.rally-rental-eyebrow{display:block;margin-bottom:12px;color:var(--rr-green);font-size:11px;font-weight:850;letter-spacing:.19em}
+.rally-rental-catalog-heading{display:flex;align-items:end;justify-content:space-between;gap:24px;margin-bottom:30px}
+.rally-rental-catalog-heading h2,.rally-rental-steps-heading h2{font-size:clamp(32px,3vw,46px);line-height:1.19;font-weight:600;color:var(--rr-ink)}
+.rally-rental-catalog-heading>p,.rally-rental-steps-heading>p{max-width:350px;color:var(--rr-muted);font-size:13px;line-height:1.7}
+.rally-rental-catalog-layout{display:grid;grid-template-columns:265px minmax(0,1fr);align-items:start;gap:28px}
+.rally-rental-filter{position:sticky;top:90px;border:1px solid var(--rr-line);border-radius:18px;background:#f8faf8;padding:23px}
+.rally-rental-filter-heading{display:flex;align-items:center;gap:10px;margin-bottom:22px}
+.rally-rental-filter-symbol{display:grid;place-items:center;width:39px;height:39px;flex:none;border-radius:10px;background:#e5f3ec;color:var(--rr-green)}
+.rally-rental-filter-heading h3{font-family:var(--font-sans,'Be Vietnam Pro',sans-serif);font-size:17px;font-weight:800;line-height:1.4}
+.rally-rental-filter-heading p{margin-top:2px;color:var(--rr-muted);font-size:10px;line-height:1.5}
+.rally-rental-filter-form{display:flex;flex-direction:column;gap:9px}
+.rally-rental-filter-form>label{margin-top:6px;color:#33443b;font-size:11px;font-weight:750}
+.rally-rental-input-wrap,.rally-rental-select-wrap{display:flex;align-items:center;gap:7px;min-height:46px;padding:0 11px;border:1px solid #dae5dd;border-radius:8px;background:#fff;color:var(--rr-green)}
+.rally-rental-input-wrap:focus-within,.rally-rental-select-wrap:focus-within{border-color:var(--rr-green);outline:2px solid rgba(0,99,65,.12)}
+.rally-rental-input-wrap input,.rally-rental-select-wrap select{width:100%;min-width:0;border:0;background:transparent;font-size:12px;color:var(--rr-ink);outline:none}
+.rally-rental-select-wrap select{appearance:none;cursor:pointer}
+.rally-rental-input-wrap svg,.rally-rental-select-wrap svg{flex:none}
+.rally-rental-filter-submit{display:flex;align-items:center;justify-content:space-between;min-height:46px;margin-top:14px;padding:0 15px;border-radius:8px;background:var(--rr-green);color:white;font-size:12px;font-weight:800;cursor:pointer;transition:background .15s}
+.rally-rental-filter-submit:hover{background:#004e34}
+.rally-rental-reset{display:inline-flex;align-items:center;gap:6px;margin:15px 0 0;color:var(--rr-green);font-size:12px;font-weight:800}
+.rally-rental-filter-note{display:flex;align-items:flex-start;gap:10px;margin-top:24px;border-top:1px solid var(--rr-line);padding-top:18px}
+.rally-rental-filter-note svg{flex:none;color:var(--rr-green)}
+.rally-rental-filter-note p{color:var(--rr-muted);font-size:10px;line-height:1.7}
+.rally-rental-catalog-results{min-width:0}
+.rally-rental-results-top{display:flex;align-items:center;justify-content:space-between;gap:15px;padding:6px 0 20px}
+.rally-rental-results-top>span:first-child{font-size:13px}
+.rally-rental-results-top b{font-size:19px;color:var(--rr-green)}
+.rally-rental-results-hint{color:var(--rr-muted);font-size:11px}
+.rally-rental-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;padding:0;list-style:none}
+.rally-rental-item{display:grid;grid-template-columns:44% minmax(0,1fr);height:100%;min-height:230px;overflow:hidden;border:1px solid var(--rr-line);border-radius:16px;background:#fff;text-decoration:none;box-shadow:0 4px 18px rgba(0,55,33,.035);transition:transform .2s,box-shadow .2s,border-color .2s}
+.rally-rental-item:hover{transform:translateY(-3px);border-color:rgba(0,99,65,.4);box-shadow:0 13px 30px rgba(0,55,33,.095)}
+.rally-rental-item-media{position:relative;min-height:220px;background:#edf5ef}
+.rally-rental-item-image{width:100%;height:100%;min-height:220px;aspect-ratio:auto!important}
+.rally-rental-combo{position:absolute;top:11px;left:10px;border-radius:5px;background:#e31837;padding:5px 8px;font-size:9px;font-weight:800;letter-spacing:.04em;color:#fff}
+.rally-rental-item-content{display:flex;flex-direction:column;min-width:0;padding:19px 15px 16px}
+.rally-rental-item-category{align-self:start;border-radius:4px;background:#e6f3ec;padding:4px 7px;color:var(--rr-green);font-size:10px;font-weight:800}
+.rally-rental-item-content h3{margin-top:10px;font-family:var(--font-sans,'Be Vietnam Pro',sans-serif);font-size:14px;font-weight:800;line-height:1.45;color:var(--rr-ink)}
+.rally-rental-brand{margin-top:5px;color:var(--rr-muted);font-size:10px;line-height:1.5}
+.rally-rental-item-price{display:flex;flex-direction:column;gap:2px;margin-top:auto;padding-top:22px}
+.rally-rental-item-price>span{font-size:10px;color:var(--rr-muted)}
+.rally-rental-item-price strong{color:var(--rr-green);font-size:17px;line-height:1.5;white-space:nowrap}
+.rally-rental-item-bottom{display:flex;align-items:center;justify-content:space-between;gap:4px;margin-top:12px}
+.rally-rental-available,.rally-rental-unavailable{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:650}
+.rally-rental-available{color:#13733a}.rally-rental-unavailable{color:#8f5555}
+.rally-rental-stock-dot{width:6px;height:6px;flex:none;border-radius:50%;background:currentColor}
+.rally-rental-open{display:grid;place-items:center;min-width:32px;height:32px;border:1px solid #d7e6dc;border-radius:8px;color:var(--rr-green)}
+.rally-rental-item:hover .rally-rental-open{background:var(--rr-green);color:#fff}
+.rally-rental-no-results{display:flex;flex-direction:column;align-items:flex-start;gap:10px;border:1px dashed #c9dcd0;border-radius:16px;padding:42px}
+.rally-rental-no-results svg{color:var(--rr-green)}
+.rally-rental-no-results h3{font-family:var(--font-sans,'Be Vietnam Pro',sans-serif);font-size:18px;font-weight:800}
+.rally-rental-no-results p{font-size:13px;color:var(--rr-muted)}
+.rally-rental-no-results a{display:inline-flex;align-items:center;gap:6px;margin-top:10px;color:var(--rr-green);font-size:13px;font-weight:800}
+.rally-rental-steps{margin:0 calc(50% - 50vw);background:#f6f8f6;padding:65px max(24px,calc((100vw - 1184px)/2)) 70px}
+.rally-rental-steps-heading{display:flex;justify-content:space-between;align-items:end;gap:20px;margin-bottom:28px}
+.rally-rental-steps-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px;padding:0;list-style:none}
+.rally-rental-steps-grid>li{display:flex;min-width:0;gap:17px;align-items:flex-start;border:1px solid #e4ece6;border-top:3px solid var(--rr-green);border-radius:12px;background:white;padding:26px 22px}
+.rally-rental-steps-grid li>b{font-family:var(--font-display,'Oswald',sans-serif);font-size:30px;font-weight:600;line-height:1.1;color:var(--rr-green)}
+.rally-rental-steps-grid li>span{display:flex;flex:1;flex-direction:column;gap:6px;padding-top:3px}
+.rally-rental-steps-grid li strong{font-size:15px;font-weight:800}
+.rally-rental-steps-grid li small{font-size:11px;line-height:1.7;color:var(--rr-muted)}
+.rally-rental-steps-grid li>svg{flex:none;color:var(--rr-green)}
+.rally-rental-final{display:flex;align-items:center;justify-content:space-between;gap:25px;max-width:1232px;margin:50px auto 0;border-radius:18px;background:#006341;padding:38px 48px;color:#fff}
+.rally-rental-final .rally-rental-eyebrow{color:#c9ebe0}
+.rally-rental-final h2{color:#fff;font-size:clamp(27px,3vw,40px);font-weight:600}
+.rally-rental-final p{margin-top:6px;font-size:13px;color:#e7f3ec}
+.rally-rental-final>a{display:inline-flex;flex:none;align-items:center;gap:10px;min-height:48px;border-radius:7px;background:#fff;padding:0 22px;color:var(--rr-green);font-size:13px;font-weight:850}
+.rally-rental-final>a:hover{background:#ecf6ef}
+.rally-rental-disclaimer{max-width:1232px;margin:22px auto 0;color:var(--rr-muted);font-size:11px;line-height:1.6}
+@media(max-width:1150px){.rally-rental-catalog-layout{grid-template-columns:245px minmax(0,1fr);gap:20px}.rally-rental-cards{grid-template-columns:1fr}.rally-rental-item{grid-template-columns:35% minmax(0,1fr);min-height:220px}.rally-rental-hero-inner{min-height:400px}.rally-rental-hero h1{font-size:clamp(42px,5vw,70px)}}
+@media(max-width:800px){.rally-rental-hero-inner{grid-template-columns:1fr;padding:47px 22px 35px;gap:25px}.rally-rental-hero-art{min-height:0;max-width:560px}.rally-rental-art-photo{width:100%;aspect-ratio:1.85;transform:none}.rally-rental-art-sup{top:13px;left:10px;transform:none}.rally-rental-art-caption{right:15px;bottom:12px;font-size:30px}.rally-rental-hero h1{max-width:600px;font-size:clamp(46px,8vw,65px)}.rally-rental-benefits{grid-template-columns:1fr 1fr}.rally-rental-benefits>div{justify-content:start;padding:16px}.rally-rental-benefits>div+div{border-left:0}.rally-rental-benefits>div:nth-child(2){border-left:1px solid var(--rr-line)}.rally-rental-benefits>div:nth-child(3){grid-column:1/-1;border-top:1px solid var(--rr-line)}.rally-rental-catalog{padding:52px 0}.rally-rental-catalog-layout{grid-template-columns:1fr}.rally-rental-filter{position:static}.rally-rental-filter-form{display:grid;grid-template-columns:1fr 1fr;gap:8px 12px}.rally-rental-filter-form>label{grid-column:span 1;margin-top:6px}.rally-rental-filter-form>.rally-rental-input-wrap,.rally-rental-filter-form>.rally-rental-select-wrap{grid-column:span 1}.rally-rental-filter-form>label:first-child,.rally-rental-filter-form>.rally-rental-input-wrap{grid-column:1/-1}.rally-rental-filter-submit{grid-column:1/-1}.rally-rental-steps{padding:48px 24px}.rally-rental-steps-grid{grid-template-columns:1fr}.rally-rental-steps-grid>li{padding:18px}.rally-rental-final{padding:29px}}
+@media(max-width:550px){.rally-rental-hero-inner{padding:37px 20px 29px}.rally-rental-kicker{margin-bottom:17px;font-size:10px}.rally-rental-hero h1{font-size:clamp(39px,11vw,48px);line-height:1.16}.rally-rental-hero-copy>p{margin-top:12px;font-size:14px;line-height:1.7}.rally-rental-hero-actions{margin-top:20px;gap:8px}.rally-rental-primary,.rally-rental-secondary{min-height:46px;padding:0 12px;font-size:11px}.rally-rental-hero-points{gap:7px 11px;margin-top:18px}.rally-rental-hero-points li{font-size:10px}.rally-rental-art-photo{aspect-ratio:1.45}.rally-rental-art-sup{font-size:8px;padding:7px}.rally-rental-benefits>div{gap:8px;padding:12px 10px}.rally-rental-benefits b{font-size:10px}.rally-rental-benefits small{font-size:9px}.rally-rental-benefits svg{width:16px;height:16px}.rally-rental-catalog{padding:40px 0}.rally-rental-catalog-heading,.rally-rental-steps-heading{flex-direction:column;align-items:start;gap:8px}.rally-rental-catalog-heading h2,.rally-rental-steps-heading h2{font-size:31px}.rally-rental-catalog-heading>p{font-size:12px}.rally-rental-filter{padding:17px}.rally-rental-filter-form{display:flex}.rally-rental-results-top{flex-wrap:wrap}.rally-rental-results-hint{display:none}.rally-rental-item{grid-template-columns:36% minmax(0,1fr);min-height:210px}.rally-rental-item-media,.rally-rental-item-image{min-height:210px}.rally-rental-item-content{padding:13px 11px}.rally-rental-item-content h3{font-size:12px}.rally-rental-item-price strong{font-size:15px}.rally-rental-item-price{padding-top:12px}.rally-rental-item-bottom{margin-top:9px}.rally-rental-available,.rally-rental-unavailable{font-size:9px}.rally-rental-cards{gap:11px}.rally-rental-steps{padding:38px 16px 44px}.rally-rental-final{flex-direction:column;align-items:start;gap:16px;margin-top:32px;padding:25px 20px}.rally-rental-final>a{width:100%;justify-content:center}.rally-rental-disclaimer{font-size:10px}}
+@media(max-width:350px){.rally-rental-item{grid-template-columns:1fr}.rally-rental-item-media,.rally-rental-item-image{min-height:190px;height:190px}.rally-rental-hero-actions>a{width:100%}}
+@media(prefers-reduced-motion:reduce){.rally-rental-page *{transition:none!important;animation:none!important}}
+
+/* RALLY_RENTAL_HEADLINE_V7_1: balanced typography, no arbitrary line breaks */
+.rally-rental-hero-copy{min-width:0;max-width:100%}
+.rally-rental-hero h1{
+  max-width:none;
+  font-size:clamp(2.6rem,4vw,3.75rem);
+  line-height:1.16;
+  letter-spacing:-.012em;
+  text-wrap:balance;
+  word-break:normal;
+  overflow-wrap:normal;
+}
+.rally-rental-hero h1 span{display:inline-block;white-space:nowrap}
+.rally-rental-hero-copy>p{max-width:32rem;line-height:1.62}
+@media (max-width:800px){
+  .rally-rental-hero h1{font-size:clamp(2.4rem,6.4vw,3.35rem)}
+}
+@media (max-width:550px){
+  .rally-rental-hero h1{font-size:clamp(2rem,8.8vw,2.65rem);line-height:1.18}
+  .rally-rental-hero-copy>p{font-size:.9rem;line-height:1.65}
+}
+@media (max-width:350px){
+  .rally-rental-hero h1{font-size:1.9rem}
+}

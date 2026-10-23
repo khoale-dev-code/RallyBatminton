@@ -154,38 +154,40 @@ export function LookupPanel({ defaultCode, hotline, intro, turnstileSiteKey, ban
 
   return (
     <>
-      {/* PHẦN ĐẦU: giới thiệu + ô tra cứu ---------------------------------- */}
-      <section aria-labelledby="lookup-title" className="full-bleed relative isolate overflow-hidden bg-ink text-paper">
-        <div
-          aria-hidden
-          className="absolute inset-0 -z-10 bg-[radial-gradient(60rem_30rem_at_85%_-10%,rgb(98_187_70/0.35),transparent_60%),radial-gradient(30rem_20rem_at_0%_110%,rgb(98_187_70/0.18),transparent_70%)]"
-        />
-        <svg
-          aria-hidden
-          viewBox="0 0 610 268"
-          className="absolute top-1/2 -right-40 -z-10 hidden w-[52rem] -translate-y-1/2 -rotate-12 text-court opacity-25 lg:block"
-        >
-          <rect x="4" y="4" width="602" height="260" fill="none" stroke="currentColor" strokeWidth="3" />
-          <path
-            d="M4 24 H606 M4 244 H606 M305 4 V264 M215 4 V264 M395 4 V264 M40 4 V264 M570 4 V264 M40 134 H215 M395 134 H570"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-          />
-        </svg>
-
-        <div className="mx-auto grid max-w-7xl items-center gap-8 px-4 py-10 sm:px-6 sm:py-14 lg:grid-cols-[1fr_minmax(0,28rem)] lg:gap-16 lg:py-20">
-          {intro}
-
-          <div className="flex flex-col gap-4 rounded-[1.25rem] bg-paper p-5 text-ink shadow-[0_30px_60px_-30px_rgb(0_0_0/0.8)] ring-1 ring-paper/10 sm:p-7">
-            <div className="flex items-center justify-between gap-3">
-              <p className="font-display text-2xl">Tìm đơn đặt sân</p>
-              <span className="inline-flex items-center gap-1.5 text-xs text-muted">
-                <span aria-hidden className="size-2 rounded-full bg-court" />
-                Bảo mật
-              </span>
+      {/* RALLY_LOOKUP_V8: hero su dung chung luong tra cuu hien tai. */}
+      <section aria-labelledby="lookup-title" className="full-bleed rally-lookup-shell">
+        <div className="rally-lookup-top">
+          <div className="rally-lookup-container rally-lookup-top-grid">
+            {intro}
+            <div className="rally-lookup-court-graphic" aria-hidden>
+              <span className="rally-lookup-graphic-tag">RALLY / MATCH CENTER</span>
+              <svg viewBox="0 0 600 340" role="presentation" focusable="false">
+                <g transform="translate(100 46) rotate(-16 200 125)" fill="none" stroke="currentColor">
+                  <rect x="8" y="8" width="440" height="228" rx="2" strokeWidth="3" />
+                  <path d="M8 31H448 M8 213H448 M228 8V236 M162 8V236 M294 8V236 M52 8V236 M404 8V236 M52 122H162 M294 122H404" strokeWidth="2" />
+                  <path d="M228 -4V249" strokeWidth="7" stroke="#FFFFFF" />
+                </g>
+                <circle cx="480" cy="58" r="5" fill="#E31837" stroke="none" />
+                <circle cx="127" cy="284" r="4" fill="#FFFFFF" stroke="none" />
+              </svg>
+              <span className="rally-lookup-graphic-foot">YOUR GAME. YOUR SCHEDULE.</span>
             </div>
-            <div role="tablist" aria-label="Cách tra cứu" className="grid grid-cols-2 gap-1 rounded-control bg-hall p-1">
+          </div>
+        </div>
+        <div className="rally-lookup-container rally-lookup-formposition">
+          <div className="rally-lookup-card">
+            <div className="rally-lookup-formarea">
+              <header className="rally-lookup-formhead">
+                <div>
+                  <span className="rally-lookup-smalllabel">BẮT ĐẦU TRA CỨU</span>
+                  <h2>Tìm đơn đặt sân</h2>
+                </div>
+                <span className="rally-lookup-secure">
+                  <span aria-hidden className="size-2 rounded-full bg-[#006341]" />
+                  Xác minh an toàn
+                </span>
+              </header>
+            <div role="tablist" aria-label="Cách tra cứu" className="rally-lookup-tabs grid grid-cols-2 gap-1 rounded-control bg-hall p-1">
               {(
                 [
                   ['phone', 'Số điện thoại', Smartphone],
@@ -249,7 +251,7 @@ export function LookupPanel({ defaultCode, hotline, intro, turnstileSiteKey, ban
                   </p>
                 )}
               </div>
-              {turnstileSiteKey && <Turnstile siteKey={turnstileSiteKey} onToken={setToken} resetSignal={turnstileReset} />}
+              {turnstileSiteKey && <Turnstile siteKey={turnstileSiteKey} onToken={setToken} resetSignal={turnstileReset} action="phone_lookup" />}
               {phoneSearch.status === 'error' && !phoneSearch.fieldErrors?.phone && (
                 <p role="alert" className="rounded-control border-l-4 border-shuttle bg-shuttle-soft px-3 py-2.5 text-sm text-shuttle-deep">
                   {phoneSearch.message}
@@ -346,12 +348,31 @@ export function LookupPanel({ defaultCode, hotline, intro, turnstileSiteKey, ban
                 Quên mã? Chuyển sang tab Số điện thoại để xem các đơn đã đặt bằng số của bạn.
               </p>
             </form>
+            </div>
+            <aside className="rally-lookup-aside" aria-label="Hướng dẫn tra cứu nhanh">
+              <span className="rally-lookup-smalllabel">ĐƠN GIẢN VÀ RIÊNG TƯ</span>
+              <h3>Bạn có thể tra cứu theo hai cách.</h3>
+              <ol className="rally-lookup-aside-steps">
+                <li>
+                  <span aria-hidden className="rally-lookup-step-index">01</span>
+                  <div><strong>Số điện thoại</strong><p>Xem danh sách đơn theo số đã dùng khi đặt sân.</p></div>
+                </li>
+                <li>
+                  <span aria-hidden className="rally-lookup-step-index">02</span>
+                  <div><strong>Mã đơn</strong><p>Mở đơn cụ thể bằng mã đặt sân và số điện thoại.</p></div>
+                </li>
+              </ol>
+              <div className="rally-lookup-aside-note">
+                <Info className="size-5 shrink-0" aria-hidden />
+                <p>Không có mã đơn? Hãy chọn <strong>Số điện thoại</strong> ở bên trái.</p>
+              </div>
+            </aside>
           </div>
         </div>
       </section>
 
       {/* KẾT QUẢ hoặc HƯỚNG DẪN ------------------------------------------- */}
-      <div ref={resultRef} aria-live="polite" className="scroll-mt-24 pt-10 sm:pt-14">
+      <div ref={resultRef} aria-live="polite" className="rally-lookup-results scroll-mt-24">
         {booking ? (
           <section aria-label={`Đơn ${booking.code}`}>
             <BookingTicket

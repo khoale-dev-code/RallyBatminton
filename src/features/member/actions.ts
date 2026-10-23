@@ -5,6 +5,8 @@ import { redirect } from 'next/navigation';
 import { z } from 'zod';
 
 import { verifyTurnstile } from '@/features/booking/turnstile';
+import { CONSENT_TEXT } from '@/features/privacy/consent-text';
+import { recordAccountConsents } from '@/features/privacy/record-consent';
 import { siteOrigin } from '@/lib/site-origin';
 import { errorCode, toUserMessage } from '@/lib/errors';
 import { formError, formSuccess, formZodError, type FormState } from '@/lib/form-state';
@@ -42,6 +44,8 @@ const registerSchema = z
       confirm: z.string(),
       next: z.string().optional(),
       turnstileToken: z.string().optional(),
+      terms: zCheckbox().refine((v) => v, 'Vui lòng đánh dấu ô xác nhận để tạo tài khoản.'),
+      marketing: zCheckbox(),
     }),
     z.object({
       method: z.literal('email'),
@@ -52,6 +56,8 @@ const registerSchema = z
       confirm: z.string(),
       next: z.string().optional(),
       turnstileToken: z.string().optional(),
+      terms: zCheckbox().refine((v) => v, 'Vui lòng đánh dấu ô xác nhận để tạo tài khoản.'),
+      marketing: zCheckbox(),
     }),
   ])
   .refine((v) => v.password === v.confirm, { message: 'Hai lần nhập mật khẩu không khớp', path: ['confirm'] });
@@ -62,7 +68,7 @@ export async function registerAction(_prev: FormState, formData: FormData): Prom
   if (!parsed.success) return formZodError(parsed.error);
   const v = parsed.data;
 
-  if (!(await verifyTurnstile(v.turnstileToken ?? ''))) {
+  if (!(await verifyTurnstile(v.turnstileToken ?? '', 'member_auth'))) {
     return formError('Xác minh chống spam không thành công. Vui lòng thử lại.', { turnstileToken: 'Hãy xác minh lại' });
   }
   const secret = secretOrNull();
@@ -100,6 +106,7 @@ export async function registerAction(_prev: FormState, formData: FormData): Prom
       await secret.auth.admin.deleteUser(created.user.id);
       return formError(toUserMessage(profileError));
     }
+    await recordAccountConsents(created.user.id, v.marketing, CONSENT_TEXT.accountTerms);
     const { error: signInError } = await supabase.auth.signInWithPassword({ email, password: v.password });
     if (signInError) return formSuccess('Đã tạo tài khoản. Vui lòng đăng nhập.');
     redirect(next);
@@ -135,6 +142,7 @@ export async function registerAction(_prev: FormState, formData: FormData): Prom
     await secret.auth.admin.deleteUser(data.user.id);
     return formError(toUserMessage(profileError));
   }
+  await recordAccountConsents(data.user.id, v.marketing, CONSENT_TEXT.accountTerms);
   if (data.session) redirect(next);
   return formSuccess(`Đã gửi thư kích hoạt tới ${v.email}. Mở thư và bấm liên kết để hoàn tất đăng ký.`);
 }

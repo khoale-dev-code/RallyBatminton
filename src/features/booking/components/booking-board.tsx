@@ -205,7 +205,9 @@ export function BookingBoard({ branch, courts, priceRules, turnstileSiteKey, pay
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="rb-board-flow flex flex-col gap-6">
+      <div className="rb-board-step" aria-label="Chọn ngày chơi">
+        <div className="rb-board-step__title"><span>01</span><div><strong>Ngày bạn muốn chơi</strong><small>Chọn ngày còn trong thời gian mở đặt sân</small></div></div>
       <DateStrip
         days={days}
         selected={dateKey}
@@ -214,7 +216,9 @@ export function BookingBoard({ branch, courts, priceRules, turnstileSiteKey, pay
           setSelection(null);
         }}
       />
-
+      </div>
+      <div className="rb-board-step" aria-label="Chọn sân cầu lông">
+        <div className="rb-board-step__title"><span>02</span><div><strong>Chọn sân yêu thích</strong><small>Kiểm tra số khung giờ còn trống</small></div></div>
       <CourtTabs
         courts={courts}
         selected={courtId}
@@ -224,8 +228,10 @@ export function BookingBoard({ branch, courts, priceRules, turnstileSiteKey, pay
           setSelection((s) => (s?.courtId === id ? s : null));
         }}
       />
+      </div>
 
-      <div className="flex flex-col gap-3">
+      <div className="rb-board-step rb-board-step--times flex flex-col gap-3">
+        <div className="rb-board-step__title"><span>03</span><div><strong>Chọn khung giờ</strong><small>Chọn giờ bắt đầu và kết thúc</small></div></div>
         <div className="flex flex-wrap items-baseline justify-between gap-2 text-sm text-muted">
           <p>
             Chạm giờ bắt đầu, rồi chạm giờ kết thúc. Mỗi ô {branch.slotMinutes} phút; tối thiểu {branch.minBookingMinutes / 60} giờ.
@@ -244,11 +250,12 @@ export function BookingBoard({ branch, courts, priceRules, turnstileSiteKey, pay
           ref={summaryRef}
           id="thong-tin-dat-san"
           aria-labelledby="booking-summary-title"
-          className="scroll-mt-24 rounded-panel border border-ink bg-paper p-4 sm:p-5"
+          className="rb-booking-summary scroll-mt-24 rounded-panel border border-ink bg-paper p-4 sm:p-5"
         >
           <div className="flex flex-col gap-4">
             <div className="flex flex-wrap items-end justify-between gap-3">
               <div>
+                <p className="rb-booking-summary__eyebrow">BƯỚC 03 / XÁC NHẬN GIỮ SÂN</p>
                 <p id="booking-summary-title" className="text-sm text-muted">
                   {selectedCourt?.name}
                 </p>
@@ -278,7 +285,7 @@ export function BookingBoard({ branch, courts, priceRules, turnstileSiteKey, pay
           </div>
         </section>
       ) : (
-        <p className="rounded-panel border border-line bg-hall p-4 text-muted sm:p-5">
+        <p className="rb-booking-no-selection rounded-panel border border-line bg-hall p-4 text-muted sm:p-5">
           Chưa chọn giờ. Giá hiển thị theo giờ, cọc {branch.depositPercent}% khi xác nhận.
         </p>
       )}
@@ -287,7 +294,7 @@ export function BookingBoard({ branch, courts, priceRules, turnstileSiteKey, pay
       {selection && firstSlot && lastSlot && quote && !summaryVisible && (
         <a
           href="#thong-tin-dat-san"
-          className="sticky bottom-3 z-10 flex items-center justify-between gap-3 rounded-panel bg-ink px-4 py-3 text-paper shadow-lift md:hidden"
+          className="rb-booking-mobile-summary sticky bottom-3 z-10 flex items-center justify-between gap-3 rounded-panel bg-ink px-4 py-3 text-paper shadow-lift md:hidden"
         >
           <span className="tabular">
             {selectedCourt?.name}, {firstSlot.start}–{lastSlot.end}

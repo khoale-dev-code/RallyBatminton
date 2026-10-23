@@ -1,10 +1,12 @@
-import { Bell, CheckCircle2, CircleAlert, ClockCheck, Gauge, Landmark, Palette, Receipt, Webhook } from 'lucide-react';
+import { Bell, CheckCircle2, CircleAlert, ClockCheck, Gauge, Landmark, Palette, Receipt, ShieldCheck, Webhook } from 'lucide-react';
+import Link from 'next/link';
 
 import { ActionForm, CheckboxField, SelectField, SubmitButton, TextareaField, TextField } from '@/components/ui/form';
 import { PageHeader } from '@/components/ui/primitives';
 import { updateAttendanceSettingsAction } from '@/features/attendance/actions';
 import { getAttendanceSettings } from '@/features/attendance/queries';
 import { AlertSettings } from '@/features/payments/components/alert-settings';
+import { saveLegalInfoAction } from '@/features/privacy/actions';
 import { BankFields } from '@/features/payments/components/bank-fields';
 import { updateBankSettingsAction, updateBrandAction, updateTaxSettingsAction } from '@/features/settings/actions';
 import { ServerSpeed } from '@/features/settings/components/server-speed';
@@ -242,6 +244,68 @@ export default async function SettingsPage() {
               </div>
               <div>
                 <SubmitButton pendingLabel="Đang lưu…">Lưu cài đặt thuế</SubmitButton>
+              </div>
+            </ActionForm>
+          </SettingsSection>
+
+          <SettingsSection
+            id="phap-ly"
+            icon={ShieldCheck}
+            title="Pháp lý & dữ liệu cá nhân"
+            description="Bên kiểm soát dữ liệu cá nhân và đầu mối liên hệ — tự điền vào Chính sách bảo vệ dữ liệu cá nhân và chân trang website."
+            aside={
+              <div className={helpBox}>
+                <p className="font-medium">Văn bản, yêu cầu của khách, thời hạn lưu trữ</p>
+                <p className="text-muted">
+                  Sửa chính sách, điều khoản, xử lý yêu cầu xem / xóa dữ liệu và thời hạn lưu trữ ở mục Dữ liệu cá nhân.
+                </p>
+                <Link href="/admin/privacy" className="font-medium text-primary underline-offset-4 hover:underline">
+                  Mở Dữ liệu cá nhân
+                </Link>
+                <Link href="/legal/bao-mat" target="_blank" className="font-medium text-primary underline-offset-4 hover:underline">
+                  Xem chính sách trên website
+                </Link>
+              </div>
+            }
+          >
+            <ActionForm action={saveLegalInfoAction}>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <TextField
+                  name="legal_name"
+                  label="Tên doanh nghiệp / hộ kinh doanh"
+                  defaultValue={brand?.legal_name ?? ''}
+                  optional
+                  maxLength={200}
+                  hint="Đúng như trên giấy đăng ký kinh doanh."
+                />
+                <TextField
+                  name="legal_address"
+                  label="Địa chỉ đăng ký"
+                  defaultValue={brand?.legal_address ?? ''}
+                  optional
+                  maxLength={300}
+                />
+                <TextField
+                  name="privacy_contact"
+                  label="Đầu mối bảo vệ dữ liệu cá nhân"
+                  defaultValue={brand?.privacy_contact ?? ''}
+                  optional
+                  maxLength={120}
+                  placeholder="Ví dụ: Nguyễn Văn A — Quản lý"
+                  hint="Người / bộ phận nhận và xử lý yêu cầu của khách."
+                />
+                <TextField
+                  name="privacy_email"
+                  label="Email về dữ liệu cá nhân"
+                  type="email"
+                  defaultValue={brand?.privacy_email ?? ''}
+                  optional
+                  hint="Để trống thì dùng email liên hệ chung."
+                />
+              </div>
+              <p className="text-sm text-muted">Mã số thuế lấy ở mục Thuế phía trên.</p>
+              <div>
+                <SubmitButton pendingLabel="Đang lưu…">Lưu thông tin pháp lý</SubmitButton>
               </div>
             </ActionForm>
           </SettingsSection>

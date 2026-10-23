@@ -1,23 +1,14 @@
-import { Clock3, MapPin, Tags } from 'lucide-react';
+// RALLY_RENTAL_EXPERIENCE_V7
 import { type Metadata } from 'next';
 
-import { CatalogPage, type CatalogSearchParams } from '@/features/catalog/components/catalog-page';
+import { RallyRentalExperience, type RentalSearchParams } from '@/features/catalog/components/rally-rental-experience';
+import '@/features/catalog/rally-rentals-v7.css';
 
-export const metadata: Metadata = { title: 'Thuê thiết bị', description: 'Thuê vợt, giày cầu lông tại quầy các chi nhánh Rally.' };
+export const metadata: Metadata = {
+  title: 'Thuê vợt, giày cầu lông tại Rally',
+  description: 'Quên dụng cụ vẫn ra sân đúng hẹn. Khám phá vợt, giày và combo cho thuê, xem giá và tình trạng tại Rally.',
+};
 
-export default async function RentalsPage({ searchParams }: { searchParams: Promise<CatalogSearchParams> }) {
-  return (
-    <CatalogPage
-      kind="rental"
-      title="Thuê"
-      accent="thiết bị"
-      description="Quên đồ? Thuê vợt, giày ngay tại quầy — theo giờ, hết trận hoặc mang về."
-      highlights={[
-        { icon: MapPin, title: 'Tại sân hoặc mang về', text: 'Giá riêng cho từng hình thức' },
-        { icon: Tags, title: 'Giá theo gói', text: 'Giờ, hết trận, theo ngày' },
-        { icon: Clock3, title: 'Có thời gian ân hạn', text: 'Trả trễ ít không tính phí' },
-      ]}
-      searchParams={await searchParams}
-    />
-  );
+export default async function RentalsPage({ searchParams }: { searchParams: Promise<RentalSearchParams> }) {
+  return <RallyRentalExperience searchParams={await searchParams} />;
 }

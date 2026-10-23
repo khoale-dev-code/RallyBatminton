@@ -8,6 +8,7 @@ import { AdminShell } from '@/features/admin-shell/components/admin-shell';
 import { parseClosedGroups } from '@/features/admin-shell/lib/ui-prefs';
 import { buildNav, NAV_CLOSED_COOKIE, SIDEBAR_COOKIE } from '@/features/admin-shell/nav';
 import { getReviewCount } from '@/features/attendance/queries';
+import { getDataRequestCounts } from '@/features/privacy/queries';
 import { getActiveBranch, getStaffContext } from '@/lib/auth/context';
 import { createClient } from '@/lib/supabase/server';
 
@@ -37,17 +38,20 @@ export default async function AdminLayout({ children }: { children: ReactNode })
   const ctx = await getStaffContext();
   if (!ctx) redirect('/admin-login');
   if (!ctx.isActive) redirect('/admin-login?error=inactive');
-  const [active, cookieStore, pendingOvertime, attendanceReview] = await Promise.all([
+  const ownerReady = ctx.role === 'owner' && !ctx.mustChangePassword;
+  const [active, cookieStore, pendingOvertime, attendanceReview, privacy] = await Promise.all([
     getActiveBranch(ctx),
     cookies(),
     countPendingOvertime(ctx.employeeId),
     // Chủ sân: số yêu cầu sửa giờ + ca ra trễ chờ duyệt (huy hiệu menu Duyệt chấm công).
-    ctx.role === 'owner' && !ctx.mustChangePassword ? getReviewCount() : Promise.resolve(0),
+    ownerReady ? getReviewCount() : Promise.resolve(0),
+    // Chủ sân: yêu cầu về dữ liệu cá nhân đang mở (huy hiệu menu Dữ liệu cá nhân).
+    ownerReady ? getDataRequestCounts() : Promise.resolve({ open: 0, overdue: 0, unacknowledged: 0 }),
   ]);
   return (
     <ToastProvider>
       <AdminShell
-        nav={ctx.mustChangePassword ? [] : buildNav(ctx, { pendingOvertime, attendanceReview })}
+        nav={ctx.mustChangePassword ? [] : buildNav(ctx, { pendingOvertime, attendanceReview, privacyRequests: privacy.open })}
         displayName={ctx.displayName}
         roleLabel={ctx.role === 'owner' ? 'Chủ sân' : 'Nhân viên'}
         branches={ctx.mustChangePassword ? [] : ctx.branches.map((b) => ({ id: b.branchId, name: b.name }))}

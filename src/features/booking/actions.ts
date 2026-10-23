@@ -21,6 +21,8 @@ import {
   type PhoneBooking,
 } from './schemas';
 import { verifyTurnstile } from './turnstile';
+import { CONSENT_TEXT } from '@/features/privacy/consent-text';
+import { requestMeta } from '@/features/privacy/request-meta';
 
 /** Khách giữ sân không cần đăng nhập. Mọi kiểm tra cuối cùng (trùng giờ, giá, giới hạn) nằm trong database. */
 export async function createGuestHoldAction(input: GuestHoldInput): Promise<GuestHoldResult> {
@@ -35,7 +37,7 @@ export async function createGuestHoldAction(input: GuestHoldInput): Promise<Gues
   }
   const v = parsed.data;
 
-  if (!(await verifyTurnstile(v.turnstileToken))) {
+  if (!(await verifyTurnstile(v.turnstileToken, 'booking_hold'))) {
     return {
       ok: false,
       error: 'Xác minh chống spam không thành công. Vui lòng thử lại.',
@@ -44,15 +46,36 @@ export async function createGuestHoldAction(input: GuestHoldInput): Promise<Gues
   }
 
   const supabase = createSecretClient();
-  const { data, error } = await supabase.rpc('create_guest_booking_hold', {
+  const meta = await requestMeta('consent');
+  // Giữ sân + lưu bằng chứng xác nhận trong cùng một giao dịch (22_privacy_security.sql).
+  // Câu chữ lưu làm bằng chứng lấy ở máy chủ, không nhận từ trình duyệt.
+  let { data, error } = await supabase.rpc('create_guest_booking_hold_v2', {
     p_court_id: v.courtId,
     p_starts_at: v.startsAt,
     p_ends_at: v.endsAt,
     p_contact_name: v.contactName,
     p_phone: v.phone,
-    p_customer_note: v.note,
+    p_customer_note: v.note ?? null,
     p_idempotency_key: v.idempotencyKey,
+    p_terms_wording: CONSENT_TEXT.bookingTerms,
+    p_marketing: v.marketing,
+    p_marketing_wording: CONSENT_TEXT.marketing,
+    p_ip_hash: meta.ipHash,
+    p_user_agent: meta.userAgent,
   });
+  if (error?.code === 'PGRST202') {
+    // Chưa chạy 22_privacy_security.sql: vẫn cho giữ sân, nhưng ghi lỗi để chủ sân biết còn thiếu bằng chứng.
+    console.error('[booking] Thiếu create_guest_booking_hold_v2 — hãy chạy supabase/sql/22_privacy_security.sql.');
+    ({ data, error } = await supabase.rpc('create_guest_booking_hold', {
+      p_court_id: v.courtId,
+      p_starts_at: v.startsAt,
+      p_ends_at: v.endsAt,
+      p_contact_name: v.contactName,
+      p_phone: v.phone,
+      p_customer_note: v.note,
+      p_idempotency_key: v.idempotencyKey,
+    }));
+  }
   if (error) return { ok: false, error: toUserMessage(error), code: errorCode(error) ?? undefined };
   const booking = bookingSummarySchema.safeParse(data);
   if (!booking.success) return { ok: false, error: 'Không đọc được kết quả giữ sân. Vui lòng tra cứu lại đơn.' };
@@ -128,7 +151,7 @@ export interface PhoneLookupState extends FormState {
 export async function lookupByPhoneAction(_prev: PhoneLookupState, formData: FormData): Promise<PhoneLookupState> {
   const parsed = phoneOnlySchema.safeParse({ phone: formData.get('phone'), turnstileToken: formData.get('turnstileToken') });
   if (!parsed.success) return formZodError(parsed.error);
-  if (!(await verifyTurnstile(parsed.data.turnstileToken))) {
+  if (!(await verifyTurnstile(parsed.data.turnstileToken, 'phone_lookup'))) {
     return formError('Xác minh chống spam không thành công. Vui lòng thử lại.', { turnstileToken: 'Hãy xác minh lại' });
   }
   const { data, error } = await createSecretClient().rpc('lookup_guest_bookings_by_phone', {

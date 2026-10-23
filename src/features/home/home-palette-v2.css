@@ -1,0 +1,306 @@
+/* Rally Home Palette v2 - white headings, unified #B8F55D CTAs.
+   Page-scoped; leaves booking, admin, header and other routes untouched. */
+.rally-home {
+  --rally-accent: #b8f55d;
+  --rally-green: #b8f55d;
+  --rally-title: #fff;
+  --rally-foreground: #eaf4ec;
+  --rally-muted: #bed1c5;
+  --rally-card-bg: #103327;
+  --rally-card-border: rgba(194, 245, 193, .16);
+  color: var(--rally-foreground);
+  background: linear-gradient(180deg, #061e17 0%, #08261b 45%, #061e17 100%);
+  isolation: isolate;
+}
+
+/* Headings are one solid color, even where the original JSX has accent spans.
+   Overrides the text-gradient / -webkit-text-fill-color used by Three.js. */
+.rally-home :is(h1, h2, h3),
+.rally-home :is(h1, h2, h3) :is(span, a),
+.rally-home .r3d-heading-green {
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+  background-image: none !important;
+  text-shadow: none;
+}
+.rally-home :is(.rally-home-display, .rally-home-section-title, .r3d-heading) {
+  text-wrap: balance;
+}
+.rally-home .rally-home-eyebrow,
+.rally-home .r3d-eyebrow {
+  color: var(--rally-accent);
+}
+
+/* Hero retains the actual court photograph; only typographic accents change. */
+.rally-home .rally-home-hero-shade {
+  background:
+    linear-gradient(90deg, rgba(3, 19, 14, .97) 0%, rgba(3, 24, 17, .88) 41%, rgba(4, 25, 19, .33) 100%),
+    linear-gradient(0deg, rgba(4, 26, 18, .80), transparent 50%);
+}
+.rally-home .rally-home-hero-button {
+  background-color: var(--rally-accent);
+  color: #0b2617;
+  border: 1px solid transparent;
+}
+.rally-home .rally-home-hero-button:hover {
+  background-color: #caff83;
+}
+.rally-home #dat-san a[href="/branches"] {
+  border-color: rgba(184, 245, 93, .60);
+  color: var(--rally-accent);
+  background: rgba(8, 29, 22, .38);
+}
+.rally-home #dat-san a[href="/branches"]:hover {
+  background: rgba(184, 245, 93, .12);
+}
+
+/* Shared top navigation, but only while the user is on the homepage. */
+body:has(.rally-home) header.sticky a[href="/booking"].bg-court-strong {
+  background: #b8f55d !important;
+  color: #102716 !important;
+  box-shadow: 0 12px 24px -14px rgba(184, 245, 93, .64);
+}
+body:has(.rally-home) header.sticky a[href="/booking"].bg-court-strong:hover {
+  background: #cbff87 !important;
+}
+
+/* Search remains light for accessible form fields. */
+.rally-home .rally-home-search {
+  background: #fff;
+  border-color: #dfe9df;
+  color: #102c1a;
+}
+.rally-home .rally-home-search nav [aria-current="page"],
+.rally-home .rally-home-search button[type="submit"] {
+  background-color: var(--rally-accent) !important;
+  color: #102716 !important;
+  border-color: transparent !important;
+  box-shadow: 0 12px 28px -17px rgba(138, 203, 62, .85);
+}
+.rally-home .rally-home-search button[type="submit"]:hover,
+.rally-home .rally-home-search nav [aria-current="page"]:hover {
+  background-color: #cbff87 !important;
+}
+.rally-home .rally-home-search :is(select,input):focus-visible {
+  outline: 2px solid var(--rally-accent);
+  outline-offset: 2px;
+}
+
+/* Benefits: soft dark tiles instead of green text on white. */
+.rally-home section[aria-label="Ưu điểm khi đặt sân tại Rally"] ul {
+  border-color: rgba(184, 245, 93, .14);
+}
+.rally-home section[aria-label="Ưu điểm khi đặt sân tại Rally"] li > span:first-child {
+  background: #19452e;
+  color: var(--rally-accent);
+}
+.rally-home section[aria-label="Ưu điểm khi đặt sân tại Rally"] li strong {
+  color: #fff;
+}
+.rally-home section[aria-label="Ưu điểm khi đặt sân tại Rally"] li div > span {
+  color: var(--rally-muted);
+}
+
+/* Branch heading, introduction, carousel navigation. */
+.rally-home #chi-nhanh :is(p.text-sm, p.sm\:text-base) {
+  color: var(--rally-muted);
+}
+.rally-home #chi-nhanh > div > div:first-child a[href="/branches"] {
+  border-color: rgba(184, 245, 93, .65);
+  color: var(--rally-accent);
+  background: transparent;
+}
+.rally-home #chi-nhanh button[aria-label^="Xem chi nhánh"] {
+  background: #123a2b;
+  border-color: rgba(184, 245, 93, .36);
+  color: var(--rally-accent);
+}
+.rally-home #chi-nhanh button[aria-label^="Xem chi nhánh"]:hover {
+  background: #24513b;
+}
+.rally-home #chi-nhanh ul + a[href="/branches"] {
+  color: var(--rally-accent);
+}
+
+/* Cards inherit a consistent surface, strong white titles and muted copy. */
+.rally-home :is(.rally-home-branch-card, .rally-home-step, .rally-home-service, .rally-home-guide-card) {
+  background-color: var(--rally-card-bg) !important;
+  border-color: var(--rally-card-border) !important;
+  color: var(--rally-foreground);
+  box-shadow: 0 18px 42px -37px rgba(0, 0, 0, .75);
+}
+.rally-home :is(.rally-home-branch-card, .rally-home-step, .rally-home-service, .rally-home-guide-card):hover {
+  border-color: rgba(184, 245, 93, .55) !important;
+}
+.rally-home :is(.rally-home-branch-card, .rally-home-step, .rally-home-service, .rally-home-guide-card) p,
+.rally-home :is(.rally-home-branch-card, .rally-home-step, .rally-home-service, .rally-home-guide-card) p span,
+.rally-home .rally-home-branch-card div > span:not(.pointer-events-none) {
+  color: var(--rally-muted);
+}
+.rally-home :is(.rally-home-step, .rally-home-service, .rally-home-guide-card) :is(a, span).text-sm.font-semibold,
+.rally-home .rally-home-service .font-bold.text-sm,
+.rally-home .rally-home-service .text-\[\#176a3a\] {
+  color: var(--rally-accent);
+}
+.rally-home .rally-home-step .rally-home-display {
+  color: rgba(184, 245, 93, .28) !important;
+}
+.rally-home .rally-home-step .grid.size-12,
+.rally-home .rally-home-guide-card .grid.size-12 {
+  background: #214c32;
+  color: var(--rally-accent);
+}
+.rally-home .rally-home-guide-card span.font-display {
+  color: rgba(239, 255, 241, .55);
+}
+.rally-home .rally-home-service > div:last-child {
+  background: #edf4ec;
+  border-radius: 1.2rem 1.2rem 0 0;
+  margin: .9rem .75rem .7rem;
+  width: calc(100% - 1.5rem);
+}
+
+/* Branch card times are actual booking links; selected slot gets same lime. */
+.rally-home .rally-home-branch-card > div:last-child > div:nth-child(2),
+.rally-home .rally-home-branch-card .border-t {
+  border-color: rgba(184, 245, 93, .16);
+}
+.rally-home .rally-home-branch-card .grid.grid-cols-4 a {
+  background: #153e2d;
+  border-color: rgba(184, 245, 93, .50);
+  color: var(--rally-accent);
+}
+.rally-home .rally-home-branch-card .grid.grid-cols-4 a:hover {
+  background: var(--rally-accent);
+  border-color: var(--rally-accent);
+  color: #102716;
+}
+.rally-home .rally-home-branch-card .grid.grid-cols-4 a:first-child:not(:last-child) {
+  outline-offset: 1px;
+}
+.rally-home .rally-home-branch-card .grid.grid-cols-4 .bg-\[\#e5f5e3\] {
+  background: var(--rally-accent) !important;
+  color: #102716 !important;
+  border-color: var(--rally-accent) !important;
+}
+.rally-home .rally-home-branch-card .grid.grid-cols-4 span[title="Hết sân"],
+.rally-home .rally-home-branch-card .mt-5 > div {
+  background: #102d23;
+  color: #8eab9d;
+  border-color: rgba(184, 245, 93, .13);
+}
+.rally-home .rally-home-branch-card .font-display {
+  color: var(--rally-accent);
+}
+.rally-home .rally-home-branch-card > div:last-child > a:last-child {
+  background: var(--rally-accent) !important;
+  color: #102716 !important;
+  border-color: transparent;
+}
+.rally-home .rally-home-branch-card > div:last-child > a:last-child:hover {
+  background: #cbff87 !important;
+}
+
+/* Full-width middle CTA, steps and services. */
+.rally-home .rally-home-interlude {
+  border: 1px solid rgba(184, 245, 93, .20);
+  background: linear-gradient(110deg, #062c20 0%, #154931 100%);
+}
+.rally-home .rally-home-interlude a[href="/booking"] {
+  background: var(--rally-accent) !important;
+  color: #102716 !important;
+}
+.rally-home .rally-home-interlude a[href="/booking"]:hover {
+  background: #cbff87 !important;
+}
+.rally-home #cach-dat > div:first-child > p,
+.rally-home section[aria-labelledby="services-title"] > div:first-child > p,
+.rally-home section[aria-labelledby="guide-title"] > div:first-child > p {
+  color: var(--rally-muted);
+}
+.rally-home .rally-home-step span[aria-hidden="true"].mt-7,
+.rally-home .rally-home-service span.inline-flex,
+.rally-home .rally-home-guide-card span.inline-flex {
+  color: var(--rally-accent) !important;
+}
+.rally-home section[aria-labelledby="guide-title"] a[href="/guide"] {
+  border-color: rgba(184, 245, 93, .66);
+  color: var(--rally-accent);
+  background: transparent;
+}
+.rally-home section[aria-labelledby="guide-title"] a[href="/guide"]:hover {
+  background: rgba(184, 245, 93, .12);
+}
+
+/* Three.js Community: remove multi-color headline gradients, unify controls. */
+.rally-home .r3d-community { --r3d-accent: #b8f55d; }
+.rally-home .r3d-community .r3d-heading-green {
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+  background: none !important;
+}
+.rally-home .r3d-community .r3d-primary {
+  background: var(--rally-accent);
+  color: #102716;
+}
+.rally-home .r3d-community .r3d-primary:hover { background: #cbff87; }
+.rally-home .r3d-community .r3d-secondary {
+  color: var(--rally-accent);
+  border-color: rgba(184, 245, 93, .7);
+  background: transparent;
+}
+.rally-home .r3d-community .r3d-secondary:hover {
+  background: rgba(184, 245, 93, .12);
+}
+.rally-home .r3d-community .r3d-view-button {
+  background: var(--rally-accent);
+  color: #102716;
+  border-color: var(--rally-accent);
+}
+.rally-home .r3d-community .r3d-view-button:hover { background: #cbff87; }
+
+/* Final call-to-action: dark panel is required for solid WHITE headings. */
+.rally-home section[aria-labelledby="final-book-title"] {
+  background: radial-gradient(ellipse at 95% 5%, rgba(74, 153, 91, .19), transparent 62%), #123828;
+  border: 1px solid rgba(184, 245, 93, .26);
+  color: #fff;
+}
+.rally-home section[aria-labelledby="final-book-title"] > div > div:first-child {
+  color: var(--rally-accent);
+}
+.rally-home section[aria-labelledby="final-book-title"] p {
+  color: var(--rally-muted);
+}
+.rally-home section[aria-labelledby="final-book-title"] a[href="/booking"] {
+  background: var(--rally-accent) !important;
+  color: #102716 !important;
+}
+.rally-home section[aria-labelledby="final-book-title"] a[href="/booking"]:hover {
+  background: #cbff87 !important;
+}
+
+/* Accessibility, mobile layout and reduced-motion protections. */
+.rally-home :is(button, a):focus-visible {
+  outline: 3px solid var(--rally-accent) !important;
+  outline-offset: 3px;
+}
+@media (max-width: 767px) {
+  .rally-home .rally-home-hero-shade {
+    background: linear-gradient(90deg, rgba(3, 19, 14, .94), rgba(3, 24, 17, .73)),
+      linear-gradient(0deg, rgba(4, 26, 18, .83), transparent 65%);
+  }
+  .rally-home :is(.rally-home-step, .rally-home-service, .rally-home-guide-card) {
+    border-radius: 1.25rem;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .rally-home :is(.rally-home-branch-card, .rally-home-step, .rally-home-service, .rally-home-guide-card) {
+    transition: none !important;
+    transform: none !important;
+  }
+}
+@media (forced-colors: active) {
+  .rally-home :is(.rally-home-hero-button, .rally-home-search button, .r3d-primary, .r3d-view-button) {
+    border: 1px solid ButtonText !important;
+  }
+}

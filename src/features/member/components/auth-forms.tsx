@@ -6,6 +6,8 @@ import { useActionState, useId, useState } from 'react';
 
 import { ActionForm, PasswordField, SubmitButton, TextField, useFormFieldError } from '@/components/ui/form';
 import { Turnstile } from '@/features/booking/components/turnstile';
+import { ConsentChecks } from '@/features/privacy/components/consent-checks';
+import { CONSENT_TEXT, linkifyConsent } from '@/features/privacy/consent-text';
 import { cn } from '@/lib/cn';
 import { initialFormState } from '@/lib/form-state';
 
@@ -37,6 +39,17 @@ export function GoogleButton({ next, label = 'Tiếp tục với Google' }: { ne
         <GoogleLogo />
         {pending ? 'Đang chuyển tới Google…' : label}
       </button>
+      <p className="text-center text-xs leading-relaxed text-muted">
+        {linkifyConsent(CONSENT_TEXT.accountTermsGoogle).map((p, i) =>
+          p.href ? (
+            <a key={i} href={p.href} target="_blank" rel="noopener" className="underline underline-offset-2 hover:text-ink">
+              {p.text}
+            </a>
+          ) : (
+            <span key={i}>{p.text}</span>
+          ),
+        )}
+      </p>
       {state.status === 'error' && (
         <p role="alert" className="animate-fade flex items-start gap-2 rounded-control bg-amber-soft px-3 py-2.5 text-sm text-amber-deep">
           <Info className="mt-0.5 size-4 shrink-0" aria-hidden />
@@ -101,6 +114,11 @@ function StrengthMeter({ value }: { value: string }) {
   );
 }
 
+/** Ô xác nhận điều khoản (bắt buộc) + nhận tin (tự chọn) — lỗi hiện ngay dưới ô. */
+function AccountConsent() {
+  return <ConsentChecks kind="account" termsError={useFormFieldError('terms')} />;
+}
+
 function TurnstileField({ siteKey }: { siteKey: string }) {
   const [token, setToken] = useState('');
   const error = useFormFieldError('turnstileToken');
@@ -108,7 +126,7 @@ function TurnstileField({ siteKey }: { siteKey: string }) {
   return (
     <div className="flex flex-col gap-1">
       <input type="hidden" name="turnstileToken" value={token} />
-      <Turnstile siteKey={siteKey} onToken={(t) => setToken(t ?? '')} resetSignal={0} />
+      <Turnstile siteKey={siteKey} onToken={(t) => setToken(t ?? '')} resetSignal={0} action="member_auth" />
       {error && <p className="text-sm text-shuttle-deep">{error}</p>}
     </div>
   );
@@ -218,6 +236,7 @@ export function RegisterForm({ turnstileSiteKey, next }: { turnstileSiteKey: str
             tab <strong className="font-semibold text-ink">Email</strong>.
           </p>
         )}
+        <AccountConsent />
         <TurnstileField siteKey={turnstileSiteKey} />
         <SubmitButton variant="brand" size="lg" pendingLabel="Đang tạo tài khoản…">
           Tạo tài khoản

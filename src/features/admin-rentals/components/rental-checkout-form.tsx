@@ -274,7 +274,7 @@ export function RentalCheckoutForm({
               <TextField
                 name="collateral"
                 label="Vật cầm cọc"
-                hint="Bắt buộc khi mang ra ngoài."
+                hint="Bắt buộc khi mang ra ngoài. Chỉ ghi LOẠI giấy tờ (vd. CCCD) — không ghi số giấy tờ."
                 value={collateral}
                 onChange={(e) => setCollateral(e.target.value)}
                 maxLength={120}

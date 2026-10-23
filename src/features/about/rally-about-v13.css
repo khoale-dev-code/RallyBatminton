@@ -1,0 +1,252 @@
+/* Rally About V13 / Scoped to /about. No global color-token or navbar changes. */
+.rabout {
+  --ra-green: #006341;
+  --ra-red: #e31837;
+  --ra-ink: #2b2b2b;
+  --ra-grey: #5d6762;
+  --ra-mist: #f3f7f5;
+  --ra-line: #dfe8e3;
+  color: var(--ra-ink);
+  padding-bottom: clamp(40px, 6vw, 80px);
+}
+.rabout *, .rabout *::before, .rabout *::after { box-sizing: border-box; }
+.rabout h1, .rabout h2, .rabout h3 { letter-spacing: -.025em; text-wrap: balance; }
+.rabout h1, .rabout h2 { font-weight: 600; }
+.rabout img { display: block; }
+.rabout a:focus-visible, .rabout button:focus-visible { outline: 3px solid var(--ra-red); outline-offset: 4px; }
+.rabout-container { width: min(100% - 48px, 1200px); margin-inline: auto; }
+.rabout-section { padding-block: clamp(66px, 7vw, 112px); }
+.rabout-kicker { margin: 0 0 14px; color: var(--ra-green); font-size: .73rem; font-weight: 800; letter-spacing: .15em; text-transform: uppercase; }
+.rabout-kicker-on-dark { color: #a3e2c0; }
+.rabout-section-header { display: flex; justify-content: space-between; align-items: end; gap: 36px; margin-bottom: 36px; }
+.rabout-section-header h2 { font-size: clamp(2.3rem, 4.4vw, 4.1rem); line-height: 1.13; margin: 0; }
+.rabout-section-header > p { max-width: 355px; margin: 0 0 5px; color: var(--ra-grey); line-height: 1.75; font-size: .98rem; }
+.rabout-button { display: inline-flex; gap: 13px; align-items: center; justify-content: center; min-height: 52px; padding: 13px 22px; text-decoration: none; border: 1px solid transparent; border-radius: 9px; font-weight: 750; font-size: .93rem; white-space: nowrap; transition: background .2s ease, transform .2s ease, border-color .2s ease; }
+.rabout-button:hover { transform: translateY(-2px); }
+.rabout-button svg { width: 17px; height: 17px; flex-shrink: 0; }
+.rabout-button-red { background: var(--ra-red); color: white; }
+.rabout-button-red:hover { background: #bf102b; }
+.rabout-button-ghost { color: white; border-color: rgb(255 255 255 / .50); background: rgb(0 0 0 / .14); }
+.rabout-button-ghost:hover { background: rgb(255 255 255 / .10); border-color: white; }
+.rabout-button-white { color: var(--ra-green); background: white; }
+.rabout-button-white:hover { background: #e7f2ed; }
+
+/* HERO: striking photography, purposeful space for headline, not a wall of copy. */
+.rabout-hero { isolation: isolate; position: relative; min-height: 610px; display: flex; align-items: stretch; overflow: hidden; background: #061e17; color: white; }
+.rabout-hero-photo { z-index: -2; object-fit: cover; object-position: 50% 53%; }
+.rabout-hero::before { content: ''; position: absolute; inset: 0; z-index: -1; background: linear-gradient(90deg, rgb(0 22 16 / .96) 0%, rgb(0 38 26 / .88) 34%, rgb(0 28 20 / .41) 75%, rgb(0 21 17 / .18) 100%),linear-gradient(0deg,rgb(0 16 12 / .65),transparent 50%); }
+.rabout-hero-inner { display: flex; flex-direction: column; justify-content: space-between; padding-block: clamp(82px, 8vw, 124px) 31px; position: relative; }
+.rabout-hero-copy { max-width: 720px; }
+.rabout-eyebrow { display: inline-flex; align-items: center; gap: 9px; letter-spacing: .17em; font-size: .72rem; font-weight: 850; }
+.rabout-eyebrow-light { color: #e9f7f0; }
+.rabout-signal { background: var(--ra-red); width: 9px; height: 9px; border-radius: 50%; box-shadow: 0 0 0 5px rgb(227 24 55 / .14); }
+.rabout-hero h1 { font-size: clamp(3.45rem, 6.1vw, 6rem); line-height: 1.06; max-width: 780px; margin: 26px 0 18px; color: white; }
+.rabout-hero-lead { margin: 0; max-width: 540px; color: #e3f0ea; font-size: clamp(1rem, 1.3vw, 1.15rem); line-height: 1.75; }
+.rabout-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 29px; }
+.rabout-hero-note { display: flex; align-items: center; gap: 18px; width: fit-content; max-width: 100%; border-top: 1px solid rgb(255 255 255 / .28); padding-top: 17px; font-size: .83rem; font-weight: 550; color: #dcece4; line-height: 1.55; }
+.rabout-note-number { font-family: 'Oswald Variable','Oswald',sans-serif; font-size: 2.3rem; line-height: 1; font-weight: 700; color: white; letter-spacing: -.04em; }
+.rabout-note-number span { color: var(--ra-red); }
+
+.rabout-utility-strip { background: var(--ra-green); color: white; }
+.rabout-strip-inner { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px 22px; padding-block: 17px; }
+.rabout-strip-inner > span { display: inline-flex; align-items: center; gap: 10px; font-size: .85rem; font-weight: 650; }
+.rabout-strip-inner svg { width: 16px; height: 16px; background: white; color: var(--ra-green); border-radius: 50%; padding: 3px; }
+
+/* Mission section / asymmetrical visual gallery */
+.rabout-story-heading { display: grid; grid-template-columns: 1fr .75fr; align-items: end; gap: 50px; margin-bottom: 35px; }
+.rabout-story-heading h2 { margin: 0; max-width: 620px; font-size: clamp(2.55rem, 4.7vw, 4.4rem); line-height: 1.12; }
+.rabout-story-copy { color: var(--ra-grey); font-size: .99rem; line-height: 1.85; }
+.rabout-story-copy p { margin: 0 0 12px; }
+.rabout-story-grid { display: grid; grid-template-columns: minmax(0,1.65fr) minmax(0,.8fr); gap: 14px; }
+.rabout-story-photo { min-width: 0; position: relative; overflow: hidden; border-radius: 15px; background: #e7efea; }
+.rabout-story-photo-main { min-height: clamp(320px, 41vw, 490px); }
+.rabout-photo-fill { position: absolute; inset: 0; width: 100%; height: 100%; }
+.rabout-photo-fill img, .rabout-img-cover { object-fit: cover; }
+.rabout-img-contain { object-fit: contain; padding: 11px; }
+.rabout-story-photo-main:after { content:''; position: absolute; z-index: 1; inset: 35% 0 0; pointer-events: none; background: linear-gradient(0deg,rgb(0 22 17 / .75),transparent); }
+.rabout-photo-label { position: absolute; z-index: 2; left: 26px; right: 24px; bottom: 26px; display: flex; flex-direction: column; gap: 7px; color: white; }
+.rabout-photo-label span { font-size: .7rem; font-weight: 800; letter-spacing: .14em; }
+.rabout-photo-label strong { font-family: 'Oswald Variable','Oswald',sans-serif; font-weight: 650; font-size: clamp(1.6rem, 2.9vw, 2.45rem); line-height: 1.2; }
+.rabout-story-photo-small { background: #e8f0eb; display: flex; align-items: center; justify-content: center; }
+.rabout-story-photo-small .rabout-img-contain { padding: 24px 10px 65px; }
+.rabout-small-photo-caption { position: absolute; z-index: 1; background: var(--ra-green); color: white; inset-inline: 0; bottom: 0; padding: 17px 20px; font-weight: 700; font-size: .84rem; }
+
+/* Truthful counters only when branch data is available. */
+.rabout-metrics { display: grid; grid-template-columns: 180px 1fr; gap: 28px; align-items: center; padding: 25px 24px; border: 1px solid var(--ra-line); border-radius: 14px; background: var(--ra-mist); }
+.rabout-metrics-heading { color: var(--ra-green); font-size: .73rem; font-weight: 900; letter-spacing: .14em; line-height: 1.6; }
+.rabout-metrics-list { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; }
+.rabout-metrics-list > div { min-width: 120px; display: flex; flex-direction: column; gap: 4px; }
+.rabout-metrics-list strong { color: var(--ra-ink); font-family: 'Oswald Variable','Oswald',sans-serif; font-size: clamp(1.8rem, 2.65vw, 2.9rem); line-height: 1.1; font-weight: 650; white-space: nowrap; }
+.rabout-metrics-list span { font-size: .77rem; color: var(--ra-grey); }
+
+/* Product-like storytelling cards, with one anchored main story. */
+.rabout-benefit-grid { display: grid; grid-template-columns: 1.12fr .94fr .94fr; grid-template-rows: repeat(2,minmax(190px,auto)); gap: 15px; }
+.rabout-benefit-card { min-width: 0; position: relative; display: flex; flex-direction: column; justify-content: space-between; gap: 34px; overflow: hidden; background: #f8faf9; border: 1px solid var(--ra-line); border-radius: 15px; padding: 26px; transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease; }
+.rabout-benefit-card:hover { transform: translateY(-3px); border-color: #b7d5c6; box-shadow: 0 12px 25px -20px rgb(0 39 23 / .48); }
+.rabout-benefit-card:nth-child(2) { grid-column: 2/4; }
+.rabout-benefit-featured { grid-row: span 2; background: var(--ra-green); color: white; border-color: var(--ra-green); min-height: 400px; }
+.rabout-benefit-featured::after { content:''; position:absolute; right: -75px; top: 80px; width: 280px; height: 380px; transform: rotate(-25deg); border: 2px solid rgb(255 255 255 / .13); box-shadow: 0 0 0 28px rgb(255 255 255 / .02), 0 0 0 58px rgb(255 255 255 / .025); pointer-events: none; }
+.rabout-benefit-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; position: relative; z-index: 1; }
+.rabout-benefit-icon { display: grid; place-items: center; width: 51px; height: 51px; background: #e7f1eb; color: var(--ra-green); border-radius: 12px; }
+.rabout-benefit-icon svg { width: 24px; height: 24px; }
+.rabout-benefit-featured .rabout-benefit-icon { color: var(--ra-green); background: white; }
+.rabout-benefit-number { font-family: 'Oswald Variable','Oswald',sans-serif; font-weight: 700; font-size: 2.5rem; line-height: 1; color: #cbdad0; }
+.rabout-benefit-featured .rabout-benefit-number { color: rgb(255 255 255 / .28); }
+.rabout-benefit-body { z-index: 1; position: relative; }
+.rabout-benefit-body h3 { font-size: clamp(1.37rem, 1.8vw, 1.75rem); font-weight: 650; margin: 0 0 8px; line-height: 1.25; }
+.rabout-benefit-body p { max-width: 500px; color: var(--ra-grey); font-size: .89rem; line-height: 1.75; margin: 0; }
+.rabout-benefit-featured .rabout-benefit-body h3 { font-size: clamp(2.2rem, 3vw, 3.2rem); }
+.rabout-benefit-featured .rabout-benefit-body p { color: #dfefe6; font-size: 1rem; }
+.rabout-benefit-link { position: relative; z-index: 1; display: inline-flex; align-items: center; gap: 9px; width: fit-content; margin-top: 2px; border-bottom: 1px solid rgb(255 255 255 / .6); font-size: .9rem; font-weight: 750; color: white; }
+.rabout-benefit-link svg { width: 17px; height: 17px; }
+
+/* Amenity section */
+.rabout-experience { isolation: isolate; overflow: hidden; background: #063e2c; color: white; }
+.rabout-experience-inner { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,.95fr); gap: 54px; align-items: center; padding-block: clamp(75px, 8vw, 120px); }
+.rabout-experience-copy h2 { font-size: clamp(2.7rem, 4.7vw, 4.7rem); line-height: 1.12; margin: 0 0 17px; color: white; }
+.rabout-experience-copy > p:not(.rabout-kicker) { max-width: 525px; color: #d6e7de; line-height: 1.78; font-size: .99rem; }
+.rabout-amenity-list { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px 16px; margin: 25px 0 30px; }
+.rabout-amenity-list span { display: flex; align-items: center; gap: 9px; font-size: .86rem; font-weight: 600; color: #f3fff8; }
+.rabout-amenity-list svg { width: 17px; height: 17px; color: #a5dec0; flex-shrink: 0; }
+.rabout-experience-art { position: relative; min-width: 0; min-height: 410px; border: 1px solid rgb(255 255 255 / .19); border-radius: 22px; background: radial-gradient(circle at 50% 35%, #286d4e 0%, #105339 57%, #083c2b 100%); overflow: hidden; }
+.rabout-experience-art:before { content:''; position: absolute; width: 78%; aspect-ratio: 1; border: 1px solid rgb(255 255 255 / .12); border-radius: 50%; left: 12%; top: 8%; box-shadow: 0 0 0 40px rgb(255 255 255 / .025), 0 0 0 90px rgb(255 255 255 / .025); }
+.rabout-experience-photo { position: absolute; inset: 25px; }
+.rabout-experience-photo img { mix-blend-mode: normal; filter: drop-shadow(0 20px 20px rgb(0 0 0 / .13)); }
+.rabout-experience-stamp { position: absolute; bottom: 28px; left: 28px; font-family: 'Oswald Variable','Oswald',sans-serif; font-weight: 750; font-size: 2.6rem; line-height: .94; letter-spacing: -.02em; color: white; }
+
+/* Branch map: preserve existing interactive selection and booking logic. */
+.rabout-location { scroll-margin-top: 95px; }
+.rabout-location .rabout-section-header { margin-bottom: 28px; }
+.rabout-location > div:has(iframe) { border-radius: 18px; }
+.rabout-branch-strip { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-top: 20px; background: var(--ra-mist); border: 1px solid var(--ra-line); padding: 20px 25px; border-radius: 14px; }
+.rabout-branch-chip { display: inline-flex; align-items: center; gap: 7px; color: var(--ra-green); font-size: .88rem; font-weight: 850; }
+.rabout-branch-chip svg { width: 16px; height: 16px; }
+.rabout-branch-strip p { margin: 4px 0 6px; font-weight: 550; font-size: .91rem; }
+.rabout-branch-hours { display: inline-flex; align-items: center; gap: 7px; font-size: .81rem; color: var(--ra-grey); }
+.rabout-branch-hours svg { width: 15px; height: 15px; }
+.rabout-text-link { color: var(--ra-green); font-weight: 800; white-space: nowrap; font-size: .89rem; display: inline-flex; align-items: center; gap: 7px; }
+.rabout-text-link svg { width: 16px; height: 16px; }
+.rabout-empty { border: 1px dashed var(--ra-line); padding: 35px; border-radius: 14px; color: var(--ra-grey); }
+
+/* Final conversion / one action. */
+.rabout-closing { padding-top: 2px; padding-bottom: 10px; }
+.rabout-closing-inner { isolation: isolate; position: relative; display: flex; align-items: center; justify-content: space-between; gap: 30px; overflow: hidden; border-radius: 18px; background: var(--ra-green); color: white; padding: clamp(32px, 5vw, 58px); }
+.rabout-closing-inner > div:first-child { z-index: 1; }
+.rabout-closing-inner h2 { font-size: clamp(2.6rem, 4.7vw, 4.65rem); line-height: 1.1; margin: 0 0 12px; color: white; }
+.rabout-closing-inner p:not(.rabout-kicker) { margin: 0; max-width: 500px; color: #e2f3e9; font-size: .95rem; }
+.rabout-closing-inner .rabout-button { z-index: 2; }
+.rabout-help-line { margin-top: 9px !important; }
+.rabout-help-line a { color: white; text-decoration: underline; text-underline-offset: 3px; font-weight: 700; }
+.rabout-closing-drawing { position: absolute; z-index: -1; right: 7%; top: -42px; font: 800 19rem/1 'Oswald Variable','Oswald',sans-serif; color: rgb(255 255 255 / .055); transform: rotate(-8deg); pointer-events: none; }
+
+@media (max-width: 1023px) {
+  .rabout-hero { min-height: 585px; }
+  .rabout-story-heading { grid-template-columns: 1fr .95fr; gap: 28px; }
+  .rabout-benefit-grid { grid-template-columns: repeat(2,minmax(0,1fr)); grid-template-rows: auto; }
+  .rabout-benefit-card, .rabout-benefit-featured { grid-column: auto !important; grid-row: auto; min-height: 255px; }
+  .rabout-benefit-featured .rabout-benefit-body h3 { font-size: 2rem; }
+  .rabout-experience-inner { gap: 25px; }
+  .rabout-experience-art { min-height: 340px; }
+  .rabout-metrics { grid-template-columns: 1fr; gap: 15px; }
+  .rabout-metrics-list > div { flex: 1; }
+}
+@media (max-width: 767px) {
+  .rabout-container { width: min(100% - 36px, 1200px); }
+  .rabout-hero { min-height: 595px; }
+  .rabout-hero::before { background: linear-gradient(90deg,rgb(0 29 19 / .95),rgb(0 30 22 / .68)),linear-gradient(0deg,rgb(0 20 15 / .66),transparent); }
+  .rabout-hero-photo { object-position: 67% 50%; }
+  .rabout-hero-inner { padding-top: 86px; padding-bottom: 24px; }
+  .rabout-hero h1 { font-size: clamp(3.4rem, 10vw, 4.7rem); line-height: 1.07; }
+  .rabout-hero-lead { max-width: 530px; }
+  .rabout-strip-inner { gap: 12px; padding-block: 16px; }
+  .rabout-strip-inner > span { width: calc(50% - 12px); font-size: .77rem; }
+  .rabout-section-header, .rabout-story-heading { display: block; }
+  .rabout-section-header > p, .rabout-story-copy { margin-top: 17px; max-width: 610px; }
+  .rabout-story-grid { grid-template-columns: 1fr; }
+  .rabout-story-photo-main { min-height: 350px; }
+  .rabout-story-photo-small { min-height: 245px; }
+  .rabout-story-photo-small .rabout-img-contain { padding: 18px 30px 70px; }
+  .rabout-metrics-list { display: grid; grid-template-columns: repeat(2,1fr); row-gap: 18px; }
+  .rabout-experience-inner { grid-template-columns: 1fr; }
+  .rabout-experience-art { min-height: 305px; }
+  .rabout-branch-strip { align-items: flex-start; flex-direction: column; }
+  .rabout-closing-inner { align-items: flex-start; flex-direction: column; }
+  .rabout-closing-drawing { right: -8%; bottom: -20px; top: auto; font-size: 12rem; }
+}
+@media (max-width: 519px) {
+  .rabout-container { width: min(100% - 32px, 1200px); }
+  .rabout-section { padding-block: 56px; }
+  .rabout-hero { min-height: 635px; }
+  .rabout-hero h1 { font-size: clamp(3.35rem, 12.4vw, 4.1rem); max-width: 420px; }
+  .rabout-hero-lead { font-size: .94rem; line-height: 1.75; }
+  .rabout-actions { align-items: stretch; flex-direction: column; }
+  .rabout-actions .rabout-button { width: 100%; }
+  .rabout-hero-note { font-size: .75rem; gap: 12px; }
+  .rabout-note-number { font-size: 1.8rem; }
+  .rabout-strip-inner > span { width: 100%; }
+  .rabout-story-heading h2, .rabout-section-header h2 { font-size: 2.45rem; }
+  .rabout-story-photo-main { min-height: 290px; }
+  .rabout-photo-label { left: 18px; bottom: 18px; right: 14px; }
+  .rabout-photo-label strong { font-size: 1.55rem; }
+  .rabout-story-photo-small { min-height: 205px; }
+  .rabout-metrics { padding: 22px 18px; }
+  .rabout-metrics-list > div { min-width: 0; }
+  .rabout-metrics-list strong { font-size: 2rem; }
+  .rabout-benefit-grid { grid-template-columns: 1fr; }
+  .rabout-benefit-card, .rabout-benefit-featured { min-height: 205px; padding: 22px; }
+  .rabout-benefit-featured { min-height: 320px; }
+  .rabout-benefit-body h3 { font-size: 1.6rem; }
+  .rabout-experience-inner { padding-block: 65px; }
+  .rabout-experience-copy h2 { font-size: 3rem; }
+  .rabout-amenity-list { gap: 11px; }
+  .rabout-amenity-list span { font-size: .78rem; }
+  .rabout-experience-art { min-height: 260px; }
+  .rabout-experience-stamp { font-size: 2rem; left: 18px; bottom: 17px; }
+  .rabout-branch-strip { padding: 18px; }
+  .rabout-closing-inner { padding: 27px 23px; }
+  .rabout-closing-inner h2 { font-size: 2.85rem; }
+  .rabout-closing-inner .rabout-button { width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .rabout-button, .rabout-benefit-card { transition: none; }
+  .rabout-button:hover, .rabout-benefit-card:hover { transform: none; }
+}
+
+
+/* RALLY ABOUT PHOTO SWAP V13.1: user provided photographic assets */
+.rabout-story-photo-main .rabout-photo-replacement-story {
+  object-fit: cover;
+  object-position: 50% 44%;
+}
+.rabout-experience-art {
+  background: #071c18;
+}
+.rabout-experience-art::before {
+  display: none;
+}
+.rabout-experience-photo {
+  inset: 0;
+}
+.rabout-experience-photo .rabout-photo-replacement-amenities {
+  object-fit: cover;
+  object-position: center 47%;
+  padding: 0;
+  filter: none;
+}
+.rabout-experience-art::after {
+  content: '';
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0, 19, 14, .75) 0%, rgba(0, 20, 15, .05) 50%, rgba(0, 20, 15, .12) 100%);
+  pointer-events: none;
+}
+.rabout-experience-stamp {
+  z-index: 1;
+  text-shadow: 0 3px 14px rgba(0, 0, 0, .5);
+}
+@media (max-width: 767px) {
+  .rabout-story-photo-main .rabout-photo-replacement-story { object-position: 55% 45%; }
+  .rabout-experience-photo .rabout-photo-replacement-amenities { object-position: center 46%; }
+}
+

@@ -2,6 +2,8 @@ import 'server-only';
 
 import { NextResponse, type NextRequest } from 'next/server';
 
+import { CONSENT_TEXT } from '@/features/privacy/consent-text';
+import { recordAccountConsents } from '@/features/privacy/record-consent';
 import { errorCode } from '@/lib/errors';
 import { type AppSupabaseClient } from '@/lib/supabase/server';
 
@@ -20,6 +22,11 @@ export async function finishMemberAuth(request: NextRequest, supabase: AppSupaba
     const code = errorCode(error);
     const reason = code === 'STAFF_ACCOUNT' ? 'staff' : code === 'MEMBER_LOCKED' ? 'locked' : 'callback';
     return NextResponse.redirect(new URL(`/login?error=${reason}`, url.origin));
+  }
+  if (!recovery) {
+    // Tài khoản mới tạo bằng Google: lưu bằng chứng "tiếp tục với Google = đồng ý điều khoản" (chỉ ghi lần đầu).
+    const { data: auth } = await supabase.auth.getUser();
+    if (auth.user) await recordAccountConsents(auth.user.id, false, CONSENT_TEXT.accountTermsGoogle);
   }
   const mustChange = !recovery && typeof data === 'object' && data !== null && !Array.isArray(data) && data.must_change_password === true;
   return NextResponse.redirect(new URL(mustChange ? '/account/profile?doi-mat-khau=1' : next, url.origin));

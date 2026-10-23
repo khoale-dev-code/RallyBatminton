@@ -8,6 +8,7 @@ interface TurnstileRenderOptions {
   'expired-callback': () => void;
   'error-callback': () => void;
   theme: 'light' | 'dark' | 'auto';
+  action?: string;
   language: string;
   appearance: 'always' | 'execute' | 'interaction-only';
 }
@@ -49,10 +50,12 @@ interface TurnstileProps {
   onToken: (token: string | null) => void;
   /** Đổi giá trị để yêu cầu xác minh lại (sau khi gửi thất bại). */
   resetSignal: number;
+  /** Tên thao tác (a-z, 0-9, _ -). Máy chủ kiểm tra lại → mã xác minh của form này không dùng được cho form khác. */
+  action?: string;
 }
 
 /** Cloudflare Turnstile — chống bot cho form giữ sân. */
-export function Turnstile({ siteKey, onToken, resetSignal }: TurnstileProps) {
+export function Turnstile({ siteKey, onToken, resetSignal, action }: TurnstileProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const widgetRef = useRef<string | null>(null);
   const emit = useEffectEvent((token: string | null) => onToken(token));
@@ -70,6 +73,7 @@ export function Turnstile({ siteKey, onToken, resetSignal }: TurnstileProps) {
           theme: 'light',
           language: 'vi',
           appearance: 'always',
+          ...(action ? { action } : {}),
         });
       })
       .catch(() => emit(null));
@@ -78,7 +82,7 @@ export function Turnstile({ siteKey, onToken, resetSignal }: TurnstileProps) {
       if (widgetRef.current && window.turnstile) window.turnstile.remove(widgetRef.current);
       widgetRef.current = null;
     };
-  }, [siteKey]);
+  }, [siteKey, action]);
 
   useEffect(() => {
     if (resetSignal > 0 && widgetRef.current && window.turnstile) {

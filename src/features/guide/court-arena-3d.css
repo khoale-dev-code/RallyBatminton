@@ -1,0 +1,52 @@
+.rga-root{background:#062e23;color:#fff;border-radius:22px;overflow:hidden;border:1px solid rgba(231,252,238,.12);box-shadow:0 22px 56px -32px rgba(0,60,37,.65);min-width:0}
+.rga-toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:15px 18px 7px}
+.rga-toolbar-heading{display:flex;align-items:center;gap:9px;font-size:11px;font-weight:800;letter-spacing:.13em;color:#dbf9e9}
+.rga-live-dot{width:7px;height:7px;border-radius:50%;background:#a7f76d;box-shadow:0 0 12px #a7f76d}
+.rga-switch{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:1px solid #52796a;background:#123e30;color:#fff;border-radius:999px;padding:8px 12px;font-size:12px;font-weight:700;min-height:37px;white-space:nowrap;cursor:pointer}
+.rga-switch:hover,.rga-scene-buttons button:hover:not(:disabled){background:#246247}
+.rga-modes{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;margin:10px 18px 12px;border-radius:11px;background:rgba(255,255,255,.07);padding:5px}
+.rga-modes button{border:0;border-radius:8px;padding:12px 6px;min-height:44px;font-weight:700;color:#dbece5;font-size:13px;cursor:pointer;background:transparent;transition:background .16s ease,color .16s ease}
+.rga-modes button:hover:not(.is-active){background:#265345}
+.rga-modes button.is-active{background:#54b83e;color:#092a1c;box-shadow:0 2px 12px #071e1580}
+.rga-stage{height:clamp(275px,29vw,425px);min-height:0;position:relative;isolation:isolate;background:radial-gradient(ellipse at 55% 58%,#156448 0%,#093b2e 55%,#06281f 100%);overflow:hidden}
+.rga-stage canvas{display:block;width:100%;height:100%;touch-action:pan-y}
+.rga-plan{width:100%;height:100%;object-fit:contain;display:block;padding:12px}
+.rga-loading{position:absolute;inset:0;z-index:2;display:flex;align-items:center;justify-content:center;color:#daeee4;font-size:13px;letter-spacing:.02em;background:linear-gradient(0deg,rgba(4,36,26,.65),rgba(4,36,26,.4));pointer-events:none}
+.rga-stage-meta{position:absolute;bottom:10px;left:13px;display:flex;gap:12px;z-index:3;font-size:10px;letter-spacing:.06em;font-weight:700;color:#f4fff7;pointer-events:none;text-shadow:0 2px 6px #000a}
+.rga-stage-meta span{display:inline-flex;align-items:center;gap:5px}
+.rga-stage-meta i{height:8px;width:8px;border-radius:50%;display:inline-block}
+.rga-player-red{background:#ff3650}.rga-player-green{background:#c9f578}
+.rga-controls{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:14px 18px 10px;border-top:1px solid #346350}
+.rga-scene-buttons{display:flex;gap:7px;flex-wrap:wrap}
+.rga-scene-buttons button{border:1px solid #406e5c;border-radius:9px;padding:9px 12px;background:#113c2f;color:#f3fff7;font-size:12px;font-weight:700;min-height:38px;display:inline-flex;align-items:center;gap:7px;cursor:pointer}
+.rga-scene-buttons button:disabled{opacity:.4;cursor:not-allowed}
+.rga-score{display:flex;align-items:center;gap:9px;font-size:12px;color:#daeee4;flex-wrap:wrap}
+.rga-score strong{color:#d6ffb5;font-size:12px}
+.rga-stepper{display:flex;align-items:center;background:#164634;border-radius:9px;padding:2px}
+.rga-stepper button{height:34px;width:33px;display:grid;place-items:center;border:0;background:transparent;color:#fff;cursor:pointer}
+.rga-stepper button:disabled{opacity:.25;cursor:not-allowed}
+.rga-stepper output{min-width:26px;text-align:center;font-size:17px;font-weight:800}
+.rga-caption{padding:8px 18px 0;margin:0;font-weight:700;font-size:13px;line-height:1.65;color:#f2fff6}
+.rga-note{padding:4px 18px 18px;margin:0;font-size:11px;line-height:1.6;color:#a9cec0}
+@media(max-width:660px){.rga-root{border-radius:14px}.rga-toolbar{padding:12px 11px 2px}.rga-toolbar-heading{font-size:9px;letter-spacing:.08em}.rga-modes{margin:9px 10px 9px;grid-template-columns:repeat(2,minmax(0,1fr))}.rga-modes button{font-size:12px;padding:8px 4px;min-height:40px}.rga-stage{height:clamp(248px,85vw,350px)}.rga-controls{padding:12px;align-items:flex-start}.rga-score{width:100%;justify-content:space-between}.rga-caption{padding:6px 12px 0}.rga-note{padding:3px 12px 13px}}
+@media(prefers-reduced-motion:reduce){.rga-modes button{transition:none}}
+/* Guide V11: ưu tiên không gian 3D rộng, không làm thay đổi các trang khác. */
+.rg11 .rg11-court .rg11-court-grid{grid-template-columns:minmax(0,.68fr) minmax(0,1.32fr);gap:clamp(22px,4vw,62px)}
+.rg11 .rg11-court .rg11-court-stage{padding:0;border:0;background:transparent;box-shadow:none;overflow:visible}
+.rg11 .rg11-court .rg11-court-copy h2{font-size:clamp(2rem,3.3vw,3.3rem);line-height:1.12;max-width:18ch}
+@media(max-width:960px){.rg11 .rg11-court .rg11-court-grid{grid-template-columns:minmax(0,1fr)}.rg11 .rg11-court .rg11-court-copy h2{max-width:none}}
+
+.rga-switch:disabled{opacity:.65;cursor:not-allowed}
+
+/* V12.2: explicit, accessible playback state for real Three.js animation. */
+.rga-playback-status{position:absolute;right:12px;top:12px;z-index:4;display:inline-flex;align-items:center;gap:7px;background:rgba(2,35,25,.90);border:1px solid rgba(182,239,192,.42);box-shadow:0 5px 16px rgba(0,0,0,.24);color:#fff;border-radius:999px;padding:7px 11px;font-size:11px;font-weight:750;pointer-events:none}
+.rga-playback-dot{width:7px;height:7px;border-radius:50%;background:#b8f55d;box-shadow:0 0 0 3px rgba(184,245,93,.14)}
+.rga-playback-status.is-paused{background:rgba(33,39,35,.93);border-color:rgba(255,255,255,.35)}
+.rga-playback-status.is-paused .rga-playback-dot{background:#e7e9e7;box-shadow:none}
+.rga-pause-overlay{position:absolute;z-index:3;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:rgba(0,21,15,.24);pointer-events:none;color:#fff;font-size:13px;font-weight:800;text-align:center;text-shadow:0 2px 12px #001c10}
+.rga-pause-icon{width:52px;height:52px;border-radius:50%;display:grid;place-items:center;background:rgba(3,41,27,.88);border:1px solid rgba(243,255,245,.5);box-shadow:0 8px 24px rgba(0,0,0,.25)}
+.rga-scene-buttons button.rga-play-toggle.is-paused{background:#b8f55d;color:#092b20;border-color:#b8f55d}
+.rga-scene-buttons button.rga-play-toggle.is-paused:hover:not(:disabled){background:#dbff9d;color:#092b20}
+.rga-scene-buttons button:focus-visible{outline:3px solid #b8f55d;outline-offset:3px}
+.rga-scene-buttons button{min-height:44px}
+@media(max-width:480px){.rga-playback-status{top:8px;right:8px;font-size:10px;padding:6px 8px}.rga-pause-overlay{font-size:12px}.rga-pause-icon{width:44px;height:44px}}

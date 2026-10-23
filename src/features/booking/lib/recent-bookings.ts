@@ -13,6 +13,9 @@ export interface RecentBooking {
 
 export const RECENT_BOOKINGS_KEY = 'rally.recent-bookings';
 export const RECENT_BOOKINGS_LIMIT = 8;
+/** Tối thiểu hóa dữ liệu trên thiết bị: tự xóa 30 ngày sau giờ chơi (và mọi mục lưu quá 90 ngày). */
+export const RECENT_BOOKINGS_TTL_DAYS = 30;
+const SAVED_MAX_DAYS = 90;
 
 function isRecentBooking(value: unknown): value is RecentBooking {
   if (typeof value !== 'object' || value === null) return false;
@@ -37,6 +40,19 @@ export function parseRecentBookings(raw: string | null): RecentBooking[] {
   } catch {
     return [];
   }
+}
+
+/** Bỏ các đơn đã qua giờ chơi quá 30 ngày hoặc đã lưu quá 90 ngày. */
+export function pruneRecentBookings(list: RecentBooking[], nowMs: number): RecentBooking[] {
+  const day = 86_400_000;
+  return list.filter((b) => {
+    const starts = Date.parse(b.startsAt);
+    const saved = Date.parse(b.savedAt);
+    return (
+      (Number.isNaN(starts) || starts >= nowMs - RECENT_BOOKINGS_TTL_DAYS * day) &&
+      (Number.isNaN(saved) || saved >= nowMs - SAVED_MAX_DAYS * day)
+    );
+  });
 }
 
 /** Thêm / đưa lên đầu (trùng mã thì cập nhật), giữ tối đa RECENT_BOOKINGS_LIMIT đơn. */
@@ -69,7 +85,22 @@ function readRaw(): string | null {
 
 export function loadRecentBookings(): RecentBooking[] {
   const raw = readRaw();
-  if (raw !== cache.raw) cache = { raw, list: parseRecentBookings(raw) };
+  if (raw !== cache.raw) {
+    const parsed = parseRecentBookings(raw);
+    const kept = pruneRecentBookings(parsed, Date.now());
+    cache = { raw, list: kept };
+    if (kept.length !== parsed.length) {
+      // Ghi lại bản đã dọn (không báo listener — đang trong lúc đọc).
+      try {
+        const next = kept.length > 0 ? JSON.stringify(kept) : null;
+        if (next) window.localStorage.setItem(RECENT_BOOKINGS_KEY, next);
+        else window.localStorage.removeItem(RECENT_BOOKINGS_KEY);
+        cache = { raw: next, list: kept };
+      } catch {
+        // Không ghi được: vẫn ẩn các mục hết hạn.
+      }
+    }
+  }
   return cache.list;
 }
 
@@ -88,6 +119,16 @@ export function rememberBooking(entry: Omit<RecentBooking, 'savedAt'>) {
 
 export function forgetBooking(code: string) {
   save(removeRecentBooking(loadRecentBookings(), code));
+}
+
+/** Xóa toàn bộ đơn đã lưu trên thiết bị này. */
+export function forgetAllBookings() {
+  try {
+    window.localStorage.removeItem(RECENT_BOOKINGS_KEY);
+  } catch {
+    // Bộ nhớ bị chặn: không có gì để xóa.
+  }
+  for (const l of listeners) l();
 }
 
 export function subscribeRecentBookings(listener: () => void) {

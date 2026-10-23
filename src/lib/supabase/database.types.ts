@@ -679,6 +679,10 @@ export type Database = {
           bank_account_name: string | null
           transfer_auto_confirm: boolean
           transfer_memo_prefix: string | null
+          legal_name: string | null
+          legal_address: string | null
+          privacy_email: string | null
+          privacy_contact: string | null
         }
         Insert: {
           id?: boolean
@@ -699,6 +703,10 @@ export type Database = {
           bank_account_name?: string | null
           transfer_auto_confirm?: boolean
           transfer_memo_prefix?: string | null
+          legal_name?: string | null
+          legal_address?: string | null
+          privacy_email?: string | null
+          privacy_contact?: string | null
         }
         Update: {
           id?: boolean
@@ -719,6 +727,10 @@ export type Database = {
           bank_account_name?: string | null
           transfer_auto_confirm?: boolean
           transfer_memo_prefix?: string | null
+          legal_name?: string | null
+          legal_address?: string | null
+          privacy_email?: string | null
+          privacy_contact?: string | null
         }
         Relationships: [
         ]
@@ -884,6 +896,7 @@ export type Database = {
           marketing_opt_in: boolean
           created_at: string
           updated_at: string
+          anonymized_at: string | null
         }
         Insert: {
           id?: string
@@ -895,6 +908,7 @@ export type Database = {
           marketing_opt_in?: boolean
           created_at?: string
           updated_at?: string
+          anonymized_at?: string | null
         }
         Update: {
           id?: string
@@ -906,6 +920,7 @@ export type Database = {
           marketing_opt_in?: boolean
           created_at?: string
           updated_at?: string
+          anonymized_at?: string | null
         }
         Relationships: [
         ]
@@ -926,6 +941,7 @@ export type Database = {
           last_seen_at: string | null
           created_at: string
           updated_at: string
+          anonymized_at: string | null
         }
         Insert: {
           user_id: string
@@ -942,6 +958,7 @@ export type Database = {
           last_seen_at?: string | null
           created_at?: string
           updated_at?: string
+          anonymized_at?: string | null
         }
         Update: {
           user_id?: string
@@ -958,6 +975,7 @@ export type Database = {
           last_seen_at?: string | null
           created_at?: string
           updated_at?: string
+          anonymized_at?: string | null
         }
         Relationships: [
         ]
@@ -2558,6 +2576,277 @@ export type Database = {
           },
         ]
       }
+      legal_documents: {
+        Row: {
+          id: string
+          code: string
+          version: number
+          title: string
+          summary: string | null
+          body: string
+          change_note: string | null
+          effective_at: string
+          created_by: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          code: string
+          version: number
+          title: string
+          summary?: string | null
+          body: string
+          change_note?: string | null
+          effective_at?: string
+          created_by?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          code?: string
+          version?: number
+          title?: string
+          summary?: string | null
+          body?: string
+          change_note?: string | null
+          effective_at?: string
+          created_by?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
+      privacy_consents: {
+        Row: {
+          id: string
+          customer_id: string | null
+          auth_user_id: string | null
+          booking_id: string | null
+          purpose: string
+          granted: boolean
+          privacy_doc_id: string | null
+          terms_doc_id: string | null
+          source: string
+          wording: string
+          ip_hash: string | null
+          user_agent: string | null
+          created_by: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          customer_id?: string | null
+          auth_user_id?: string | null
+          booking_id?: string | null
+          purpose: string
+          granted: boolean
+          privacy_doc_id?: string | null
+          terms_doc_id?: string | null
+          source: string
+          wording: string
+          ip_hash?: string | null
+          user_agent?: string | null
+          created_by?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          customer_id?: string | null
+          auth_user_id?: string | null
+          booking_id?: string | null
+          purpose?: string
+          granted?: boolean
+          privacy_doc_id?: string | null
+          terms_doc_id?: string | null
+          source?: string
+          wording?: string
+          ip_hash?: string | null
+          user_agent?: string | null
+          created_by?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          { foreignKeyName: 'privacy_consents_privacy_doc_id_fkey'; columns: ['privacy_doc_id']; isOneToOne: false; referencedRelation: 'legal_documents'; referencedColumns: ['id'] },
+          { foreignKeyName: 'privacy_consents_terms_doc_id_fkey'; columns: ['terms_doc_id']; isOneToOne: false; referencedRelation: 'legal_documents'; referencedColumns: ['id'] },
+          { foreignKeyName: 'privacy_consents_booking_id_fkey'; columns: ['booking_id']; isOneToOne: false; referencedRelation: 'bookings'; referencedColumns: ['id'] },
+          { foreignKeyName: 'privacy_consents_customer_id_fkey'; columns: ['customer_id']; isOneToOne: false; referencedRelation: 'customers'; referencedColumns: ['id'] },
+        ]
+      }
+      data_subject_requests: {
+        Row: {
+          id: string
+          code: string
+          kind: string
+          status: string
+          requester_name: string
+          phone: string | null
+          email: string | null
+          auth_user_id: string | null
+          customer_id: string | null
+          booking_code: string | null
+          verified: boolean
+          verification_note: string | null
+          details: string
+          channel: string
+          received_at: string
+          ack_due_at: string
+          due_at: string
+          extended_due_at: string | null
+          extension_reason: string | null
+          acknowledged_at: string | null
+          resolved_at: string | null
+          resolution_note: string | null
+          handled_by: string | null
+          ip_hash: string | null
+          redacted_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          code?: string
+          kind: string
+          status?: string
+          requester_name: string
+          phone?: string | null
+          email?: string | null
+          auth_user_id?: string | null
+          customer_id?: string | null
+          booking_code?: string | null
+          verified?: boolean
+          verification_note?: string | null
+          details: string
+          channel?: string
+          received_at?: string
+          ack_due_at: string
+          due_at: string
+          extended_due_at?: string | null
+          extension_reason?: string | null
+          acknowledged_at?: string | null
+          resolved_at?: string | null
+          resolution_note?: string | null
+          handled_by?: string | null
+          ip_hash?: string | null
+          redacted_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          code?: string
+          kind?: string
+          status?: string
+          requester_name?: string
+          phone?: string | null
+          email?: string | null
+          auth_user_id?: string | null
+          customer_id?: string | null
+          booking_code?: string | null
+          verified?: boolean
+          verification_note?: string | null
+          details?: string
+          channel?: string
+          received_at?: string
+          ack_due_at?: string
+          due_at?: string
+          extended_due_at?: string | null
+          extension_reason?: string | null
+          acknowledged_at?: string | null
+          resolved_at?: string | null
+          resolution_note?: string | null
+          handled_by?: string | null
+          ip_hash?: string | null
+          redacted_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          { foreignKeyName: 'data_subject_requests_customer_id_fkey'; columns: ['customer_id']; isOneToOne: false; referencedRelation: 'customers'; referencedColumns: ['id'] },
+        ]
+      }
+      data_retention_policies: {
+        Row: {
+          code: string
+          label: string
+          data_scope: string
+          retention_days: number
+          action: string
+          basis: string
+          is_automatic: boolean
+          sort_order: number
+          last_run_at: string | null
+          last_run_count: number | null
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          label: string
+          data_scope: string
+          retention_days: number
+          action: string
+          basis: string
+          is_automatic?: boolean
+          sort_order?: number
+          last_run_at?: string | null
+          last_run_count?: number | null
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          label?: string
+          data_scope?: string
+          retention_days?: number
+          action?: string
+          basis?: string
+          is_automatic?: boolean
+          sort_order?: number
+          last_run_at?: string | null
+          last_run_count?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      payment_webhook_events: {
+        Row: {
+          id: number
+          provider: string
+          received_at: string
+          auth_result: string
+          auth_method: string | null
+          provider_txn_id: string | null
+          http_status: number
+          outcome: string | null
+          body_sha256: string | null
+          payload: Json | null
+          ip_hash: string | null
+        }
+        Insert: {
+          id?: number
+          provider?: string
+          received_at?: string
+          auth_result: string
+          auth_method?: string | null
+          provider_txn_id?: string | null
+          http_status: number
+          outcome?: string | null
+          body_sha256?: string | null
+          payload?: Json | null
+          ip_hash?: string | null
+        }
+        Update: {
+          id?: number
+          provider?: string
+          received_at?: string
+          auth_result?: string
+          auth_method?: string | null
+          provider_txn_id?: string | null
+          http_status?: number
+          outcome?: string | null
+          body_sha256?: string | null
+          payload?: Json | null
+          ip_hash?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       booking_balances: {
@@ -2575,6 +2864,84 @@ export type Database = {
       }
     }
     Functions: {
+      anonymize_customer: { Args: { p_customer_id: string; p_reason?: string | null; p_request_id?: string | null }; Returns: Json }
+      apply_retention: { Args: { p_dry_run?: boolean }; Returns: Json }
+      create_guest_booking_hold_v2: {
+        Args: {
+          p_contact_name: string
+          p_court_id: string
+          p_customer_note: string | null
+          p_ends_at: string
+          p_idempotency_key: string
+          p_ip_hash: string | null
+          p_marketing: boolean
+          p_marketing_wording: string | null
+          p_phone: string
+          p_starts_at: string
+          p_terms_wording: string
+          p_user_agent: string | null
+        }
+        Returns: Json
+      }
+      customer_data_export: { Args: { p_customer_id: string; p_request_id?: string | null }; Returns: Json }
+      data_request_counts: { Args: never; Returns: Json }
+      member_set_marketing: { Args: { p_granted: boolean; p_user_agent?: string | null; p_wording: string }; Returns: Json }
+      my_data_export: { Args: never; Returns: Json }
+      publish_legal_document: {
+        Args: {
+          p_body: string
+          p_change_note: string
+          p_code: string
+          p_effective_at?: string | null
+          p_summary: string | null
+          p_title: string
+        }
+        Returns: Json
+      }
+      service_apply_retention: { Args: never; Returns: Json }
+      service_log_webhook_event: {
+        Args: {
+          p_auth_method: string | null
+          p_auth_result: string
+          p_body_sha256: string | null
+          p_http_status: number
+          p_ip_hash: string | null
+          p_outcome: string | null
+          p_payload: Json | null
+          p_provider: string
+          p_txn_id: string | null
+        }
+        Returns: undefined
+      }
+      service_record_member_consents: {
+        Args: {
+          p_ip_hash: string | null
+          p_marketing: boolean
+          p_marketing_wording: string | null
+          p_terms_wording: string
+          p_user_agent: string | null
+          p_user_id: string
+        }
+        Returns: undefined
+      }
+      service_submit_data_request: {
+        Args: {
+          p_booking_code: string | null
+          p_details: string
+          p_email: string | null
+          p_ip_hash: string | null
+          p_kind: string
+          p_name: string
+          p_phone: string | null
+          p_user_id: string | null
+        }
+        Returns: Json
+      }
+      update_data_request: {
+        Args: { p_extension_reason?: string | null; p_id: string; p_note?: string | null; p_status: string; p_verified?: boolean | null }
+        Returns: Json
+      }
+      update_retention_policy: { Args: { p_automatic: boolean; p_code: string; p_days: number }; Returns: undefined }
       reveal_guest_booking: {
         Args: {
           p_booking_id: string

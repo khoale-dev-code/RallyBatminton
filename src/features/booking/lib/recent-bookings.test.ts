@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
-import { parseRecentBookings, removeRecentBooking, sortRecentBookings, upsertRecentBooking, type RecentBooking } from './recent-bookings';
+import {
+  parseRecentBookings,
+  pruneRecentBookings,
+  removeRecentBooking,
+  sortRecentBookings,
+  upsertRecentBooking,
+  type RecentBooking,
+} from './recent-bookings';
 
 const entry = (code: string, startsAt: string): RecentBooking => ({
   code,
@@ -46,5 +53,15 @@ describe('sortRecentBookings', () => {
       now,
     );
     expect(sorted.map((b) => b.code)).toEqual(['RB-NEXT0001', 'RB-NEXT0002', 'RB-PAST0001']);
+  });
+});
+
+describe('pruneRecentBookings', () => {
+  it('tự bỏ đơn đã qua 30 ngày hoặc lưu quá 90 ngày', () => {
+    const now = Date.parse('2026-12-01T00:00:00Z');
+    const fresh = { ...entry('RB-FRESH001', '2026-11-20T10:00:00Z'), savedAt: '2026-11-19T00:00:00Z' };
+    const oldPlay = { ...entry('RB-OLDPLAY1', '2026-10-20T10:00:00Z'), savedAt: '2026-10-19T00:00:00Z' };
+    const oldSave = { ...entry('RB-OLDSAVE1', '2027-01-20T10:00:00Z'), savedAt: '2026-08-01T00:00:00Z' };
+    expect(pruneRecentBookings([fresh, oldPlay, oldSave], now).map((b) => b.code)).toEqual(['RB-FRESH001']);
   });
 });

@@ -1,6 +1,6 @@
 'use client';
 
-import { CalendarDays, LayoutDashboard, UserRoundCog } from 'lucide-react';
+import { CalendarDays, LayoutDashboard, ShieldCheck, UserRoundCog } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
@@ -10,6 +10,7 @@ const TABS = [
   { href: '/account', label: 'Tổng quan', icon: LayoutDashboard },
   { href: '/account/bookings', label: 'Đơn đặt sân', icon: CalendarDays },
   { href: '/account/profile', label: 'Hồ sơ & bảo mật', icon: UserRoundCog },
+  { href: '/account/privacy', label: 'Quyền riêng tư', icon: ShieldCheck },
 ];
 
 export function AccountTabs() {

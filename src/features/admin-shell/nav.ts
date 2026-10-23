@@ -20,7 +20,8 @@ export type NavIcon =
   | 'scan'
   | 'bank'
   | 'cash'
-  | 'review';
+  | 'review'
+  | 'privacy';
 
 export interface NavItem {
   href: string;
@@ -44,7 +45,10 @@ export const NAV_CLOSED_COOKIE = 'rally_nav_closed';
 export const NAV_GROUP_KEYS: NavGroupKey[] = ['ops', 'goods', 'hr', 'admin'];
 
 /** Menu chỉ hiện mục người dùng có quyền — chỉ là tiện ích; database vẫn chặn bằng RLS. */
-export function buildNav(ctx: StaffContext, counts: { pendingOvertime?: number; attendanceReview?: number } = {}): NavGroup[] {
+export function buildNav(
+  ctx: StaffContext,
+  counts: { pendingOvertime?: number; attendanceReview?: number; privacyRequests?: number } = {},
+): NavGroup[] {
   const owner = isOwner(ctx);
   const can = (p: Parameters<typeof hasPermission>[1]) => owner || hasPermission(ctx, p);
   const groups: NavGroup[] = [
@@ -94,6 +98,7 @@ export function buildNav(ctx: StaffContext, counts: { pendingOvertime?: number; 
         ? [
             { href: '/admin/branches', label: 'Chi nhánh & sân', icon: 'building' as const },
             { href: '/admin/audit', label: 'Nhật ký thay đổi', icon: 'log' as const },
+            { href: '/admin/privacy', label: 'Dữ liệu cá nhân', icon: 'privacy' as const, badge: counts.privacyRequests ?? 0 },
             { href: '/admin/settings', label: 'Cài đặt thương hiệu', icon: 'settings' as const },
           ]
         : [],

@@ -1,0 +1,79 @@
+/* Rally Home Layout Fix v1 | applies ONLY to the homepage.
+   The shared SiteLayout intentionally keeps content inside max-w-7xl.
+   The palette previously painted only that inner rectangle, leaving white
+   gutters at the sides. Paint a full-viewport background without moving
+   or resizing SiteLayout, the hero, or the Three.js canvas. */
+.rally-home {
+  position: relative;
+  isolation: isolate;
+  min-width: 0;
+  background: transparent;
+}
+
+.rally-home::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset-block: 0;
+  left: 50%;
+  width: 100vw;
+  transform: translateX(-50%);
+  pointer-events: none;
+  background: linear-gradient(180deg, #061e17 0%, #08261b 45%, #061e17 100%);
+}
+
+/* The original carousel reserves 1/3 of its width for each branch.
+   When there is exactly one branch, make it a genuine featured court. */
+@media (min-width: 900px) {
+  .rally-home #chi-nhanh ul:has(> li:only-child) {
+    overflow-x: visible;
+    scroll-snap-type: none;
+  }
+  .rally-home #chi-nhanh ul:has(> li:only-child) > li {
+    width: 100%;
+    max-width: none;
+    flex: 0 0 100%;
+  }
+  .rally-home #chi-nhanh ul:has(> li:only-child) .rally-home-branch-card {
+    display: grid;
+    grid-template-columns: minmax(0, 1.08fr) minmax(0, .92fr);
+    min-height: 26rem;
+    align-items: stretch;
+  }
+  .rally-home #chi-nhanh ul:has(> li:only-child) .rally-home-branch-card > div:first-child {
+    aspect-ratio: auto;
+    height: 100%;
+    min-height: 26rem;
+  }
+  .rally-home #chi-nhanh ul:has(> li:only-child) .rally-home-branch-card > div:last-child {
+    min-width: 0;
+    justify-content: center;
+    padding: 1.75rem clamp(1.5rem, 3vw, 3rem);
+  }
+  .rally-home #chi-nhanh ul:has(> li:only-child) .rally-home-branch-card .grid.grid-cols-4 {
+    gap: .5rem;
+  }
+}
+
+/* On tablets a single branch should not look like a half-empty carousel. */
+@media (min-width: 640px) and (max-width: 899px) {
+  .rally-home #chi-nhanh ul:has(> li:only-child) > li {
+    width: min(100%, 40rem);
+    flex: 0 0 min(100%, 40rem);
+  }
+}
+
+/* The rest of the site stays centered as designed. Keep long labels from
+   forcing accidental horizontal overflow, especially at 320-390px. */
+.rally-home :is(.rally-home-branch-card, .rally-home-step, .rally-home-service, .rally-home-guide-card) {
+  min-width: 0;
+}
+.rally-home #chi-nhanh .rally-home-branch-card .grid.grid-cols-4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+@media (max-width: 639px) {
+  .rally-home #chi-nhanh ul:has(> li:only-child) > li {
+    width: min(88vw, 25rem);
+  }
+}

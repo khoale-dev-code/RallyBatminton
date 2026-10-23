@@ -2,7 +2,7 @@ import { createHmac } from 'node:crypto';
 
 import { describe, expect, it, vi } from 'vitest';
 
-import { verifySepayRequest } from './sepay';
+import { isAllowedIp, verifySepayRequest, verifySepayRequestDetailed } from './sepay';
 
 vi.mock('server-only', () => ({}));
 import { memoPrefixFor } from './bank-form';
@@ -112,5 +112,17 @@ describe('đối soát SePay API', () => {
 
   it('giờ Việt Nam đúng định dạng SePay', () => {
     expect(sepayDateTime(new Date('2026-10-19T08:55:07Z'))).toBe('2026-10-19 15:55:07');
+  });
+});
+
+describe('verifySepayRequestDetailed / isAllowedIp', () => {
+  it('ghi rõ cách xác thực và lọc IP khi có danh sách', () => {
+    const base = { rawBody: '{}', authorization: null, signature: null, timestamp: null, secret: null, apiKey: 'K', nowSeconds: 1 };
+    expect(verifySepayRequestDetailed({ ...base, authorization: 'Apikey K' })).toEqual({ result: 'ok', method: 'apikey' });
+    expect(verifySepayRequestDetailed(base)).toEqual({ result: 'unauthorized', method: null });
+    expect(isAllowedIp('1.2.3.4', [])).toBe(true);
+    expect(isAllowedIp('1.2.3.4', ['1.2.3.4'])).toBe(true);
+    expect(isAllowedIp('9.9.9.9', ['1.2.3.4'])).toBe(false);
+    expect(isAllowedIp(null, ['1.2.3.4'])).toBe(false);
   });
 });

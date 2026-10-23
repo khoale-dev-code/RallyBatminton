@@ -1,0 +1,162 @@
+/* Rally Home Silver v1: cohesive pearl-silver background and readable dark cards.
+   Scope: homepage only. Loaded AFTER home-palette-v2 and home-layout-fix.
+   Existing booking logic, responsive carousel and Three.js visuals are untouched. */
+
+/* The site's shared layout is max-w-7xl: paint the FULL viewport by replacing
+   the previous dark ::before background, without changing the content width. */
+body:has(.rally-home) {
+  background: #f3f5f3;
+}
+.rally-home {
+  --rally-silver: #f3f5f3;
+  --rally-silver-bright: #fafbf9;
+  --rally-silver-line: #dce4dd;
+  --rally-ink: #142b20;
+  --rally-ink-muted: #536b5b;
+  --rally-accent: #b8f55d;
+  background: transparent !important;
+  color: var(--rally-ink);
+}
+.rally-home::before {
+  background: linear-gradient(180deg, #f8f9f7 0%, #f1f4f1 32%, #edf1ee 68%, #f8f9f7 100%) !important;
+}
+
+/* Headlines on light panels must be dark, with no multi-color spans. Headlines
+   inside dark cards, hero, promo and Three.js remain white by design. */
+.rally-home :is(#chi-nhanh, #cach-dat, section[aria-labelledby="services-title"], section[aria-labelledby="guide-title"])
+  :is(.rally-home-section-title, .rally-home-section-title span) {
+  color: var(--rally-ink) !important;
+  -webkit-text-fill-color: var(--rally-ink) !important;
+  background-image: none !important;
+  text-shadow: none !important;
+}
+.rally-home .rally-home-eyebrow {
+  color: #236344;
+}
+.rally-home #chi-nhanh .rally-home-section-title + p {
+  color: var(--rally-ink-muted) !important;
+}
+.rally-home #cach-dat > div:first-child > p,
+.rally-home section[aria-labelledby="services-title"] > div:first-child > p,
+.rally-home section[aria-labelledby="guide-title"] > div:first-child > p {
+  color: var(--rally-ink-muted) !important;
+}
+/* Restore eyebrow color where the rule above also matches a small paragraph. */
+.rally-home :is(#chi-nhanh, #cach-dat, section[aria-labelledby="services-title"], section[aria-labelledby="guide-title"])
+  .rally-home-eyebrow {
+  color: #236344 !important;
+}
+
+/* Benefits are ON the light page, so the previous white labels are unreadable.
+   Give them crisp dark type and a soft light-green icon tile. */
+.rally-home section[aria-label="Ưu điểm khi đặt sân tại Rally"] ul {
+  border-color: var(--rally-silver-line);
+}
+.rally-home section[aria-label="Ưu điểm khi đặt sân tại Rally"] li > span:first-child {
+  color: #1a7046;
+  background: #e0eddf;
+  border: 1px solid #d3e2d6;
+}
+.rally-home section[aria-label="Ưu điểm khi đặt sân tại Rally"] li strong {
+  color: #163024 !important;
+}
+.rally-home section[aria-label="Ưu điểm khi đặt sân tại Rally"] li div > span {
+  color: #526758 !important;
+}
+
+/* Search is deliberately white to distinguish it from the silver canvas. */
+.rally-home .rally-home-search {
+  background: #fff !important;
+  border-color: #e1e7df !important;
+  box-shadow: 0 20px 60px -34px rgb(15 48 27 / .28), 0 2px 8px rgb(28 47 29 / .035);
+}
+
+/* Make the existing green cards pop against silver without changing the
+   booking links, photos, slots, hover behavior or responsive dimensions. */
+.rally-home :is(.rally-home-branch-card, .rally-home-step, .rally-home-service, .rally-home-guide-card) {
+  background: linear-gradient(148deg, #153d2e, #0d3025) !important;
+  border: 1px solid #315944 !important;
+  color: #edf7ef;
+  box-shadow: 0 24px 54px -39px rgb(4 40 24 / .37), 0 4px 16px -12px rgb(5 43 25 / .2);
+}
+.rally-home :is(.rally-home-branch-card, .rally-home-step, .rally-home-service, .rally-home-guide-card):hover {
+  border-color: #8ed85e !important;
+  box-shadow: 0 26px 58px -32px rgb(4 40 24 / .42);
+}
+.rally-home :is(.rally-home-branch-card, .rally-home-step, .rally-home-service, .rally-home-guide-card) :is(h3, h3 a) {
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+}
+.rally-home :is(.rally-home-branch-card, .rally-home-step, .rally-home-service, .rally-home-guide-card) p,
+.rally-home :is(.rally-home-branch-card, .rally-home-step, .rally-home-service, .rally-home-guide-card) p span {
+  color: #cbddcf;
+}
+.rally-home .rally-home-service > div:last-child {
+  background: #f4f7f2;
+}
+
+/* Secondary navigation on the LIGHT canvas: dark green instead of lime text
+   on light gray. Lime stays reserved for solid primary actions. */
+.rally-home #chi-nhanh > div > div:first-child a[href="/branches"],
+.rally-home section[aria-labelledby="guide-title"] a[href="/guide"],
+.rally-home #chi-nhanh ul + a[href="/branches"] {
+  background: #fff !important;
+  color: #1b5134 !important;
+  border: 1px solid #ccdacd !important;
+  box-shadow: 0 2px 7px rgb(14 54 24 / .04);
+}
+.rally-home #chi-nhanh > div > div:first-child a[href="/branches"]:hover,
+.rally-home section[aria-labelledby="guide-title"] a[href="/guide"]:hover,
+.rally-home #chi-nhanh ul + a[href="/branches"]:hover {
+  background: #e5f3db !important;
+  border-color: #9fcf8b !important;
+}
+.rally-home #chi-nhanh button[aria-label^="Xem chi nhánh"] {
+  color: #1c5137 !important;
+  background: #fff !important;
+  border-color: #cfdecf !important;
+}
+.rally-home #chi-nhanh button[aria-label^="Xem chi nhánh"]:hover {
+  background: #e5f3db !important;
+}
+
+/* On dark panels keep the original white headings, and lime CTAs. */
+.rally-home :is(.rally-home-interlude, .r3d-community, section[aria-labelledby="final-book-title"])
+  :is(h2, h2 span) {
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+}
+.rally-home .rally-home-hero :is(h1, h1 span),
+.rally-home .rally-home-hero .rally-home-glass p {
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+}
+.rally-home .rally-home-interlude,
+.rally-home section[aria-labelledby="final-book-title"] {
+  box-shadow: 0 26px 65px -40px rgb(0 38 22 / .35);
+}
+.rally-home :is(.rally-home-interlude, .r3d-community) .rally-home-eyebrow,
+.rally-home .r3d-community .r3d-eyebrow {
+  color: #b8f55d !important;
+}
+.rally-home .rally-home-branch-card > div:last-child > a:last-child,
+.rally-home .rally-home-search button[type="submit"],
+.rally-home .rally-home-interlude a[href="/booking"],
+.rally-home .r3d-community .r3d-primary,
+.rally-home .r3d-community .r3d-view-button,
+.rally-home section[aria-labelledby="final-book-title"] a[href="/booking"] {
+  background: #b8f55d !important;
+  color: #102718 !important;
+  border-color: transparent !important;
+}
+
+@media (max-width: 639px) {
+  .rally-home :is(.rally-home-branch-card, .rally-home-step, .rally-home-service, .rally-home-guide-card) {
+    box-shadow: 0 15px 30px -27px rgb(4 40 24 / .4);
+  }
+}
+@media (forced-colors: active) {
+  .rally-home :is(.rally-home-search, .rally-home-step, .rally-home-service, .rally-home-guide-card) {
+    border: 1px solid CanvasText !important;
+  }
+}

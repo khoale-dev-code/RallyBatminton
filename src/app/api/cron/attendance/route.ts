@@ -18,6 +18,7 @@ function authorized(header: string | null, secret: string): boolean {
 /**
  * Hằng đêm (Vercel Cron, vercel.json): đóng các ca nhân viên quên quét ra đã quá hạn (đúng giờ kết thúc theo lịch)
  * và cho đề nghị tăng ca chưa trả lời hết hạn. Trang Duyệt chấm công / Bảng lương cũng tự chạy việc này khi mở.
+ * Kèm theo: dọn dữ liệu cá nhân hết thời hạn lưu trữ (Quản trị → Dữ liệu cá nhân → Thời hạn lưu trữ).
  */
 async function handle(request: NextRequest) {
   const secret = getCronSecret();
@@ -26,9 +27,18 @@ async function handle(request: NextRequest) {
     return NextResponse.json({ ok: false, message: 'unauthorized' }, { status: 401 });
   }
   try {
-    const { data, error } = await createSecretClient().rpc('service_close_forgotten_shifts');
-    if (error) return NextResponse.json({ ok: false, message: error.message }, { status: 502 });
-    return NextResponse.json({ ok: true, result: data }, { headers: { 'Cache-Control': 'no-store' } });
+    const supabase = createSecretClient();
+    const [shifts, retention] = await Promise.all([
+      supabase.rpc('service_close_forgotten_shifts'),
+      // Cùng lịch hằng đêm: dọn dữ liệu cá nhân hết thời hạn lưu trữ (loại chủ sân bật "Tự động").
+      supabase.rpc('service_apply_retention'),
+    ]);
+    if (shifts.error) return NextResponse.json({ ok: false, message: shifts.error.message }, { status: 502 });
+    if (retention.error) console.error('[cron] Chưa dọn được dữ liệu hết hạn (đã chạy 22_privacy_security.sql?):', retention.error.message);
+    return NextResponse.json(
+      { ok: true, result: shifts.data, retention: retention.error ? null : retention.data },
+      { headers: { 'Cache-Control': 'no-store' } },
+    );
   } catch (e) {
     return NextResponse.json({ ok: false, message: e instanceof Error ? e.message : 'error' }, { status: 500 });
   }

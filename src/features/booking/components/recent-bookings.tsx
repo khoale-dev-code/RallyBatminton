@@ -10,7 +10,14 @@ import { formatPhone } from '@/lib/format';
 
 import { useMinuteClock } from '../hooks/use-clock';
 import { bookingWhen } from '../lib/lookup-view';
-import { forgetBooking, loadRecentBookings, sortRecentBookings, subscribeRecentBookings, type RecentBooking } from '../lib/recent-bookings';
+import {
+  forgetAllBookings,
+  forgetBooking,
+  loadRecentBookings,
+  sortRecentBookings,
+  subscribeRecentBookings,
+  type RecentBooking,
+} from '../lib/recent-bookings';
 
 const EMPTY: RecentBooking[] = [];
 
@@ -32,7 +39,7 @@ export function RecentBookings({ onOpen }: { onOpen: (b: RecentBooking) => void 
   const sorted = minute === null ? list : sortRecentBookings(list, minute * 60000);
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="rally-lookup-recent flex flex-col gap-4">
       {member.status === 'member' ? (
         <Link
           href="/account/bookings"
@@ -56,27 +63,29 @@ export function RecentBookings({ onOpen }: { onOpen: (b: RecentBooking) => void 
       ) : null}
 
       {sorted.length > 0 && (
-        <section aria-labelledby="recent-title" className="flex flex-col gap-3">
-          <div className="flex items-center gap-2">
-            <MonitorSmartphone className="size-5 text-court-deep" aria-hidden />
-            <h2 id="recent-title" className="text-2xl">
-              Đơn trên thiết bị này
-            </h2>
-          </div>
-          <ul className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
+        <section aria-labelledby="recent-title" className="flex flex-col gap-4">
+          <header className="rally-lookup-listhead">
+            <div>
+              <p className="rally-lookup-smalllabel">ĐƠN ĐÃ XEM GẦN ĐÂY</p>
+              <h2 id="recent-title">Đơn lưu trên thiết bị</h2>
+              <p>Chọn một đơn để xem lại chi tiết và trạng thái.</p>
+            </div>
+            <MonitorSmartphone className="size-6 text-[#006341]" aria-hidden />
+          </header>
+          <ul className="rally-lookup-recent-grid grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {sorted.map((b) => {
               const when = bookingWhen(b.startsAt, b.startsAt);
               const past = minute !== null && Date.parse(b.startsAt) < minute * 60000;
               return (
-                <li key={b.code} className="relative">
+                <li key={b.code} className="relative rally-lookup-recent-item">
                   <button
                     type="button"
                     onClick={() => onOpen(b)}
-                    className="group flex w-full items-center gap-3 rounded-panel border border-line bg-paper p-3 pr-11 text-left transition-shadow hover:shadow-lift"
+                    className="rally-lookup-order group flex w-full items-center gap-3 rounded-panel border border-line bg-paper p-3 pr-11 text-left transition-shadow hover:shadow-lift"
                   >
                     <span
                       className={cn(
-                        'flex w-14 shrink-0 flex-col items-center rounded-control py-1.5',
+                        'rally-lookup-date flex w-14 shrink-0 flex-col items-center rounded-control py-1.5',
                         past ? 'bg-hall text-muted' : 'bg-ink text-paper',
                       )}
                     >
@@ -104,10 +113,15 @@ export function RecentBookings({ onOpen }: { onOpen: (b: RecentBooking) => void 
               );
             })}
           </ul>
-          <p className="flex items-center gap-1.5 text-xs text-muted">
-            <History className="size-3.5" aria-hidden />
-            Chỉ lưu trên trình duyệt của máy này. Dùng máy chung? Bấm ✕ để xóa sau khi xem.
-          </p>
+          <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted">
+            <p className="flex items-center gap-1.5">
+              <History className="size-3.5" aria-hidden />
+              Chỉ lưu trên trình duyệt của máy này, tự xóa 30 ngày sau giờ chơi. Dùng máy chung? Bấm ✕ để xóa sau khi xem.
+            </p>
+            <button type="button" onClick={forgetAllBookings} className="font-medium text-ink underline-offset-4 hover:underline">
+              Xóa tất cả khỏi thiết bị này
+            </button>
+          </div>
         </section>
       )}
     </div>

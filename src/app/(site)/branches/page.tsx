@@ -1,125 +1,98 @@
-import { ArrowRight, CalendarDays, Map } from 'lucide-react';
+import { ArrowRight, Clock3, MapPin, ShieldCheck } from 'lucide-react';
 import { type Metadata } from 'next';
 import Link from 'next/link';
 
 import { LoadErrorNotice, SetupNotice } from '@/components/layout/setup-notice';
-import { CourtDraw } from '@/components/motion/court-draw';
-import { Reveal } from '@/components/motion/reveal';
-import { SplitHeading } from '@/components/motion/split-heading';
 import { EmptyState } from '@/components/ui/primitives';
 import { bookingHref } from '@/features/booking/lib/links';
-import { BranchShowcase } from '@/features/branches/components/branch-showcase';
+import { RallyBranchCards } from '@/features/branches/components/rally-branch-cards';
 import { getHomeBranches } from '@/features/home/queries';
 import { formatDateKey, formatNumber, formatVnd } from '@/lib/format';
 import { isDateKey } from '@/lib/time';
 
+import '@/features/branches/rally-branches-v10.css';
+
 export const revalidate = 60;
 
 export const metadata: Metadata = {
-  title: 'Chi nhánh',
-  description: 'Hệ thống chi nhánh sân cầu lông Rally: địa chỉ, giờ mở cửa, số sân, giá và giờ trống hôm nay.',
+  title: 'Chi nhánh Rally | Chọn sân và xem giờ trống',
+  description: 'Khám phá chi nhánh Rally, xem địa chỉ, giờ hoạt động, giá từ và khung giờ trống để đặt sân cầu lông nhanh chóng.',
 };
 
 export default async function BranchesPage({ searchParams }: { searchParams: Promise<{ date?: string; time?: string }> }) {
-  const [result, sp] = await Promise.all([getHomeBranches(new Date()), searchParams]);
-  // Từ ô tìm giờ trống ở trang chủ: giữ ngày/giờ đã chọn khi bấm Đặt sân.
-  const date = sp.date && isDateKey(sp.date) ? sp.date : null;
-  const time = sp.time && /^\d{2}:\d{2}$/.test(sp.time) ? sp.time : null;
+  const [result, params] = await Promise.all([getHomeBranches(new Date()), searchParams]);
+  const date = params.date && isDateKey(params.date) ? params.date : null;
+  const time = date && params.time && /^\d{2}:\d{2}$/.test(params.time) ? params.time : null;
   const branches = result.ok ? result.data : [];
-  const courts = branches.reduce((n, b) => n + b.courtCount, 0);
-  const minPrice = branches.reduce<number | null>((m, b) => (b.minPrice !== null && (m === null || b.minPrice < m) ? b.minPrice : m), null);
-  const openNow = branches.filter((b) => b.isOpen).length;
+  const courtCount = branches.reduce((total, branch) => total + branch.courtCount, 0);
+  const minPrice = branches.reduce<number | null>(
+    (min, branch) => branch.minPrice === null ? min : min === null ? branch.minPrice : Math.min(min, branch.minPrice),
+    null,
+  );
 
   return (
-    <>
-      <section aria-labelledby="branches-title" className="full-bleed relative isolate overflow-hidden bg-ink text-paper">
-        <div
-          aria-hidden
-          className="absolute inset-0 -z-10 bg-[radial-gradient(50rem_24rem_at_15%_-20%,rgb(98_187_70/0.35),transparent_65%)]"
-        />
-        <CourtDraw className="absolute top-1/2 right-[-6rem] -z-10 hidden h-[150%] -translate-y-1/2 rotate-[-58deg] text-court/35 md:block" />
-        <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 pt-12 pb-24 sm:px-6 sm:pt-16 lg:pb-28">
-          <span className="inline-flex w-fit items-center gap-2 rounded-full bg-paper/10 px-3 py-1 text-xs font-semibold tracking-wide uppercase ring-1 ring-paper/20">
-            <span aria-hidden className="size-2 rounded-full bg-shuttle" />
-            Hệ thống sân Rally
-          </span>
-          <SplitHeading
-            as="h1"
-            id="branches-title"
-            className="max-w-3xl text-[2.75rem] leading-[1.02] font-semibold sm:text-6xl lg:text-7xl"
-          >
-            Chọn sân gần bạn, <span className="text-court">ra sân ngay.</span>
-          </SplitHeading>
-          <p className="max-w-xl text-paper/75 sm:text-lg">
-            {date
-              ? `Đang tìm giờ trống ngày ${formatDateKey(date)}${time ? `, từ ${time}` : ''} — chọn chi nhánh để giữ sân.`
-              : 'Giờ trống cập nhật trực tiếp ở từng chi nhánh. Chạm một giờ để giữ sân trong một phút.'}
+    <div className="rly-branches-v10">
+      <section aria-labelledby="branches-title" className="rly-branches-hero full-bleed">
+        <div className="rly-branches-hero-inner">
+          <p className="rly-branches-eyebrow"><span aria-hidden="true" /> RALLY BADMINTON / CHI NHÁNH</p>
+          <h1 id="branches-title">Chọn sân. Vào trận.</h1>
+          <p className="rly-branches-hero-desc">
+            Khám phá các chi nhánh, xem giờ trống và chọn sân phù hợp với lịch chơi của bạn.
           </p>
-          {branches.length > 0 && (
-            <dl className="flex flex-wrap gap-x-8 gap-y-3 text-sm">
-              <div>
-                <dt className="text-paper/60">Chi nhánh</dt>
-                <dd className="font-display text-3xl tabular">{branches.length}</dd>
-              </div>
-              <div>
-                <dt className="text-paper/60">Tổng số sân</dt>
-                <dd className="font-display text-3xl tabular">{formatNumber(courts)}</dd>
-              </div>
-              <div>
-                <dt className="text-paper/60">Đang mở cửa</dt>
-                <dd className="font-display text-3xl text-court tabular">{openNow}</dd>
-              </div>
-              {minPrice !== null && (
-                <div>
-                  <dt className="text-paper/60">Giá từ</dt>
-                  <dd className="font-display text-3xl tabular">
-                    {formatVnd(minPrice)}
-                    <span className="font-sans text-sm text-paper/60">/giờ</span>
-                  </dd>
-                </div>
-              )}
-            </dl>
-          )}
+          <div className="rly-branches-hero-cta">
+            <a className="rly-btn rly-btn-red" href="#danh-sach-chi-nhanh">Khám phá chi nhánh <ArrowRight size={19} aria-hidden="true" /></a>
+            <Link className="rly-btn rly-btn-outline-light" href={bookingHref(null, { date, time })}>Xem lịch đặt sân</Link>
+          </div>
+          <div className="rly-branches-hero-stats" aria-label="Thông tin hệ thống sân">
+            <div><strong>{formatNumber(branches.length)}</strong><span>Chi nhánh hiển thị</span></div>
+            <div><strong>{formatNumber(courtCount)}</strong><span>Sân đang phục vụ</span></div>
+            {minPrice !== null && <div><strong>{formatVnd(minPrice)}</strong><span>Giá tham khảo từ / giờ</span></div>}
+          </div>
         </div>
       </section>
 
-      <div className="relative -mt-14 pb-4 sm:-mt-16">
+      <section id="danh-sach-chi-nhanh" className="rly-branches-directory" aria-labelledby="branches-list-title">
+        <div className="rly-branches-section-head">
+          <div>
+            <p className="rly-branches-kicker">01 / KHÔNG GIAN CHƠI CỦA BẠN</p>
+            <h2 id="branches-list-title">Tìm sân phù hợp</h2>
+            <p>
+              {date
+                ? `Bạn đang tìm sân ngày ${formatDateKey(date)}${time ? ` lúc ${time}` : ''}. Hãy chọn chi nhánh để xem lịch chi tiết.`
+                : 'Từ địa điểm đến giá và giờ chơi, mọi thông tin cần thiết đều ở ngay đây.'}
+            </p>
+          </div>
+          <Link className="rly-branches-text-link" href="/about#ban-do">Xem vị trí các sân <ArrowRight size={17} aria-hidden="true" /></Link>
+        </div>
         {!result.ok && result.reason === 'not_configured' && <SetupNotice />}
         {!result.ok && result.reason === 'error' && <LoadErrorNotice />}
         {result.ok && branches.length === 0 && <EmptyState title="Chưa có chi nhánh mở đặt sân" />}
-        {branches.length > 0 && <BranchShowcase branches={branches} date={date} time={time} />}
-      </div>
+        {branches.length > 0 && <RallyBranchCards branches={branches} date={date} time={time} />}
+      </section>
 
-      <Reveal className="mt-12 grid gap-4 sm:mt-16 md:grid-cols-2">
-        <Link
-          data-reveal
-          href={bookingHref(null, { date })}
-          className="group relative isolate flex items-center gap-4 overflow-hidden rounded-[1.25rem] bg-court p-5 text-on-court sm:p-6"
-        >
-          <span className="grid size-12 shrink-0 place-items-center rounded-full bg-ink text-paper">
-            <CalendarDays className="size-5" aria-hidden />
-          </span>
-          <span className="flex flex-1 flex-col">
-            <span className="font-display text-2xl leading-tight">Xem lịch trống mọi chi nhánh</span>
-            <span className="text-sm text-ink/75">Chọn chi nhánh, ngày và giờ trên một trang.</span>
-          </span>
-          <ArrowRight className="size-5 shrink-0 transition-transform group-hover:translate-x-1" aria-hidden />
-        </Link>
-        <Link
-          data-reveal
-          href="/about#ban-do"
-          className="group flex items-center gap-4 rounded-[1.25rem] border border-line bg-paper p-5 sm:p-6"
-        >
-          <span className="grid size-12 shrink-0 place-items-center rounded-full bg-shuttle text-paper">
-            <Map className="size-5" aria-hidden />
-          </span>
-          <span className="flex flex-1 flex-col">
-            <span className="font-display text-2xl leading-tight">Bản đồ & giới thiệu sân</span>
-            <span className="text-sm text-muted">Địa chỉ cụ thể, chỉ đường và tiện ích từng nơi.</span>
-          </span>
-          <ArrowRight className="size-5 shrink-0 transition-transform group-hover:translate-x-1" aria-hidden />
-        </Link>
-      </Reveal>
-    </>
+      <section aria-labelledby="branches-steps-title" className="rly-branches-steps">
+        <div className="rly-branches-section-head">
+          <div>
+            <p className="rly-branches-kicker">02 / ĐẶT SÂN DỄ DÀNG</p>
+            <h2 id="branches-steps-title">Ba bước, một trận đấu</h2>
+          </div>
+          <p>Chọn nơi chơi, kiểm tra lịch trống, gửi thông tin giữ sân. Đơn giản và rõ ràng.</p>
+        </div>
+        <ol className="rly-branches-step-grid">
+          <li><span>01</span><MapPin aria-hidden="true" size={22}/><h3>Chọn chi nhánh</h3><p>Xem vị trí, giá tham khảo và thông tin từng sân.</p></li>
+          <li><span>02</span><Clock3 aria-hidden="true" size={22}/><h3>Chọn giờ chơi</h3><p>Mở lịch thực tế để chọn sân và khung giờ phù hợp.</p></li>
+          <li><span>03</span><ShieldCheck aria-hidden="true" size={22}/><h3>Gửi yêu cầu</h3><p>Điền thông tin liên hệ và nhận xác nhận từ chi nhánh.</p></li>
+        </ol>
+      </section>
+
+      <section className="rly-branches-bottom-cta" aria-label="Bắt đầu đặt sân">
+        <div>
+          <p className="rly-branches-kicker">RALLY / ĐẶT SÂN TRỰC TUYẾN</p>
+          <h2>Sẵn sàng ra sân?</h2>
+          <p>Chọn ngày và giờ chơi của bạn trên lịch đặt sân Rally.</p>
+        </div>
+        <Link className="rly-btn rly-btn-red" href={bookingHref(null, { date, time })}>Đặt sân ngay <ArrowRight size={19} aria-hidden="true" /></Link>
+      </section>
+    </div>
   );
 }

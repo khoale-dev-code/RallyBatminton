@@ -21,11 +21,51 @@ function supabaseStoragePattern(): { patterns: RemotePattern[]; isLocal: boolean
 
 const storage = supabaseStoragePattern();
 
+/**
+ * Content-Security-Policy: chỉ cho tải mã / kết nối tới đúng các nơi website dùng (Supabase, Cloudflare Turnstile,
+ * bản đồ Google nhúng). Next.js cần 'unsafe-inline' cho script khởi tạo trang; 'unsafe-eval' chỉ ở chế độ dev.
+ */
+function contentSecurityPolicy(): string {
+  const dev = process.env.NODE_ENV !== 'production';
+  const preview = process.env.VERCEL_ENV === 'preview';
+  let supabase = '';
+  let supabaseWs = '';
+  try {
+    const url = new URL(process.env.NEXT_PUBLIC_SUPABASE_URL ?? '');
+    supabase = url.origin;
+    supabaseWs = `${url.protocol === 'http:' ? 'ws' : 'wss'}://${url.host}`;
+  } catch {
+    // Chưa cấu hình Supabase: bỏ qua.
+  }
+  const turnstile = 'https://challenges.cloudflare.com';
+  const vercelLive = preview ? ' https://vercel.live' : '';
+  return [
+    "default-src 'self'",
+    `script-src 'self' 'unsafe-inline'${dev ? " 'unsafe-eval'" : ''} ${turnstile}${vercelLive}`,
+    "style-src 'self' 'unsafe-inline'",
+    `img-src 'self' data: blob: https: ${supabase}`.trim(),
+    "font-src 'self' data:",
+    `connect-src 'self' ${supabase} ${supabaseWs} ${turnstile}${vercelLive}`.replace(/\s+/g, ' ').trim(),
+    `frame-src ${turnstile} https://www.google.com https://maps.google.com${vercelLive}`,
+    "worker-src 'self' blob:",
+    "object-src 'none'",
+    "base-uri 'self'",
+    `form-action 'self' ${supabase} https://accounts.google.com`.trim(),
+    "frame-ancestors 'none'",
+    // Supabase chạy http (máy cục bộ) thì không ép https.
+    ...(dev || supabase.startsWith('http:') ? [] : ['upgrade-insecure-requests']),
+  ].join('; ');
+}
+
 const securityHeaders = [
   { key: 'X-Content-Type-Options', value: 'nosniff' },
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
   { key: 'X-Frame-Options', value: 'DENY' },
-  { key: 'Permissions-Policy', value: 'camera=(self), microphone=(), geolocation=()' },
+  { key: 'Permissions-Policy', value: 'camera=(self), microphone=(), geolocation=(), payment=(), usb=()' },
+  { key: 'Cross-Origin-Opener-Policy', value: 'same-origin' },
+  { key: 'Content-Security-Policy', value: contentSecurityPolicy() },
+  // Chỉ có tác dụng khi chạy HTTPS (Vercel); trình duyệt bỏ qua trên http://localhost.
+  ...(process.env.NODE_ENV === 'production' ? [{ key: 'Strict-Transport-Security', value: 'max-age=31536000' }] : []),
 ];
 
 const nextConfig: NextConfig = {

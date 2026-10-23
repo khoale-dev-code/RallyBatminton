@@ -47,3 +47,14 @@ export function getSepayApiConfig(): { token: string | null; apiBase: string } {
 export function getCronSecret(): string | null {
   return optionalEnv('CRON_SECRET');
 }
+
+/**
+ * (Tùy chọn) Chỉ nhận webhook SePay từ các IP này — xem developer.sepay.vn → Địa chỉ IP.
+ * Ví dụ: SEPAY_ALLOWED_IPS=103.255.238.9,35.240.192.27. Để trống = không giới hạn (vẫn bắt buộc HMAC / API Key).
+ */
+export function getSepayAllowedIps(): string[] {
+  return (process.env.SEPAY_ALLOWED_IPS ?? '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+}

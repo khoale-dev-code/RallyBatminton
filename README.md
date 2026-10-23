@@ -59,6 +59,7 @@ Vào **Supabase Dashboard → SQL Editor**, mở từng file trong `supabase/sql
 | 20 | `19_staff_checkout.sql` | Có | Tổng quan riêng cho nhân viên (lương tạm tính, giờ công, đi trễ, tăng ca, thưởng/phạt); tên đồng nghiệp trên lịch ca; bán hàng chuyển khoản bằng mã QR SePay tự xác nhận. Xem mục 18. Chạy sau 18 |
 | 21 | `20_booking_extend.sql` | Có | Khách chơi thêm giờ: gia hạn đơn đang chơi theo bước 30 phút, giới hạn bởi đơn kế tiếp trên sân / giờ đóng cửa, tính tiền phần thêm theo bảng giá. Xem mục 19. Chạy sau 19 |
 | 22 | `21_attendance_rules.sql` | **BẮT BUỘC** | Quy tắc chấm công: công chỉ tính trong khung ca (+ tăng ca đã đồng ý), quên quét thì nhân viên gửi yêu cầu sửa giờ để chủ sân duyệt, tự đóng ca quên quét ra, trang *Duyệt chấm công*, máy quầy hiện mã QR không cần đăng nhập. Xem mục 20. Chạy sau 20 |
+| 23 | `22_privacy_security.sql` | **BẮT BUỘC** | Bảo vệ dữ liệu cá nhân (Luật 91/2025/QH15, NĐ 356/2025/NĐ-CP): văn bản pháp lý có phiên bản, bằng chứng xác nhận / đồng ý khi đặt sân và đăng ký, yêu cầu xem / tải / sửa / xóa dữ liệu kèm hạn xử lý, ẩn danh hóa khách, thời hạn lưu trữ, nhật ký webhook thanh toán, siết quyền bảng. Xem mục 22. Chạy sau 21 |
 
 **Đã cài Rally từ trước?** Chỉ cần chạy thêm `05_product_details.sql`, `06_product_tax.sql` rồi `07_units_options.sql` (không mất dữ liệu).
 
@@ -96,6 +97,7 @@ Sao chép `.env.example` thành `.env.local`, điền theo **Project Settings �
 | `NEXT_PUBLIC_SITE_URL` | Địa chỉ website; dùng để tạo mã QR chấm công |
 | `NEXT_PUBLIC_TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY` | Cloudflare Turnstile chống spam form giữ sân. File mẫu dùng khóa thử nghiệm của Cloudflare; thay khóa thật khi chạy chính thức |
 | `SEPAY_WEBHOOK_SECRET` / `SEPAY_WEBHOOK_API_KEY` | Khóa bảo mật webhook SePay (mục 15) |
+| `SEPAY_ALLOWED_IPS` | (Tùy chọn) Chỉ nhận webhook từ các IP của SePay, cách nhau dấu phẩy (mục 22) |
 | `SEPAY_API_TOKEN` | API Token ở SePay → API Access, để đối soát dự phòng (mục 16) |
 | `RESEND_API_KEY`, `ALERT_EMAIL_FROM` | Gửi email cảnh báo cho chủ sân qua Resend (mục 16) |
 | `CRON_SECRET` | Khóa bảo vệ đường dẫn chạy định kỳ `/api/cron/sepay-reconcile` và `/api/cron/attendance` (tự đóng ca quên quét ra mỗi đêm) |
@@ -384,3 +386,42 @@ Quy tắc:
 **Tự đóng ca mỗi đêm:** `vercel.json` có lịch `/api/cron/attendance` (2:30 sáng giờ Việt Nam) dùng `CRON_SECRET`. Không cài cron thì hệ thống vẫn tự đóng khi chủ sân mở *Duyệt chấm công* hoặc *Bảng lương*, và trước khi chốt lương.
 
 Sau khi chạy SQL: các tháng **chưa chốt lương** được tính lại công theo khung ca (tháng đã chốt giữ nguyên). Kiểm tra bằng `supabase/tests/99_verify_schema.sql` dòng 27.
+
+## 21. Cẩm nang cầu lông (`/guide`)
+
+Trang công khai **Cẩm nang** (menu trên cùng và chân trang): 9 bài cho người mới — luật chơi, sân đơn / sân đôi, lỗi hay mắc, chọn vợt, kỹ thuật nền tảng, khởi động, giày & đồ dùng, quấn cán, lần đầu đến Rally. Có **sơ đồ sân tương tác** (đánh đơn / đôi, ô giao cầu theo điểm chẵn lẻ).
+
+- Bấm thẻ → đọc bài trong hộp thoại (điện thoại: trượt từ dưới lên), trang phía sau giữ nguyên vị trí cuộn. Đường dẫn vẫn là `/guide/<bài>` nên gửi cho người khác được; mở trực tiếp thì ra trang riêng (tốt cho Google).
+- Nội dung nằm trong `src/features/guide/content.ts` (chữ đậm `**...**`, liên kết trong web `[chữ](/booking)`). Thêm / sửa bài chỉ cần sửa file này; thời gian đọc tự tính.
+- Không cần SQL. Trang dựng sẵn khi build (tải rất nhanh).
+
+## 22. Bảo vệ dữ liệu cá nhân & bảo mật (`22_privacy_security.sql`)
+
+Căn cứ năm 2026: **Luật Bảo vệ dữ liệu cá nhân số 91/2025/QH15** và **Nghị định 356/2025/NĐ-CP** (cùng hiệu lực 01/01/2026, thay Nghị định 13/2023/NĐ-CP). Checklist trước khi chạy thật: [`docs/GO-LIVE-CHECKLIST.md`](docs/GO-LIVE-CHECKLIST.md).
+
+**Văn bản pháp lý (chân trang mọi trang công khai):** `/legal` — Chính sách bảo vệ dữ liệu cá nhân (`/legal/bao-mat`), Điều khoản sử dụng và đặt sân (`/legal/dieu-khoan`), Chính sách hủy sân và hoàn cọc (`/legal/huy-san`), Chính sách cookie (`/legal/cookie`).
+- Nội dung nằm trong database, **có phiên bản**: *Quản trị → Dữ liệu cá nhân → Văn bản pháp lý → Sửa* → đăng phiên bản mới (có xem trước, ghi nội dung thay đổi, hẹn ngày hiệu lực). Phiên bản cũ giữ nguyên và xem lại được (`?v=1`).
+- Bảng giữ chỗ / cọc / hoàn cọc trong chính sách hủy sân **đọc trực tiếp cấu hình từng chi nhánh** (cùng công thức với lúc khách hủy) → luôn khớp màn hình đặt sân, xác nhận, tra cứu.
+- Tên doanh nghiệp, địa chỉ, đầu mối dữ liệu: *Cài đặt → Pháp lý & dữ liệu cá nhân* (mã số thuế ở mục Thuế).
+- **Bản mặc định là bản nháp** viết theo đúng cách hệ thống đang hoạt động — cần rà soát (nên nhờ luật sư) trước khi vận hành công khai.
+
+**Xác nhận và đồng ý (form đặt sân, đăng ký thành viên):** hai ô tách riêng, không chọn sẵn — (1) *bắt buộc*: đồng ý điều khoản + xác nhận đã được cung cấp chính sách bảo vệ dữ liệu; (2) *không bắt buộc*: nhận tin khuyến mãi. Mỗi lần lưu **bằng chứng** (`privacy_consents`): câu chữ chính xác, phiên bản chính sách / điều khoản, thời điểm, mã băm IP, trình duyệt — giữ sân và lưu bằng chứng trong cùng một giao dịch. Đăng nhập Google lần đầu cũng được ghi. Rút lại đồng ý = thêm bản ghi mới (không sửa / xóa bản cũ). Nhân viên đổi cờ "nhận tin" cũng tự ghi bằng chứng.
+
+**Quyền của khách:**
+- Khách không cần tài khoản gửi yêu cầu tại `/legal/yeu-cau-du-lieu` (xem, nhận bản sao, sửa, xóa, rút đồng ý, hạn chế, phản đối, khiếu nại). Số điện thoại khớp mã một đơn đã đặt → **tự xác minh**; không khớp → chủ sân gọi lại xác minh. Có Turnstile và giới hạn số lần gửi.
+- Thành viên: *Tài khoản → Quyền riêng tư* — tải toàn bộ dữ liệu (JSON), bật / tắt nhận tin, xem lịch sử đồng ý và yêu cầu.
+- Hạn xử lý theo Điều 5 Nghị định 356/2025: phản hồi **2 ngày làm việc**; xem / sửa / cung cấp **10 ngày**; rút đồng ý / hạn chế / phản đối **15 ngày**; xóa **20 ngày**; gia hạn tối đa một lần (ghi lý do). Menu *Dữ liệu cá nhân* có số việc chờ; danh sách tô đỏ khi quá hạn.
+- **Xóa = ẩn danh hóa**: tên, SĐT, email, ghi chú trên hồ sơ khách, mọi đơn, đồ thuê, đơn bán **và nhật ký thay đổi** bị xóa; đơn và giao dịch giữ ở dạng không định danh (luật kế toán, soft-delete). Thành viên: tài khoản bị khóa và xóa đăng nhập (Supabase Auth — xóa mềm). Không làm được khi khách còn đơn sắp chơi / đang mượn đồ. Chủ sân cũng tải được dữ liệu của khách để trả lời yêu cầu xem.
+
+**Tối thiểu hóa dữ liệu:** đặt sân chỉ cần họ tên + SĐT; vật cầm cọc khi thuê đồ chỉ được ghi *loại* giấy tờ (database chặn chuỗi số dài); số điện thoại trong bảng chống tra cứu dồn dập được băm, tự xóa sau 1 ngày; đơn lưu trên trình duyệt khách tự xóa 30 ngày sau giờ chơi (có nút *Xóa tất cả khỏi thiết bị này*). Lưu ý: mã băm vẫn là dữ liệu cá nhân (giả danh), không phải ẩn danh.
+
+**Thời hạn lưu trữ:** *Dữ liệu cá nhân → Thời hạn lưu trữ* — sửa số ngày, bật *Tự động* cho loại được phép; chạy hằng đêm cùng lịch `/api/cron/attendance` hoặc bấm *Dọn dữ liệu hết hạn ngay*. Bảng này hiện trong chính sách bảo vệ dữ liệu.
+
+**Bảo mật:**
+- **Turnstile** xác minh ở máy chủ (Siteverify) kèm *action* từng form và *hostname* (chặn mã tạo trên trang giả). Production thiếu `TURNSTILE_SECRET_KEY` → từ chối.
+- **Webhook SePay**: HMAC-SHA256 trên dữ liệu gốc + `X-SePay-Timestamp` ±5 phút (hoặc API Key); mỗi mã giao dịch chỉ ghi một lần (ràng buộc duy nhất); tùy chọn `SEPAY_ALLOWED_IPS`. Mọi lần gọi (kể cả bị từ chối) ghi vào *Nhật ký thông báo thanh toán*.
+- **Header bảo mật**: Content-Security-Policy (chỉ Supabase, Cloudflare Turnstile, bản đồ Google), HSTS, COOP, X-Frame-Options, Permissions-Policy.
+- **Quyền database**: khách chưa đăng nhập (anon) không còn quyền ghi trực tiếp bảng nào; thu hồi TRUNCATE của anon / authenticated. Kiểm toán: chạy `supabase/tests/98_security_audit.sql` (mọi dòng `WARN` cần xem lại) và `99_verify_schema.sql` (dòng 28).
+- **Khóa bí mật không lọt xuống trình duyệt**: sau `npm run build` chạy `npm run check:secrets`.
+- Rà soát WCAG 2.1 AA (axe-core) các trang khách: đã sửa tương phản chữ nhỏ, bảng cuộn ngang dùng được bằng bàn phím; số trang trí cỡ lớn được ẩn khỏi trình đọc màn hình.
+
