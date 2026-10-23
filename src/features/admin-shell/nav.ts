@@ -21,7 +21,8 @@ export type NavIcon =
   | 'bank'
   | 'cash'
   | 'review'
-  | 'privacy';
+  | 'privacy'
+  | 'security';
 
 export interface NavItem {
   href: string;
@@ -47,7 +48,7 @@ export const NAV_GROUP_KEYS: NavGroupKey[] = ['ops', 'goods', 'hr', 'admin'];
 /** Menu chỉ hiện mục người dùng có quyền — chỉ là tiện ích; database vẫn chặn bằng RLS. */
 export function buildNav(
   ctx: StaffContext,
-  counts: { pendingOvertime?: number; attendanceReview?: number; privacyRequests?: number } = {},
+  counts: { pendingOvertime?: number; attendanceReview?: number; privacyRequests?: number; securityEvents?: number } = {},
 ): NavGroup[] {
   const owner = isOwner(ctx);
   const can = (p: Parameters<typeof hasPermission>[1]) => owner || hasPermission(ctx, p);
@@ -99,9 +100,10 @@ export function buildNav(
             { href: '/admin/branches', label: 'Chi nhánh & sân', icon: 'building' as const },
             { href: '/admin/audit', label: 'Nhật ký thay đổi', icon: 'log' as const },
             { href: '/admin/privacy', label: 'Dữ liệu cá nhân', icon: 'privacy' as const, badge: counts.privacyRequests ?? 0 },
+            { href: '/admin/security', label: 'Bảo mật', icon: 'security' as const, badge: counts.securityEvents ?? 0 },
             { href: '/admin/settings', label: 'Cài đặt thương hiệu', icon: 'settings' as const },
           ]
-        : [],
+        : [{ href: '/admin/security', label: 'Xác thực 2 lớp', icon: 'security' as const }],
     },
   ];
   return groups.filter((g) => g.items.length > 0);

@@ -7,8 +7,16 @@ const CODE_MESSAGES: Record<string, string> = {
   // Đặt sân
   SLOT_TAKEN: 'Khung giờ này vừa có người giữ. Vui lòng chọn giờ khác.',
   HOLD_EXPIRED: 'Thời gian giữ chỗ đã hết. Vui lòng đặt lại.',
-  TOO_MANY_HOLDS: 'Số điện thoại này đang giữ 2 lượt chưa xác nhận. Hoàn tất hoặc chờ hết hạn rồi đặt tiếp.',
+  TOO_MANY_HOLDS: 'Số điện thoại này đang có lượt giữ chưa thanh toán. Hoàn tất chuyển cọc hoặc chờ hết hạn rồi đặt tiếp.',
   RATE_LIMITED: 'Bạn thao tác quá nhanh. Vui lòng thử lại sau ít phút.',
+  // Chống giữ sân ảo (23_security_hardening.sql)
+  ONLINE_BOOKING_PAUSED: 'Đặt sân online đang tạm dừng. Vui lòng gọi hotline chi nhánh để đặt sân.',
+  HOLD_RISK_BLOCKED:
+    'Số điện thoại này tạm thời không giữ sân online được do nhiều lượt giữ trước đó chưa thanh toán. Vui lòng gọi chi nhánh để được hỗ trợ.',
+  CLIENT_HOLD_LIMIT:
+    'Thiết bị này đang giữ nhiều lượt chưa thanh toán. Hoàn tất chuyển cọc các lượt đang giữ hoặc chờ hết hạn rồi đặt tiếp.',
+  HOLDS_BUSY: 'Chi nhánh đang có nhiều lượt giữ chờ thanh toán. Vui lòng thử lại sau ít phút hoặc gọi chi nhánh để đặt.',
+  MFA_REQUIRED: 'Thao tác này cần phiên đã xác thực 2 lớp. Đăng xuất, đăng nhập lại và nhập mã trong ứng dụng xác thực.',
   OUTSIDE_OPENING_HOURS: 'Khung giờ nằm ngoài giờ mở cửa của chi nhánh.',
   NO_PRICE_RULE: 'Khung giờ này chưa có bảng giá. Vui lòng chọn giờ khác hoặc liên hệ chi nhánh.',
   RANGE_NOT_ALIGNED: 'Giờ bắt đầu và kết thúc phải theo từng ô 30 phút.',
@@ -164,6 +172,7 @@ const CODE_MESSAGES: Record<string, string> = {
   OVERTIME_EXPIRED: 'Đã quá khung giờ tăng ca, không trả lời được nữa.',
   // Quyền & cấu hình
   AUTH_REQUIRED: 'Vui lòng đăng nhập.',
+  INVALID_INPUT: 'Dữ liệu không hợp lệ. Vui lòng kiểm tra lại.',
   PERMISSION_DENIED: 'Bạn không có quyền thực hiện thao tác này tại chi nhánh.',
   OWNER_REQUIRED: 'Chỉ chủ sân được thực hiện thao tác này.',
   SERVER_ONLY: 'Thao tác chỉ được thực hiện từ máy chủ.',

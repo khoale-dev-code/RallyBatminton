@@ -2847,6 +2847,158 @@ export type Database = {
         }
         Relationships: []
       }
+      security_settings: {
+        Row: {
+          id: boolean
+          online_booking_paused: boolean
+          pause_message: string | null
+          paused_at: string | null
+          require_owner_mfa: boolean
+          require_staff_mfa: boolean
+          client_max_active_holds: number
+          client_max_holds_per_hour: number
+          client_max_phones_per_day: number
+          abandon_window_days: number
+          phone_elevated_after: number
+          phone_block_after: number
+          elevated_hold_minutes: number
+          hold_cap_per_court: number
+          hold_cap_min: number
+          login_max_failures: number
+          login_lock_minutes: number
+          login_ip_max_failures: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          id?: boolean
+          online_booking_paused?: boolean
+          pause_message?: string | null
+          paused_at?: string | null
+          require_owner_mfa?: boolean
+          require_staff_mfa?: boolean
+          client_max_active_holds?: number
+          client_max_holds_per_hour?: number
+          client_max_phones_per_day?: number
+          abandon_window_days?: number
+          phone_elevated_after?: number
+          phone_block_after?: number
+          elevated_hold_minutes?: number
+          hold_cap_per_court?: number
+          hold_cap_min?: number
+          login_max_failures?: number
+          login_lock_minutes?: number
+          login_ip_max_failures?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          id?: boolean
+          online_booking_paused?: boolean
+          pause_message?: string | null
+          paused_at?: string | null
+          require_owner_mfa?: boolean
+          require_staff_mfa?: boolean
+          client_max_active_holds?: number
+          client_max_holds_per_hour?: number
+          client_max_phones_per_day?: number
+          abandon_window_days?: number
+          phone_elevated_after?: number
+          phone_block_after?: number
+          elevated_hold_minutes?: number
+          hold_cap_per_court?: number
+          hold_cap_min?: number
+          login_max_failures?: number
+          login_lock_minutes?: number
+          login_ip_max_failures?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      security_events: {
+        Row: {
+          id: string
+          kind: string
+          severity: string
+          branch_id: string | null
+          subject: string | null
+          subject_key: string | null
+          occurrences: number
+          details: Json
+          first_seen_at: string
+          last_seen_at: string
+          alerted_at: string | null
+          acknowledged_at: string | null
+          acknowledged_by: string | null
+        }
+        Insert: {
+          id?: string
+          kind: string
+          severity: string
+          branch_id?: string | null
+          subject?: string | null
+          subject_key?: string | null
+          occurrences?: number
+          details?: Json
+          first_seen_at?: string
+          last_seen_at?: string
+          alerted_at?: string | null
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+        }
+        Update: {
+          id?: string
+          kind?: string
+          severity?: string
+          branch_id?: string | null
+          subject?: string | null
+          subject_key?: string | null
+          occurrences?: number
+          details?: Json
+          first_seen_at?: string
+          last_seen_at?: string
+          alerted_at?: string | null
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'security_events_branch_id_fkey'
+            columns: ['branch_id']
+            isOneToOne: false
+            referencedRelation: 'branches'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      customer_hold_policies: {
+        Row: {
+          customer_id: string
+          policy: string
+          note: string
+          until_at: string | null
+          set_by: string | null
+          updated_at: string
+        }
+        Insert: {
+          customer_id: string
+          policy: string
+          note: string
+          until_at?: string | null
+          set_by?: string | null
+          updated_at?: string
+        }
+        Update: {
+          customer_id?: string
+          policy?: string
+          note?: string
+          until_at?: string | null
+          set_by?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       booking_balances: {
@@ -2913,6 +3065,35 @@ export type Database = {
         }
         Returns: undefined
       }
+      acknowledge_security_event: { Args: { p_event_id: string }; Returns: undefined }
+      acknowledge_all_security_events: { Args: never; Returns: number }
+      service_record_security_event: {
+        Args: { p_details?: Json; p_kind: string; p_severity: string; p_subject: string | null; p_subject_key: string | null }
+        Returns: string
+      }
+      set_customer_hold_policy: {
+        Args: { p_customer_id: string; p_note: string | null; p_policy: string; p_until?: string | null }
+        Returns: Json
+      }
+      customer_hold_status: { Args: { p_customer_id: string }; Returns: Json }
+      restricted_customers: { Args: never; Returns: Json }
+      service_note_hold_rejection: {
+        Args: { p_code: string; p_court_id: string; p_ip_hash: string | null; p_phone: string }
+        Returns: undefined
+      }
+      online_booking_status: { Args: never; Returns: Json }
+      service_login_check: { Args: { p_ip_hash: string | null; p_login: string; p_scope: string }; Returns: number }
+      service_login_record: {
+        Args: { p_ip_hash: string | null; p_login: string; p_scope: string; p_success: boolean }
+        Returns: undefined
+      }
+      update_security_settings: {
+        Args: { p: Json }
+        Returns: Database['public']['Tables']['security_settings']['Row']
+      }
+      service_pending_security_alerts: { Args: { p_limit?: number }; Returns: Json }
+      service_mark_security_alerted: { Args: { p_ids: string[] }; Returns: number }
+      service_security_maintenance: { Args: never; Returns: Json }
       service_record_member_consents: {
         Args: {
           p_ip_hash: string | null

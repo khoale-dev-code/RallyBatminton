@@ -4,6 +4,7 @@ import { after, NextResponse, type NextRequest } from 'next/server';
 import { z } from 'zod';
 
 import { sendPendingAlertsSafely } from '@/features/payments/alerts';
+import { sendSecurityAlertsSafely } from '@/features/security/alerts';
 import { isAllowedIp, verifySepayRequestDetailed } from '@/features/payments/lib/sepay';
 import { errorCode } from '@/lib/errors';
 import { getSepayAllowedIps, getSepayWebhookAuth } from '@/lib/env.server';
@@ -81,6 +82,8 @@ function logEvent(entry: WebhookLog) {
       p_ip_hash: entry.ipHash,
     });
     if (error) console.error('[sepay] Chưa ghi được nhật ký webhook (đã chạy 22_privacy_security.sql?):', error.message);
+    // Bị từ chối dồn dập → database tạo sự kiện an ninh (23_security_hardening.sql); gửi email cho chủ sân.
+    else if (entry.authResult === 'unauthorized') await sendSecurityAlertsSafely();
   });
 }
 

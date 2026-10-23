@@ -214,7 +214,7 @@ export function TaxSection({ ed, brandTax, canManageTax }: TaxSectionProps) {
             Cửa hàng đang tính thuế theo phương pháp{' '}
             <strong className="text-ink">{brandTax.method === 'deduction' ? 'khấu trừ' : 'trực tiếp'}</strong>.{' '}
             {canManageTax ? (
-              <Link href="/admin/settings#thue" className="underline underline-offset-4 hover:text-ink">
+              <Link href="/admin/settings?muc=thue" className="underline underline-offset-4 hover:text-ink">
                 Đổi cách tính thuế
               </Link>
             ) : (

@@ -3,6 +3,7 @@
 import { createHash } from 'node:crypto';
 
 import { headers } from 'next/headers';
+import { after } from 'next/server';
 import { z } from 'zod';
 
 import { getAuthUserId } from '@/lib/auth/context';
@@ -23,6 +24,10 @@ import {
 import { verifyTurnstile } from './turnstile';
 import { CONSENT_TEXT } from '@/features/privacy/consent-text';
 import { requestMeta } from '@/features/privacy/request-meta';
+import { sendSecurityAlertsSafely } from '@/features/security/alerts';
+
+/** Mã lỗi giữ sân cho thấy dấu hiệu giữ sân ảo (23_security_hardening.sql). */
+const HOLD_ABUSE_CODES = new Set(['HOLD_RISK_BLOCKED', 'CLIENT_HOLD_LIMIT', 'HOLDS_BUSY', 'RATE_LIMITED', 'TOO_MANY_HOLDS']);
 
 /** Khách giữ sân không cần đăng nhập. Mọi kiểm tra cuối cùng (trùng giờ, giá, giới hạn) nằm trong database. */
 export async function createGuestHoldAction(input: GuestHoldInput): Promise<GuestHoldResult> {
@@ -76,7 +81,18 @@ export async function createGuestHoldAction(input: GuestHoldInput): Promise<Gues
       p_idempotency_key: v.idempotencyKey,
     }));
   }
-  if (error) return { ok: false, error: toUserMessage(error), code: errorCode(error) ?? undefined };
+  if (error) {
+    const code = errorCode(error);
+    // Bị chặn vì dấu hiệu lạm dụng → ghi sự kiện an ninh + báo chủ sân (sau khi đã trả lời khách).
+    if (code && HOLD_ABUSE_CODES.has(code)) {
+      const report = { p_code: code, p_phone: v.phone, p_ip_hash: meta.ipHash, p_court_id: v.courtId };
+      after(async () => {
+        const { error: noteError } = await supabase.rpc('service_note_hold_rejection', report);
+        if (!noteError && code !== 'RATE_LIMITED' && code !== 'TOO_MANY_HOLDS') await sendSecurityAlertsSafely();
+      });
+    }
+    return { ok: false, error: toUserMessage(error), code: code ?? undefined };
+  }
   const booking = bookingSummarySchema.safeParse(data);
   if (!booking.success) return { ok: false, error: 'Không đọc được kết quả giữ sân. Vui lòng tra cứu lại đơn.' };
   // Khách đang đăng nhập tài khoản thành viên: gắn đơn vào tài khoản (người dùng lấy từ phiên phía máy chủ).

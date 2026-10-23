@@ -12,6 +12,9 @@ const ctx: StaffContext = {
   employeeId: 'e1',
   isActive: true,
   mustChangePassword: false,
+  aal: 'aal1',
+  mfaRequired: false,
+  mfaEnrolled: false,
   branches: [],
 };
 

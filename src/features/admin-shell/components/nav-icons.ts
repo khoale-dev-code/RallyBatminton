@@ -21,6 +21,7 @@ import {
   HandCoins,
   ClipboardCheck,
   ShieldCheck,
+  LockKeyhole,
 } from 'lucide-react';
 
 import { type NavIcon } from '../nav';
@@ -47,4 +48,5 @@ export const NAV_ICONS: Record<NavIcon, LucideIcon> = {
   cash: HandCoins,
   review: ClipboardCheck,
   privacy: ShieldCheck,
+  security: LockKeyhole,
 };

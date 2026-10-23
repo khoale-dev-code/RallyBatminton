@@ -7,6 +7,8 @@ import { z } from 'zod';
 import { verifyTurnstile } from '@/features/booking/turnstile';
 import { CONSENT_TEXT } from '@/features/privacy/consent-text';
 import { recordAccountConsents } from '@/features/privacy/record-consent';
+import { lockMessage } from '@/features/security/lib/settings';
+import { loginLockSeconds, recordLoginResult } from '@/features/security/login-guard';
 import { siteOrigin } from '@/lib/site-origin';
 import { errorCode, toUserMessage } from '@/lib/errors';
 import { formError, formSuccess, formZodError, type FormState } from '@/lib/form-state';
@@ -161,12 +163,19 @@ export async function memberSignInAction(_prev: FormState, formData: FormData): 
   if (!parsed.success) return formZodError(parsed.error);
   const { login, password, next } = parsed.data;
 
+  // Chống dò mật khẩu: sai nhiều lần → khóa tạm (23_security_hardening.sql).
+  const lockSeconds = await loginLockSeconds('member', login);
+  if (lockSeconds > 0) return formError(lockMessage(lockSeconds));
+
   let email = login.toLowerCase();
   if (!login.includes('@')) {
     const secret = secretOrNull();
     if (!secret) return formError(NO_SECRET);
     const { data, error } = await secret.rpc('resolve_member_login', { p_login: login });
-    if (error || !data) return formError(GENERIC_LOGIN_ERROR);
+    if (error || !data) {
+      await recordLoginResult('member', login, false);
+      return formError(GENERIC_LOGIN_ERROR);
+    }
     email = data;
   }
 
@@ -176,8 +185,10 @@ export async function memberSignInAction(_prev: FormState, formData: FormData): 
     if (error.code === 'email_not_confirmed') {
       return formError('Email chưa được kích hoạt. Mở thư kích hoạt trong hộp thư (kể cả mục Spam) rồi thử lại.');
     }
+    await recordLoginResult('member', login, false);
     return formError(GENERIC_LOGIN_ERROR);
   }
+  await recordLoginResult('member', login, true);
   // Tạo hồ sơ nếu thiếu; tài khoản nhân sự / bị khóa không dùng trang khách.
   const { data: profile, error: profileError } = await supabase.rpc('ensure_member_profile');
   if (profileError) {

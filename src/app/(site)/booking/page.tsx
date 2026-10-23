@@ -11,6 +11,7 @@ import { bookingHref } from '@/features/booking/lib/links';
 import { getBrandInfo } from '@/features/brand/queries';
 import { bookingBoardProps } from '@/features/branches/board-props';
 import { PriceTable } from '@/features/branches/components/price-table';
+import { BookingPausedNotice } from '@/features/security/components/booking-paused-notice';
 import { mapDirectionsHref } from '@/features/branches/lib/map-embed';
 import { getBranchDetail, listPublishedBranches } from '@/features/branches/queries';
 import { cn } from '@/lib/cn';
@@ -63,6 +64,7 @@ export default async function BookingPage({ searchParams }: { searchParams: Prom
       </div>
 
       <div className="rb-booking-content">
+        <BookingPausedNotice className="mb-6" />
         {!list.ok && list.reason === 'not_configured' && <SetupNotice />}
         {!list.ok && list.reason === 'error' && <LoadErrorNotice />}
         {list.ok && branches.length === 0 && <EmptyState title="Chưa có chi nhánh mở đặt sân" />}

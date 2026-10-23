@@ -4,13 +4,15 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 
 import { ACTIVE_BRANCH_COOKIE, getActiveBranch, getStaffContext } from './context';
-import { hasPermission, type AppPermission, type StaffBranch, type StaffContext } from './permissions';
+import { hasPermission, needsMfa, type AppPermission, type StaffBranch, type StaffContext } from './permissions';
 
 /** Trang quản trị: bắt buộc đăng nhập bằng tài khoản nhân sự đang hoạt động. */
 export async function requireStaff(options: { allowPasswordChange?: boolean } = {}): Promise<StaffContext> {
   const ctx = await getStaffContext();
   if (!ctx) redirect('/admin-login');
   if (!ctx.isActive) redirect('/admin-login?error=inactive');
+  // Chủ sân bắt buộc xác thực 2 lớp mà phiên chưa nhập mã: database chưa cấp quyền nào → sang bước nhập / cài mã.
+  if (needsMfa(ctx)) redirect('/admin-mfa');
   if (ctx.mustChangePassword && !options.allowPasswordChange) redirect('/admin/password');
   return ctx;
 }

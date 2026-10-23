@@ -6,6 +6,7 @@ import { Suspense } from 'react';
 import { SetupNotice } from '@/components/layout/setup-notice';
 import { Panel } from '@/components/ui/primitives';
 import { BookingBoard } from '@/features/booking/components/booking-board';
+import { BookingPausedNotice } from '@/features/security/components/booking-paused-notice';
 import { getBrandInfo } from '@/features/brand/queries';
 import { CourtGallery } from '@/features/branches/components/court-gallery';
 import { PriceTable } from '@/features/branches/components/price-table';
@@ -77,6 +78,7 @@ export default async function BranchPage({ params }: PageProps) {
           <h2 id="book-title" className="mb-4 text-2xl sm:text-3xl">
             Chọn giờ chơi
           </h2>
+          <BookingPausedNotice className="mb-4" />
           <Suspense fallback={<div className="h-96 animate-pulse rounded-panel bg-hall" />}>
             <BookingBoard {...bookingBoardProps(detail, brand)} />
           </Suspense>

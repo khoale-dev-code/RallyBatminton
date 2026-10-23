@@ -1,32 +1,17 @@
-import { BellRing, CheckCircle2, CircleAlert, Send } from 'lucide-react';
-import { type ReactNode } from 'react';
+import { BellRing, CircleAlert, Send } from 'lucide-react';
 
 import { ActionForm, CheckboxField, SubmitButton, TextareaField } from '@/components/ui/form';
 import { sendTestAlertAction, updateNotificationSettingsAction } from '@/features/settings/actions';
-import { cn } from '@/lib/cn';
 
 interface AlertSettingsProps {
   settings: { alert_emails: string[]; alert_on_review: boolean; alert_on_unmatched: boolean } | null;
   ownerEmail: string | null;
-  env: { resend: boolean; sepayToken: boolean; cron: boolean };
-  siteUrl: string;
+  /** Máy chủ đã có RESEND_API_KEY (gửi được email). */
+  emailReady: boolean;
 }
 
-function EnvRow({ ok, children }: { ok: boolean; children: ReactNode }) {
-  return (
-    <li className={cn('flex items-start gap-2', ok ? 'text-court-deep' : 'text-shuttle-deep')}>
-      {ok ? (
-        <CheckCircle2 className="mt-0.5 size-4 shrink-0" aria-hidden />
-      ) : (
-        <CircleAlert className="mt-0.5 size-4 shrink-0" aria-hidden />
-      )}
-      <span>{children}</span>
-    </li>
-  );
-}
-
-/** Cài đặt email cảnh báo cho chủ sân + trạng thái các khóa trên máy chủ. */
-export function AlertSettings({ settings, ownerEmail, env, siteUrl }: AlertSettingsProps) {
+/** Cài đặt email cảnh báo cho chủ sân. */
+export function AlertSettings({ settings, ownerEmail, emailReady }: AlertSettingsProps) {
   if (!settings) {
     return (
       <p className="flex items-center gap-2 text-sm text-shuttle-deep">
@@ -70,24 +55,13 @@ export function AlertSettings({ settings, ownerEmail, env, siteUrl }: AlertSetti
           Ngay khi có giao dịch cần xử lý, website gửi một email có tên, số điện thoại khách và việc cần làm — không ai trực website vẫn
           biết ngay. Mỗi giao dịch chỉ báo một lần.
         </p>
-        <ul className="flex flex-col gap-1.5">
-          <EnvRow ok={env.resend}>
-            {env.resend ? 'Đã có RESEND_API_KEY — gửi được email.' : 'Chưa có RESEND_API_KEY — chưa gửi được email (README mục 16).'}
-          </EnvRow>
-          <EnvRow ok={env.sepayToken}>
-            {env.sepayToken ? 'Đã có SEPAY_API_TOKEN — đối soát dự phòng bật.' : 'Chưa có SEPAY_API_TOKEN — chưa đối soát dự phòng.'}
-          </EnvRow>
-          <EnvRow ok={env.cron}>
-            {env.cron ? (
-              <>
-                Đã có CRON_SECRET — lịch chạy gọi <code className="break-all">{`${siteUrl}/api/cron/sepay-reconcile`}</code>
-              </>
-            ) : (
-              'Chưa có CRON_SECRET — chưa chạy đối soát tự động được.'
-            )}
-          </EnvRow>
-        </ul>
-        {env.resend && (
+        {!emailReady && (
+          <p className="flex items-start gap-2 text-shuttle-deep">
+            <CircleAlert className="mt-0.5 size-4 shrink-0" aria-hidden />
+            Máy chủ chưa có RESEND_API_KEY nên chưa gửi được email.
+          </p>
+        )}
+        {emailReady && (
           <ActionForm action={sendTestAlertAction} className="gap-2">
             <SubmitButton size="sm" variant="outline" pendingLabel="Đang gửi…">
               <Send className="size-4" aria-hidden />

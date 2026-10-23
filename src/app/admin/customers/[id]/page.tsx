@@ -1,55 +1,28 @@
+import { ArrowLeft, UserRound } from 'lucide-react';
+import { initialsOf } from '@/features/member/lib/initials';
+import '@/features/admin-customers/rally-customers-v15.css';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
 import { ActionForm, CheckboxField, SubmitButton, TextareaField, TextField } from '@/components/ui/form';
-import { Badge, DescriptionList, PageHeader, Panel, Stat } from '@/components/ui/primitives';
+import { Badge, DescriptionList, Panel, Stat } from '@/components/ui/primitives';
 import { updateCustomerAction } from '@/features/admin-customers/actions';
 import { MemberTierBadge } from '@/features/admin-customers/components/member-tier-badge';
 import { getCustomer } from '@/features/admin-customers/queries';
 import { AnonymizePanel, ExportCustomerData } from '@/features/privacy/components/admin-privacy';
 import { listConsents } from '@/features/privacy/queries';
+import { HoldPolicyCard } from '@/features/security/components/hold-policy-card';
+import { getCustomerHoldStatus } from '@/features/security/queries';
 import { requireStaff, withGuard } from '@/lib/auth/guards';
 import { isOwner } from '@/lib/auth/permissions';
 import { formatDate, formatDateTime, formatNumber, formatPhone, formatTime, formatVnd } from '@/lib/format';
 import { BOOKING_STATUS, RENTAL_STATUS } from '@/lib/labels';
 
-export default async function CustomerPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  const [ctx, data] = await withGuard(requireStaff(), () => getCustomer(id));
-  if (!data) notFound();
-  const { customer: c, member, bookings, rentals, sales, stats } = data;
-  const owner = isOwner(ctx);
-  const consents = owner ? await listConsents({ customerId: c.id, userId: c.auth_user_id ?? undefined }, 10) : null;
+type CustomerBookingItem = NonNullable<Awaited<ReturnType<typeof getCustomer>>>['bookings'][number];
+
+function BookingRow({ b }: { b: CustomerBookingItem }) {
   return (
-    <>
-      <PageHeader
-        title={c.full_name}
-        description={c.anonymized_at ? `Đã ẩn danh hóa lúc ${formatDate(c.anonymized_at)}` : formatPhone(c.phone)}
-        back={
-          <Link href="/admin/customers" className="text-sm text-muted hover:underline">
-            Khách hàng
-          </Link>
-        }
-      />
-      <div className="mb-6 grid grid-cols-2 gap-4 rounded-panel border border-line bg-paper p-4 sm:p-5 lg:grid-cols-4">
-        <Stat label="Tổng chi tiêu" value={formatVnd(stats.spent)} hint="Đặt sân, mua hàng, thuê đồ" />
-        <Stat
-          label="Đã chơi"
-          value={`${stats.played} lượt`}
-          hint={stats.noShow > 0 ? `${stats.noShow} lần không đến` : 'Chưa bỏ lịch lần nào'}
-        />
-        <Stat label="Hóa đơn mua hàng" value={sales.filter((x) => x.status === 'completed').length} />
-        <Stat label="Lượt thuê đồ" value={rentals.length} />
-      </div>
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
-        <div className="flex min-w-0 flex-col gap-6">
-          <Panel title={`Lịch sử đặt sân (${bookings.length})`}>
-            {bookings.length === 0 ? (
-              <p className="text-muted">Chưa có đơn đặt sân bạn được xem.</p>
-            ) : (
-              <ul className="divide-y divide-line">
-                {bookings.map((b) => (
-                  <li key={b.id}>
+<li>
                     <Link
                       href={`/admin/bookings/${b.id}`}
                       className="flex flex-wrap items-center justify-between gap-3 py-3 hover:bg-hall/60"
@@ -68,7 +41,65 @@ export default async function CustomerPage({ params }: { params: Promise<{ id: s
                       </span>
                     </Link>
                   </li>
-                ))}
+  );
+}
+
+export default async function CustomerPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ view?: string }> }) {
+  const { id } = await params;
+  const { view: requestedView } = await searchParams;
+  const view = requestedView === 'profile' ? 'profile' : 'activity';
+  const [ctx, data] = await withGuard(requireStaff(), () => getCustomer(id));
+  if (!data) notFound();
+  const { customer: c, member, bookings, rentals, sales, stats } = data;
+  const owner = isOwner(ctx);
+  const [consents, holdStatus] = await Promise.all([
+    owner && view === 'profile' ? listConsents({ customerId: c.id, userId: c.auth_user_id ?? undefined }, 10) : Promise.resolve(null),
+    c.anonymized_at || view !== 'profile' ? Promise.resolve(null) : getCustomerHoldStatus(c.id),
+  ]);
+  return (
+    <div className="rcm-page">
+      <header className="rcm-profile-header">
+        <span className="rcm-profile-avatar" aria-hidden>{initialsOf(c.full_name)}</span>
+        <div className="min-w-0 flex-1">
+          <Link href="/admin/customers" className="rcm-profile-back"><ArrowLeft size={14} aria-hidden /> Danh sách khách</Link>
+          <h1>{c.full_name}</h1>
+          <p>{c.anonymized_at ? `Đã ẩn danh hóa ngày ${formatDate(c.anonymized_at)}` : formatPhone(c.phone)}</p>
+          <div className="rcm-profile-badges">
+            {member ? <MemberTierBadge tier={member.tier} /> : <Badge>Khách vãng lai</Badge>}
+            {member?.is_locked && <Badge tone="red">Thành viên đang khóa</Badge>}
+          </div>
+        </div>
+        <UserRound size={28} aria-hidden className="opacity-40" />
+      </header>
+      <section className="rcm-profile-kpis" aria-label="Tổng hợp khách hàng">
+        <div><Stat label="Chi tiêu đã ghi nhận" value={formatVnd(stats.spent)} hint="Sân, hàng hóa và thuê" /></div>
+        <div><Stat label="Đã chơi" value={`${stats.played} lượt`} hint={stats.noShow ? `${stats.noShow} lần không đến` : 'Chưa bỏ lịch'} /></div>
+        <div><Stat label="Hóa đơn hoàn tất" value={sales.filter((x) => x.status === 'completed').length} /></div>
+        <div><Stat label="Lượt thuê đồ" value={rentals.length} /></div>
+      </section>
+      <nav className="rcm-section-nav" aria-label="Nội dung hồ sơ">
+        <Link href={`/admin/customers/${id}`} aria-current={view === 'activity' ? 'page' : undefined}>Lịch sử giao dịch</Link>
+        <Link href={`/admin/customers/${id}?view=profile`} aria-current={view === 'profile' ? 'page' : undefined}>Thông tin & quản lý</Link>
+      </nav>
+      <div className="rcm-profile-body">
+        {view === 'activity' && (
+        <div className="flex min-w-0 flex-col gap-6">
+          <Panel title={`Lịch sử đặt sân (${bookings.length})`}>
+            {bookings.length === 0 ? (
+              <p className="text-muted">Chưa có đơn đặt sân bạn được xem.</p>
+            ) : (
+              <ul className="divide-y divide-line">
+                {bookings.slice(0, 8).map((b) => <BookingRow key={b.id} b={b} />)}
+                {bookings.length > 8 && (
+                  <li>
+                    <details className="rcm-history-more">
+                      <summary>Xem thêm {bookings.length - 8} đơn cũ</summary>
+                      <ul className="divide-y divide-line">
+                        {bookings.slice(8).map((b) => <BookingRow key={b.id} b={b} />)}
+                      </ul>
+                    </details>
+                  </li>
+                )}
               </ul>
             )}
           </Panel>
@@ -124,6 +155,9 @@ export default async function CustomerPage({ params }: { params: Promise<{ id: s
             </Panel>
           )}
         </div>
+
+        )}
+        {view === 'profile' && (
         <div className="flex flex-col gap-6">
           <Panel title="Tài khoản thành viên">
             {member ? (
@@ -144,6 +178,7 @@ export default async function CustomerPage({ params }: { params: Promise<{ id: s
               <p className="text-sm text-muted">Khách vãng lai — chưa có tài khoản trên website.</p>
             )}
           </Panel>
+          {holdStatus && <HoldPolicyCard customerId={c.id} status={holdStatus} />}
           {owner && (
             <Panel title="Quyền riêng tư" description="Bằng chứng xác nhận / đồng ý và yêu cầu về dữ liệu của khách.">
               <div className="flex flex-col gap-4">
@@ -195,7 +230,8 @@ export default async function CustomerPage({ params }: { params: Promise<{ id: s
             )}
           </Panel>
         </div>
+        )}
       </div>
-    </>
+    </div>
   );
 }

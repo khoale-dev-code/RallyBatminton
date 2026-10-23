@@ -10,7 +10,8 @@ with checks as (
            = 34 + (select count(*) from unnest(array['product_units', 'member_profiles', 'member_point_ledger', 'bank_transactions',
                      'notification_settings', 'reconcile_runs', 'shift_overtime', 'attendance_settings',
                      'attendance_fix_requests', 'attendance_kiosks', 'legal_documents', 'privacy_consents',
-                     'data_subject_requests', 'data_retention_policies', 'payment_webhook_events']) t(name)
+                     'data_subject_requests', 'data_retention_policies', 'payment_webhook_events',
+                     'security_settings', 'security_events', 'customer_hold_policies']) t(name)
                    where to_regclass('public.' || t.name) is not null) as ok,
          (select count(*)::text from pg_class c join pg_namespace s on s.oid = c.relnamespace
            where s.nspname = 'public' and c.relkind = 'r') as detail
@@ -195,6 +196,20 @@ with checks as (
          and not has_table_privilege('anon', 'public.privacy_consents', 'SELECT')
          and not has_table_privilege('anon', 'public.customers', 'INSERT'),
          'văn bản pháp lý có phiên bản + bằng chứng đồng ý + yêu cầu dữ liệu + ẩn danh hóa + anon không ghi bảng'
+  union all
+  select 29, 'Đã chạy 23_security_hardening.sql (chống giữ sân ảo, khóa đăng nhập sai, xác thực 2 lớp)',
+         to_regclass('public.security_settings') is not null
+         and to_regclass('public.security_events') is not null
+         and to_regclass('public.customer_hold_policies') is not null
+         and to_regclass('private.hold_attempts') is not null
+         and to_regprocedure('public.service_login_check(text,text,text)') is not null
+         and to_regprocedure('private.mfa_satisfied(public.app_role)') is not null
+         and pg_get_functiondef('private.is_owner()'::regprocedure) like '%mfa_satisfied%'
+         and pg_get_functiondef('public.create_guest_booking_hold_v2(uuid,timestamptz,timestamptz,text,text,text,text,text,boolean,text,text,text)'::regprocedure) like '%HOLDS_BUSY%'
+         and exists (select 1 from pg_trigger where tgname = 'payment_webhook_events_watch')
+         and not has_table_privilege('anon', 'public.security_settings', 'SELECT')
+         and not has_function_privilege('anon', 'public.service_login_record(text,text,text,boolean)', 'execute'),
+         'ngưỡng chống lạm dụng + sự kiện an ninh + khóa đăng nhập + MFA kiểm ở is_owner / permitted_branch_ids'
   union all
   select 12, 'pg_cron (tùy chọn)',
          true,

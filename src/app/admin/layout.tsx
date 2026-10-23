@@ -9,7 +9,9 @@ import { parseClosedGroups } from '@/features/admin-shell/lib/ui-prefs';
 import { buildNav, NAV_CLOSED_COOKIE, SIDEBAR_COOKIE } from '@/features/admin-shell/nav';
 import { getReviewCount } from '@/features/attendance/queries';
 import { getDataRequestCounts } from '@/features/privacy/queries';
+import { countOpenSecurityEvents } from '@/features/security/queries';
 import { getActiveBranch, getStaffContext } from '@/lib/auth/context';
+import { needsMfa } from '@/lib/auth/permissions';
 import { createClient } from '@/lib/supabase/server';
 
 export const metadata: Metadata = {
@@ -38,8 +40,10 @@ export default async function AdminLayout({ children }: { children: ReactNode })
   const ctx = await getStaffContext();
   if (!ctx) redirect('/admin-login');
   if (!ctx.isActive) redirect('/admin-login?error=inactive');
+  // Chủ sân bắt buộc 2 lớp mà phiên chưa nhập mã → database chưa cấp quyền nào; sang bước nhập / cài mã.
+  if (needsMfa(ctx)) redirect('/admin-mfa');
   const ownerReady = ctx.role === 'owner' && !ctx.mustChangePassword;
-  const [active, cookieStore, pendingOvertime, attendanceReview, privacy] = await Promise.all([
+  const [active, cookieStore, pendingOvertime, attendanceReview, privacy, securityEvents] = await Promise.all([
     getActiveBranch(ctx),
     cookies(),
     countPendingOvertime(ctx.employeeId),
@@ -47,11 +51,15 @@ export default async function AdminLayout({ children }: { children: ReactNode })
     ownerReady ? getReviewCount() : Promise.resolve(0),
     // Chủ sân: yêu cầu về dữ liệu cá nhân đang mở (huy hiệu menu Dữ liệu cá nhân).
     ownerReady ? getDataRequestCounts() : Promise.resolve({ open: 0, overdue: 0, unacknowledged: 0 }),
+    // Chủ sân: sự kiện an ninh cần chú ý chưa xem (huy hiệu menu Bảo mật).
+    ownerReady ? countOpenSecurityEvents() : Promise.resolve(0),
   ]);
   return (
     <ToastProvider>
       <AdminShell
-        nav={ctx.mustChangePassword ? [] : buildNav(ctx, { pendingOvertime, attendanceReview, privacyRequests: privacy.open })}
+        nav={
+          ctx.mustChangePassword ? [] : buildNav(ctx, { pendingOvertime, attendanceReview, privacyRequests: privacy.open, securityEvents })
+        }
         displayName={ctx.displayName}
         roleLabel={ctx.role === 'owner' ? 'Chủ sân' : 'Nhân viên'}
         branches={ctx.mustChangePassword ? [] : ctx.branches.map((b) => ({ id: b.branchId, name: b.name }))}

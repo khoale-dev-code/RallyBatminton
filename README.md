@@ -60,6 +60,7 @@ Vào **Supabase Dashboard → SQL Editor**, mở từng file trong `supabase/sql
 | 21 | `20_booking_extend.sql` | Có | Khách chơi thêm giờ: gia hạn đơn đang chơi theo bước 30 phút, giới hạn bởi đơn kế tiếp trên sân / giờ đóng cửa, tính tiền phần thêm theo bảng giá. Xem mục 19. Chạy sau 19 |
 | 22 | `21_attendance_rules.sql` | **BẮT BUỘC** | Quy tắc chấm công: công chỉ tính trong khung ca (+ tăng ca đã đồng ý), quên quét thì nhân viên gửi yêu cầu sửa giờ để chủ sân duyệt, tự đóng ca quên quét ra, trang *Duyệt chấm công*, máy quầy hiện mã QR không cần đăng nhập. Xem mục 20. Chạy sau 20 |
 | 23 | `22_privacy_security.sql` | **BẮT BUỘC** | Bảo vệ dữ liệu cá nhân (Luật 91/2025/QH15, NĐ 356/2025/NĐ-CP): văn bản pháp lý có phiên bản, bằng chứng xác nhận / đồng ý khi đặt sân và đăng ký, yêu cầu xem / tải / sửa / xóa dữ liệu kèm hạn xử lý, ẩn danh hóa khách, thời hạn lưu trữ, nhật ký webhook thanh toán, siết quyền bảng. Xem mục 22. Chạy sau 21 |
+| 24 | `23_security_hardening.sql` | **BẮT BUỘC** | Bảo vệ 4 lớp: chống giữ sân ảo (giới hạn theo thiết bị / SĐT / sức chứa chi nhánh), khóa đăng nhập sai nhiều lần, xác thực 2 lớp kiểm ở database, sự kiện an ninh + email, tạm dừng đặt sân online. Xem mục 23. Chạy sau 22 |
 
 **Đã cài Rally từ trước?** Chỉ cần chạy thêm `05_product_details.sql`, `06_product_tax.sql` rồi `07_units_options.sql` (không mất dữ liệu).
 
@@ -424,4 +425,16 @@ Căn cứ năm 2026: **Luật Bảo vệ dữ liệu cá nhân số 91/2025/QH15
 - **Quyền database**: khách chưa đăng nhập (anon) không còn quyền ghi trực tiếp bảng nào; thu hồi TRUNCATE của anon / authenticated. Kiểm toán: chạy `supabase/tests/98_security_audit.sql` (mọi dòng `WARN` cần xem lại) và `99_verify_schema.sql` (dòng 28).
 - **Khóa bí mật không lọt xuống trình duyệt**: sau `npm run build` chạy `npm run check:secrets`.
 - Rà soát WCAG 2.1 AA (axe-core) các trang khách: đã sửa tương phản chữ nhỏ, bảng cuộn ngang dùng được bằng bàn phím; số trang trí cỡ lớn được ẩn khỏi trình đọc màn hình.
+
+## 23. Bảo vệ 4 lớp (`23_security_hardening.sql`)
+
+Hướng dẫn đầy đủ (cấu hình Vercel Firewall, sao lưu, kịch bản sự cố): [`docs/SECURITY-4-LOP.md`](docs/SECURITY-4-LOP.md). Trang quản trị: **Quản trị → Bảo mật** (nhân viên chỉ thấy mục xác thực 2 lớp của mình).
+
+- **Chống giữ sân ảo** (trong database, không lách được bằng gọi thẳng API): giới hạn lượt giữ chưa thanh toán theo thiết bị / mạng (mã băm IP), theo số điện thoại, và **sức chứa chi nhánh** (số sân × hệ số); SĐT nhiều lần *giữ rồi bỏ* → chỉ giữ 1 lượt với thời gian ngắn hơn, rồi tạm chặn giữ online (tự hết sau N ngày). Khách quen bị chặn nhầm: hồ sơ khách → *Giữ sân online → Tin cậy*. Mọi ngưỡng chỉnh ở trang Bảo mật.
+- **Tạm dừng đặt sân online** (khi bị tấn công / bảo trì): khách thấy thông báo ở trang đặt sân, nhân viên vẫn đặt tại quầy.
+- **Khóa đăng nhập sai**: 5 lần / 15 phút → khóa tài khoản 15 phút; một mạng sai hàng loạt → khóa mạng đó. Áp dụng đăng nhập quản trị, thành viên, nhập mã 2 lớp.
+- **Xác thực 2 lớp** (Google / Microsoft Authenticator): bật cho mình rồi bật *Bắt buộc* cho chủ sân / nhân viên. Khi bắt buộc, `is_owner()` / `permitted_branch_ids()` chỉ cấp quyền cho phiên đã nhập mã (aal2) — lộ mật khẩu cũng không đọc / sửa được dữ liệu. Chủ sân đặt lại 2 lớp cho nhân viên mất điện thoại.
+- **Sự kiện an ninh + email** (cần `RESEND_API_KEY`): giữ sân bất thường, khóa đăng nhập, dò mật khẩu hàng loạt, webhook thanh toán sai khóa, gỡ 2 lớp, tạm dừng đặt sân. Gộp theo giờ; lịch hằng đêm (`/api/cron/attendance`) gửi bù và dọn dấu vết cũ.
+- **Chặn dò lỗ hổng**: `/.env`, `/wp-admin`, `*.php`… trả 404 ngay ở `src/proxy.ts`.
+- Kiểm tra: `99_verify_schema.sql` dòng 29; `98_security_audit.sql` thêm dòng 11–12 (chủ sân đã bật / bắt buộc 2 lớp chưa).
 

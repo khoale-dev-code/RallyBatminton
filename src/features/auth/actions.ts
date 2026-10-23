@@ -5,6 +5,10 @@ import { z } from 'zod';
 
 import { getAuthUserId, parseStaffContext, rememberStaffContext } from '@/lib/auth/context';
 import { clearStaffContextCache } from '@/lib/auth/context-cache';
+import { needsMfa } from '@/lib/auth/permissions';
+import { safeAdminPath } from '@/lib/auth/safe-path';
+import { loginLockSeconds, recordLoginResult } from '@/features/security/login-guard';
+import { lockMessage } from '@/features/security/lib/settings';
 import { formError, formZodError, type FormState } from '@/lib/form-state';
 import { createClient } from '@/lib/supabase/server';
 import { createSecretClient } from '@/lib/supabase/secret';
@@ -18,12 +22,6 @@ const signInSchema = z.object({
   next: z.string().optional(),
 });
 
-/** Chỉ cho phép chuyển hướng nội bộ (chống open redirect). */
-function safeNext(next: string | undefined): string {
-  if (next && next.startsWith('/') && !next.startsWith('//') && !next.startsWith('/\\')) return next;
-  return '/admin';
-}
-
 export async function signInAction(_prev: FormState, formData: FormData): Promise<FormState> {
   const parsed = signInSchema.safeParse({
     login: formData.get('login'),
@@ -33,31 +31,51 @@ export async function signInAction(_prev: FormState, formData: FormData): Promis
   if (!parsed.success) return formZodError(parsed.error);
   const { login, password, next } = parsed.data;
 
+  // Chống dò mật khẩu: sai nhiều lần → khóa tạm theo tài khoản và theo mạng (23_security_hardening.sql).
+  const lockSeconds = await loginLockSeconds('staff', login);
+  if (lockSeconds > 0) return formError(lockMessage(lockSeconds));
+
   let email = login.toLowerCase();
   if (!login.includes('@')) {
     // Số điện thoại là bí danh: máy chủ tra email tương ứng (không lộ thông tin nếu không tồn tại).
+    let resolved: string | null = null;
     try {
       const { data, error } = await createSecretClient().rpc('resolve_staff_login', { p_login: login });
-      if (error || !data) return formError(GENERIC_LOGIN_ERROR);
-      email = data;
+      resolved = error ? null : data;
     } catch {
       return formError('Đăng nhập bằng số điện thoại cần cấu hình SUPABASE_SECRET_KEY trên máy chủ. Hãy dùng email.');
     }
+    if (!resolved) {
+      await recordLoginResult('staff', login, false);
+      return formError(GENERIC_LOGIN_ERROR);
+    }
+    email = resolved;
   }
 
   const supabase = await createClient();
   const { data: signedIn, error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) return formError(GENERIC_LOGIN_ERROR);
+  if (error) {
+    await recordLoginResult('staff', login, false);
+    return formError(GENERIC_LOGIN_ERROR);
+  }
   // Trang này chỉ dành cho nhân sự: tài khoản khách (thành viên) bị đăng xuất ngay.
   const { data: staff } = await supabase.rpc('my_staff_context');
   const ctx = staff ? parseStaffContext(staff) : null;
   if (!ctx) {
     await supabase.auth.signOut();
+    await recordLoginResult('staff', login, false);
     return formError(GENERIC_LOGIN_ERROR);
+  }
+  await recordLoginResult('staff', login, true);
+  const destination = safeAdminPath(next);
+  // Đã cài xác thực 2 lớp (hoặc chủ sân bắt buộc): nhập mã / cài đặt trước khi vào trang quản trị.
+  const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+  if ((aal?.nextLevel === 'aal2' && aal.currentLevel !== 'aal2') || needsMfa(ctx)) {
+    redirect(`/admin-mfa?next=${encodeURIComponent(destination)}`);
   }
   // Trang quản trị đầu tiên sau đăng nhập không phải hỏi lại quyền.
   rememberStaffContext(signedIn.session, ctx);
-  redirect(safeNext(next));
+  redirect(destination);
 }
 
 export async function signOutAction(): Promise<void> {

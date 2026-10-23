@@ -11,12 +11,13 @@ export const PUBLIC_TAGS = {
   branches: 'public-branches',
   catalog: 'public-catalog',
   legal: 'public-legal',
+  booking: 'public-booking-status',
 } as const;
 
 export type PublicTag = keyof typeof PUBLIC_TAGS;
 
 /** Thời gian tối đa giữ cache (giây) — sau khi admin sửa, cache được xóa ngay bằng invalidatePublic. */
-export const PUBLIC_REVALIDATE = { brand: 600, branches: 300, catalog: 60, legal: 600 } as const;
+export const PUBLIC_REVALIDATE = { brand: 600, branches: 300, catalog: 60, legal: 600, booking: 60 } as const;
 
 /** Gọi sau khi admin sửa dữ liệu công khai: lần xem kế tiếp lấy dữ liệu mới ngay (không phục vụ bản cũ). */
 export function invalidatePublic(...scopes: PublicTag[]): void {

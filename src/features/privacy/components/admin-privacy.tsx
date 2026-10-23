@@ -1,25 +1,20 @@
 'use client';
 
-import { Download, Eye, LoaderCircle, PencilLine, UserX } from 'lucide-react';
-import { useMemo, useState, useTransition } from 'react';
+import { Download, LoaderCircle, UserX } from 'lucide-react';
+import { useState, useTransition } from 'react';
 
-import { ActionForm, CheckboxField, FieldError, SelectField, SubmitButton, TextareaField, TextField } from '@/components/ui/form';
+import { ActionForm, CheckboxField, SelectField, SubmitButton, TextareaField, TextField } from '@/components/ui/form';
 import { buttonClass } from '@/components/ui/button';
-import { cn } from '@/lib/cn';
 
 import {
   anonymizeCustomerAction,
   exportCustomerDataAction,
-  publishLegalDocumentAction,
   runRetentionAction,
   updateDataRequestAction,
   updateRetentionAction,
 } from '../actions';
-import { type LegalCode } from '../consent-text';
-import { BLOCK_PLACEHOLDERS, INLINE_PLACEHOLDERS, parseLegalMarkup, unknownPlaceholders } from '../lib/markup';
-import { type BranchCancellation, type RetentionPolicy } from '../types';
+import { type RetentionPolicy } from '../types';
 import { downloadJson } from './download-json';
-import { LegalDocumentBody } from './legal-document';
 
 // ---- Yêu cầu của khách ---------------------------------------------------------------------
 
@@ -162,134 +157,5 @@ export function RunRetention({ due }: { due: number }) {
   );
 }
 
-// ---- Soạn văn bản pháp lý --------------------------------------------------------------------
-
-export function LegalEditor({
-  code,
-  initial,
-  values,
-  cancellation,
-  retention,
-}: {
-  code: LegalCode;
-  initial: { title: string; summary: string; body: string };
-  values: Record<string, string | null>;
-  cancellation: BranchCancellation[];
-  retention: RetentionPolicy[];
-}) {
-  const [body, setBody] = useState(initial.body);
-  const [title, setTitle] = useState(initial.title);
-  const [mode, setMode] = useState<'edit' | 'preview'>('edit');
-  const blocks = useMemo(() => parseLegalMarkup(body), [body]);
-  const unknown = useMemo(() => unknownPlaceholders(body), [body]);
-  const changed = body !== initial.body || title !== initial.title;
-
-  return (
-    <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_18rem]">
-      <ActionForm action={publishLegalDocumentAction.bind(null, code)} className="min-w-0 gap-4">
-        <TextField name="title" label="Tiêu đề" value={title} onChange={(e) => setTitle(e.currentTarget.value)} required maxLength={120} />
-        <TextField name="summary" label="Tóm tắt (hiện dưới tiêu đề)" defaultValue={initial.summary} optional maxLength={400} />
-        <div role="tablist" aria-label="Chế độ" className="flex w-fit gap-1 rounded-control bg-hall p-1">
-          {(['edit', 'preview'] as const).map((m) => (
-            <button
-              key={m}
-              type="button"
-              role="tab"
-              aria-selected={mode === m}
-              onClick={() => setMode(m)}
-              className={cn(
-                'inline-flex min-h-9 items-center gap-1.5 rounded-[0.4rem] px-3 text-sm font-medium',
-                mode === m ? 'bg-paper shadow-sm' : 'text-muted hover:text-ink',
-              )}
-            >
-              {m === 'edit' ? <PencilLine className="size-4" aria-hidden /> : <Eye className="size-4" aria-hidden />}
-              {m === 'edit' ? 'Soạn' : 'Xem trước'}
-            </button>
-          ))}
-        </div>
-        <div className={cn(mode === 'preview' && 'hidden')}>
-          <label htmlFor="legal-body" className="mb-1.5 block text-sm font-medium">
-            Nội dung
-          </label>
-          <textarea
-            id="legal-body"
-            name="body"
-            value={body}
-            onChange={(e) => setBody(e.currentTarget.value)}
-            rows={28}
-            spellCheck={false}
-            className="w-full rounded-control border border-line bg-paper p-3 font-mono text-[0.85rem] leading-relaxed focus:border-ink focus:outline-none"
-          />
-          <FieldError name="body" />
-          {unknown.length > 0 && (
-            <p className="mt-1 text-sm text-shuttle-deep">Khóa không hỗ trợ: {unknown.map((k) => `{{${k}}}`).join(', ')}</p>
-          )}
-        </div>
-        {mode === 'preview' && (
-          <div className="rounded-panel border border-line p-4 sm:p-6">
-            <p className="mb-4 font-display text-3xl">{title}</p>
-            <LegalDocumentBody blocks={blocks} values={values} cancellation={cancellation} retention={retention} />
-          </div>
-        )}
-        <div className="grid gap-4 rounded-panel border border-line bg-hall/50 p-4 sm:grid-cols-2">
-          <TextField
-            name="changeNote"
-            label="Nội dung thay đổi"
-            required
-            maxLength={300}
-            placeholder="Ví dụ: Cập nhật thời hạn hoàn tiền"
-            hint="Hiện trong danh sách phiên bản trên website."
-          />
-          <TextField
-            name="effectiveDate"
-            label="Ngày có hiệu lực"
-            type="date"
-            optional
-            hint="Để trống = áp dụng ngay. Đổi quan trọng nên báo trước vài ngày."
-          />
-        </div>
-        <p className="text-sm text-muted">
-          Đăng sẽ tạo <strong className="text-ink">phiên bản mới</strong>; phiên bản cũ được giữ nguyên làm bằng chứng cho những khách đã
-          xác nhận trước đó.
-        </p>
-        <SubmitButton pendingLabel="Đang đăng…" className="self-start" disabled={!changed || unknown.length > 0}>
-          Đăng phiên bản mới
-        </SubmitButton>
-      </ActionForm>
-
-      <aside className="flex flex-col gap-4 text-sm xl:sticky xl:top-6 xl:self-start">
-        <div className="rounded-panel border border-line p-4">
-          <p className="mb-2 font-medium">Cú pháp</p>
-          <ul className="flex flex-col gap-1.5 font-mono text-[0.8rem] text-muted">
-            <li>## Tiêu đề mục</li>
-            <li>### Tiêu đề phụ</li>
-            <li>- Gạch đầu dòng</li>
-            <li>1. Đánh số</li>
-            <li>**chữ đậm**</li>
-            <li>[chữ](/legal/bao-mat)</li>
-            <li>| Cột | Cột |</li>
-            <li>&gt; Ghi chú nổi bật</li>
-          </ul>
-        </div>
-        <div className="rounded-panel border border-line p-4">
-          <p className="mb-2 font-medium">Chèn giá trị</p>
-          <ul className="flex flex-col gap-1.5">
-            {INLINE_PLACEHOLDERS.map((p) => (
-              <li key={p.key}>
-                <code className="rounded bg-hall px-1 text-[0.78rem]">{`{{${p.key}}}`}</code> <span className="text-muted">{p.label}</span>
-              </li>
-            ))}
-          </ul>
-          <p className="mt-3 mb-2 font-medium">Khối tự sinh (một dòng riêng)</p>
-          <ul className="flex flex-col gap-1.5">
-            {BLOCK_PLACEHOLDERS.map((p) => (
-              <li key={p.key}>
-                <code className="rounded bg-hall px-1 text-[0.78rem]">{`{{${p.key}}}`}</code> <span className="text-muted">{p.label}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </aside>
-    </div>
-  );
-}
+// Trình soạn văn bản kiểu Word (giữ định dạng lưu pháp lý hiện tại).
+export { LegalEditor } from './legal-word-editor';

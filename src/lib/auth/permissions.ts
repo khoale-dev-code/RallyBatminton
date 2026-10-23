@@ -19,7 +19,18 @@ export interface StaffContext {
   employeeId: string | null;
   isActive: boolean;
   mustChangePassword: boolean;
+  /** Mức xác thực của phiên: aal2 = đã nhập mã xác thực 2 lớp. */
+  aal: 'aal1' | 'aal2';
+  /** Chủ sân bật "bắt buộc 2 lớp" cho vai trò này (23_security_hardening.sql). */
+  mfaRequired: boolean;
+  /** Đã cài ứng dụng xác thực (có mã 2 lớp đã xác minh). */
+  mfaEnrolled: boolean;
   branches: StaffBranch[];
+}
+
+/** Phiên chưa đủ xác thực: database chưa cấp quyền nào cho tới khi nhập mã 2 lớp. */
+export function needsMfa(ctx: StaffContext): boolean {
+  return ctx.mfaRequired && ctx.aal !== 'aal2';
 }
 
 export const PERMISSION_GROUPS: Array<{

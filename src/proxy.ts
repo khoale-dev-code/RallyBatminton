@@ -2,6 +2,7 @@ import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
 import { isSupabaseConfigured, publicEnv } from '@/lib/env';
+import { isProbePath } from '@/lib/probe-path';
 
 /**
  * Proxy (Next.js 16, thay cho middleware):
@@ -18,6 +19,9 @@ function matches(pathname: string, prefixes: string[]): boolean {
 }
 
 export async function proxy(request: NextRequest) {
+  if (isProbePath(request.nextUrl.pathname)) {
+    return new NextResponse('Not found', { status: 404, headers: { 'Cache-Control': 'no-store', 'X-Robots-Tag': 'noindex' } });
+  }
   let response = NextResponse.next({ request });
   if (!isSupabaseConfigured()) return response;
 

@@ -1,4 +1,4 @@
-import { AlarmClock, ArrowRight, ExternalLink, FileText, Inbox, Landmark, ShieldAlert, Timer, TriangleAlert } from 'lucide-react';
+import { AlarmClock, ArrowRight, CheckCircle2, ChevronDown, Clock3, ExternalLink, FileText, Inbox, Landmark, ShieldAlert, ShieldCheck, Timer, TriangleAlert } from 'lucide-react';
 import Link from 'next/link';
 import { type ReactNode } from 'react';
 
@@ -17,6 +17,7 @@ import {
 import { requireOwner, withGuard } from '@/lib/auth/guards';
 import { requestNow } from '@/lib/time';
 import { cn } from '@/lib/cn';
+import '@/features/privacy/rally-privacy-admin-v17.css';
 import { formatDate, formatDateTime, formatPhone } from '@/lib/format';
 import { createClient } from '@/lib/supabase/server';
 
@@ -38,22 +39,18 @@ function Section({
   children: ReactNode;
 }) {
   return (
-    <section id={id} aria-labelledby={`${id}-title`} className="flex scroll-mt-24 flex-col gap-3">
-      <header className="flex flex-wrap items-end justify-between gap-3">
-        <div className="flex items-start gap-3">
-          <span aria-hidden className="grid size-9 shrink-0 place-items-center rounded-control bg-primary-soft text-primary">
-            {icon}
-          </span>
-          <div>
-            <h2 id={`${id}-title`} className="text-xl">
-              {title}
-            </h2>
-            <p className="max-w-2xl text-sm text-muted">{hint}</p>
+    <section id={id} aria-labelledby={`${id}-title`} className="rp17-section">
+      <header className="rp17-section-header">
+        <div className="rp17-section-heading">
+          <span aria-hidden className="rp17-section-icon">{icon}</span>
+          <div className="rp17-section-copy">
+            <h2 id={`${id}-title`}>{title}</h2>
+            <p>{hint}</p>
           </div>
         </div>
-        {actions}
+        {actions && <div className="rp17-section-action">{actions}</div>}
       </header>
-      {children}
+      <div className="rp17-section-body">{children}</div>
     </section>
   );
 }
@@ -106,30 +103,81 @@ export default async function PrivacyAdminPage() {
       : {};
   const dueAutomatic = (retention ?? []).filter((r) => r.isAutomatic).reduce((s, r) => s + (dueCounts[r.code] ?? 0), 0);
 
+  const flaggedWebhooks = (webhooks ?? []).filter((w) => w.auth_result !== 'ok').length;
+  const existingDocs = docs.filter((d) => Boolean(d)).length;
+  const retentionGroups = [
+    {
+      key: 'auto',
+      title: 'Dọn tự động',
+      description: 'Các nhóm dữ liệu được xử lý theo lịch đã cấu hình.',
+      rows: (retention ?? []).filter((r) => r.action !== 'keep' && r.isAutomatic),
+    },
+    {
+      key: 'manual',
+      title: 'Xử lý thủ công',
+      description: 'Các nhóm chỉ được xử lý khi người có quyền thực hiện.',
+      rows: (retention ?? []).filter((r) => r.action !== 'keep' && !r.isAutomatic),
+    },
+    {
+      key: 'keep',
+      title: 'Lưu theo quy định',
+      description: 'Dữ liệu giao dịch và bằng chứng cần tuân thủ thời hạn lưu trữ.',
+      rows: (retention ?? []).filter((r) => r.action === 'keep'),
+    },
+  ];
+
   return (
-    <>
-      <PageHeader
-        title="Dữ liệu cá nhân"
-        description="Yêu cầu của khách, văn bản pháp lý, thời hạn lưu trữ và nhật ký thanh toán — theo Luật Bảo vệ dữ liệu cá nhân 91/2025/QH15 và Nghị định 356/2025/NĐ-CP."
-        actions={
-          <Link href="/legal" target="_blank" className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-primary">
-            Trang công khai
-            <ExternalLink className="size-4" aria-hidden />
+    <main className="rp17-page">
+      <header className="rp17-hero">
+        <div className="rp17-hero-top"><span className="rp17-eyebrow"><ShieldCheck size={15} aria-hidden /> RALLY ADMIN / QUẢN TRỊ DỮ LIỆU</span><span className="rp17-private"><span /> Nội bộ · Chỉ chủ sân</span></div>
+        <div className="rp17-hero-main">
+          <div>
+            <h1>Dữ liệu cá nhân</h1>
+            <p>Quản lý yêu cầu của khách, chính sách, thời hạn lưu trữ và nhật ký thanh toán tại một nơi.</p>
+          </div>
+          <Link href="/legal" target="_blank" rel="noopener noreferrer" className="rp17-public-link">
+            Xem trang pháp lý <ExternalLink size={16} aria-hidden />
           </Link>
-        }
-      />
+        </div>
+      </header>
+
+      <section className="rp17-metrics" aria-label="Tổng quan dữ liệu cá nhân">
+        <div className="rp17-metric">
+          <span className="rp17-metric-icon blue"><Inbox size={19} aria-hidden /></span>
+          <div><strong>{open.length}</strong><span>Yêu cầu cần xử lý</span><small>{open.length ? 'Ưu tiên phản hồi đúng hạn' : 'Không có yêu cầu chờ'}</small></div>
+        </div>
+        <div className="rp17-metric">
+          <span className="rp17-metric-icon teal"><FileText size={19} aria-hidden /></span>
+          <div><strong>{existingDocs}<small>/{LEGAL_CODES.length}</small></strong><span>Văn bản hiện có</span><small>Kiểm tra phiên bản và hiệu lực</small></div>
+        </div>
+        <div className="rp17-metric">
+          <span className="rp17-metric-icon amber"><Clock3 size={19} aria-hidden /></span>
+          <div><strong>{dueAutomatic}</strong><span>Bản ghi đến hạn tự dọn</span><small>Chỉ nhóm đã bật tự động</small></div>
+        </div>
+        <div className="rp17-metric">
+          <span className="rp17-metric-icon red"><ShieldAlert size={19} aria-hidden /></span>
+          <div><strong>{flaggedWebhooks}</strong><span>Webhook cần kiểm tra</span><small>Trong {(webhooks ?? []).length} sự kiện gần nhất</small></div>
+        </div>
+      </section>
+
+      <nav className="rp17-jump" aria-label="Đi đến khu vực quản lý">
+        <a href="#yeu-cau"><Inbox size={16} aria-hidden /> Yêu cầu khách <span>{open.length}</span></a>
+        <a href="#van-ban"><FileText size={16} aria-hidden /> Văn bản pháp lý</a>
+        <a href="#luu-tru"><Timer size={16} aria-hidden /> Thời hạn lưu trữ</a>
+        <a href="#webhook"><Landmark size={16} aria-hidden /> Nhật ký thanh toán</a>
+      </nav>
 
       {missing.length > 0 && (
-        <p className="mb-6 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-panel border border-amber-deep/25 bg-amber-soft px-4 py-3 text-sm text-amber-deep">
+        <p role="alert" className="rp17-alert">
           <TriangleAlert className="size-4" aria-hidden />
           Chính sách đang thiếu {missing.join(', ')}.
-          <Link href="/admin/settings#phap-ly" className="font-semibold underline underline-offset-4">
+          <Link href="/admin/settings?muc=phap-ly" className="font-semibold underline underline-offset-4">
             Điền trong Cài đặt
           </Link>
         </p>
       )}
 
-      <div className="flex flex-col gap-10">
+      <div className="rp17-sections">
         <Section
           id="yeu-cau"
           icon={<Inbox className="size-4" />}
@@ -137,11 +185,13 @@ export default async function PrivacyAdminPage() {
           hint="Phản hồi khách trong 2 ngày làm việc. Hạn hoàn thành: xem / sửa / cung cấp 10 ngày, rút đồng ý / hạn chế / phản đối 15 ngày, xóa 20 ngày; gia hạn tối đa 1 lần."
         >
           {open.length === 0 ? (
-            <p className="rounded-panel border border-dashed border-line px-4 py-6 text-center text-sm text-muted">
-              Không có yêu cầu nào đang chờ.
-            </p>
+            <div className="rp17-empty">
+              <span className="rp17-empty-icon"><CheckCircle2 size={23} aria-hidden /></span>
+              <strong>Không có yêu cầu đang chờ</strong>
+              <p>Những yêu cầu mới từ khách sẽ xuất hiện tại đây để bạn xử lý.</p>
+            </div>
           ) : (
-            <ul className="divide-y divide-line overflow-hidden rounded-panel border border-line bg-paper">
+            <ul className="rp17-request-list">
               {open.map((r) => {
                 const d = requestDeadline(r, now);
                 const st = DATA_REQUEST_STATUS[r.status] ?? { label: r.status, tone: 'neutral' as const };
@@ -150,7 +200,7 @@ export default async function PrivacyAdminPage() {
                   <li key={r.id}>
                     <Link
                       href={`/admin/privacy/requests/${r.id}`}
-                      className="flex flex-col gap-2 p-4 transition-colors hover:bg-primary-soft/40 sm:flex-row sm:items-center sm:justify-between"
+                      className="rp17-request-row"
                     >
                       <span className="min-w-0">
                         <span className="flex flex-wrap items-center gap-2">
@@ -183,7 +233,7 @@ export default async function PrivacyAdminPage() {
             </ul>
           )}
           {closed && closed.length > 0 && (
-            <details className="rounded-panel border border-line bg-paper">
+            <details className="rp17-closed-requests">
               <summary className="cursor-pointer px-4 py-3 text-sm font-medium">Đã xử lý gần đây ({closed.length})</summary>
               <ul className="divide-y divide-line border-t border-line">
                 {closed.slice(0, 30).map((r) => {
@@ -216,22 +266,22 @@ export default async function PrivacyAdminPage() {
           title="Văn bản pháp lý"
           hint="Sửa nội dung → đăng phiên bản mới. Phiên bản cũ giữ nguyên để chứng minh khách đã xác nhận bản nào. Bản mặc định là bản nháp — hãy rà soát (nên nhờ luật sư) trước khi vận hành."
         >
-          <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <ul className="rp17-legal-grid">
             {LEGAL_CODES.map((code) => {
               const doc = docs.find((d) => d.code === code);
               const scheduled = doc && Date.parse(doc.effectiveAt) > now;
               return (
-                <li key={code} className="flex flex-col gap-2 rounded-panel border border-line bg-paper p-4">
-                  <p className="font-medium">{LEGAL_PAGES[code].label}</p>
+                <li key={code} className="rp17-legal-card">
+                  <div className="rp17-legal-icon"><FileText size={19} aria-hidden /></div><h3>{LEGAL_PAGES[code].label}</h3>
                   <p className="text-sm text-muted">
                     {doc ? `Phiên bản ${doc.version} · ${scheduled ? 'hiệu lực từ' : 'từ'} ${formatDate(doc.effectiveAt)}` : 'Chưa có'}
                   </p>
                   {scheduled && <Badge tone="amber">Đã hẹn ngày hiệu lực</Badge>}
-                  <div className="mt-auto flex flex-wrap gap-x-4 gap-y-1 pt-2 text-sm">
-                    <Link href={`/admin/privacy/documents/${code}`} className="font-medium text-primary hover:underline">
+                  <div className="rp17-legal-actions">
+                    <Link href={`/admin/privacy/documents/${code}`} className="rp17-doc-edit">
                       Sửa
                     </Link>
-                    <Link href={legalHref(code)} target="_blank" className="text-muted hover:text-primary">
+                    <Link href={legalHref(code)} target="_blank" className="rp17-doc-view">
                       Xem trên web
                     </Link>
                   </div>
@@ -249,30 +299,37 @@ export default async function PrivacyAdminPage() {
           actions={<RunRetention due={dueAutomatic} />}
         >
           {retention && (
-            <ul className="divide-y divide-line overflow-hidden rounded-panel border border-line bg-paper">
-              {retention.map((r) => (
-                <li key={r.code} className="flex flex-col gap-3 p-4 lg:flex-row lg:items-center lg:justify-between">
-                  <div className="min-w-0 lg:max-w-xl">
-                    <p className="flex flex-wrap items-center gap-2 font-medium">
-                      {r.label}
-                      <Badge tone={r.action === 'keep' ? 'neutral' : r.isAutomatic ? 'green' : 'amber'}>
-                        {r.action === 'keep' ? 'Lưu theo luật' : r.isAutomatic ? 'Tự động' : 'Thủ công'}
-                      </Badge>
-                      {(dueCounts[r.code] ?? 0) > 0 && <Badge tone="red">{dueCounts[r.code]} hết hạn</Badge>}
-                    </p>
-                    <p className="text-sm text-muted">
-                      {formatRetention(r.retentionDays)} · {r.basis}
-                    </p>
-                    {r.lastRunAt && (
-                      <p className="text-xs text-muted">
-                        Lần chạy gần nhất {formatDateTime(r.lastRunAt)} · {r.lastRunCount ?? 0} bản ghi
-                      </p>
-                    )}
-                  </div>
-                  <RetentionRow policy={r} />
-                </li>
+            <div className="rp17-retention-groups">
+              {retentionGroups.filter((group) => group.rows.length > 0).map((group) => (
+                <details key={group.key} className="rp17-retention-group" open={group.key === 'auto'}>
+                  <summary>
+                    <span className="rp17-retention-group-text">
+                      <strong>{group.title} <em>{group.rows.length}</em></strong>
+                      <small>{group.description}</small>
+                    </span>
+                    <ChevronDown size={18} aria-hidden className="rp17-details-chevron" />
+                  </summary>
+                  <ul className="rp17-retention-list">
+                    {group.rows.map((r) => (
+                      <li key={r.code} className="rp17-retention-row">
+                        <div className="rp17-retention-copy">
+                          <p className="rp17-retention-label">
+                            {r.label}
+                            <Badge tone={r.action === 'keep' ? 'neutral' : r.isAutomatic ? 'green' : 'amber'}>
+                              {r.action === 'keep' ? 'Lưu theo luật' : r.isAutomatic ? 'Tự động' : 'Thủ công'}
+                            </Badge>
+                            {(dueCounts[r.code] ?? 0) > 0 && <Badge tone="red">{dueCounts[r.code]} hết hạn</Badge>}
+                          </p>
+                          <p className="rp17-retention-description">{formatRetention(r.retentionDays)} · {r.basis}</p>
+                          {r.lastRunAt && <small>Lần chạy gần nhất: {formatDateTime(r.lastRunAt)} · {r.lastRunCount ?? 0} bản ghi</small>}
+                        </div>
+                        <div className="rp17-retention-form"><RetentionRow policy={r} /></div>
+                      </li>
+                    ))}
+                  </ul>
+                </details>
               ))}
-            </ul>
+            </div>
           )}
         </Section>
 
@@ -287,8 +344,8 @@ export default async function PrivacyAdminPage() {
               Chưa có thông báo nào.
             </p>
           ) : (
-            <div className="overflow-x-auto rounded-panel border border-line bg-paper">
-              <table className="w-full min-w-[40rem] text-sm">
+            <div className="rp17-webhook-wrap">
+              <table className="rp17-webhook-table">
                 <thead className="bg-hall text-left">
                   <tr>
                     <th scope="col" className="px-4 py-2.5 font-medium">
@@ -308,8 +365,8 @@ export default async function PrivacyAdminPage() {
                 <tbody className="divide-y divide-line">
                   {webhooks.map((w) => (
                     <tr key={w.id}>
-                      <td className="px-4 py-2.5 tabular">{formatDateTime(w.received_at)}</td>
-                      <td className="px-4 py-2.5">
+                      <td data-label="Thời điểm" className="px-4 py-2.5 tabular">{formatDateTime(w.received_at)}</td>
+                      <td data-label="Xác thực" className="px-4 py-2.5">
                         {w.auth_result === 'ok' ? (
                           <Badge tone="green">{w.auth_method === 'hmac' ? 'HMAC hợp lệ' : 'API Key hợp lệ'}</Badge>
                         ) : (
@@ -319,8 +376,8 @@ export default async function PrivacyAdminPage() {
                           </span>
                         )}
                       </td>
-                      <td className="px-4 py-2.5 font-mono text-xs">{w.provider_txn_id ?? '—'}</td>
-                      <td className="px-4 py-2.5">
+                      <td data-label="Mã giao dịch" className="px-4 py-2.5 font-mono text-xs">{w.provider_txn_id ?? '—'}</td>
+                      <td data-label="Kết quả" className="px-4 py-2.5">
                         HTTP {w.http_status}
                         {w.outcome ? ` · ${w.outcome}` : ''}
                       </td>
@@ -332,6 +389,6 @@ export default async function PrivacyAdminPage() {
           )}
         </Section>
       </div>
-    </>
+    </main>
   );
 }

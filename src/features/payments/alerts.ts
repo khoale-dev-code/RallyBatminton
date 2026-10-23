@@ -1,7 +1,7 @@
 import 'server-only';
 
 import { configuredSiteUrl } from '@/lib/site-origin';
-import { getAlertEmailConfig } from '@/lib/env.server';
+import { emailConfigured, sendEmail } from '@/lib/email';
 import { createSecretClient } from '@/lib/supabase/secret';
 
 import { alertEmailHtml, alertEmailText, alertSubject, pendingAlertsSchema, type AlertItem } from './lib/alert-email';
@@ -11,31 +11,6 @@ export type AlertResult =
   | { status: 'nothing' }
   | { status: 'skipped'; reason: 'no_api_key' | 'no_recipients' }
   | { status: 'failed'; message: string };
-
-/** Gửi một email qua Resend (gọi thẳng REST, không cần thư viện). */
-async function sendEmail(
-  to: string[],
-  subject: string,
-  html: string,
-  text: string,
-): Promise<{ ok: true } | { ok: false; message: string }> {
-  const { apiKey, from, apiBase } = getAlertEmailConfig();
-  if (!apiKey) return { ok: false, message: 'Chưa cấu hình RESEND_API_KEY.' };
-  try {
-    const res = await fetch(`${apiBase.replace(/\/$/, '')}/emails`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ from, to, subject, html, text }),
-      signal: AbortSignal.timeout(10_000),
-      cache: 'no-store',
-    });
-    if (res.ok) return { ok: true };
-    const body = (await res.text()).slice(0, 300);
-    return { ok: false, message: `Resend trả lỗi ${res.status}: ${body}` };
-  } catch (error) {
-    return { ok: false, message: error instanceof Error ? error.message : 'Không gửi được email.' };
-  }
-}
 
 const adminBankUrl = () => `${configuredSiteUrl()}/admin/bank?tab=pending`;
 
@@ -53,7 +28,7 @@ export async function sendPendingAlerts(): Promise<AlertResult> {
   const parsed = pendingAlertsSchema.safeParse(data);
   if (!parsed.success || parsed.data.items.length === 0) return { status: 'nothing' };
   const { items, recipients } = parsed.data;
-  if (!getAlertEmailConfig().apiKey) return { status: 'skipped', reason: 'no_api_key' };
+  if (!emailConfigured()) return { status: 'skipped', reason: 'no_api_key' };
   if (recipients.length === 0) return { status: 'skipped', reason: 'no_recipients' };
 
   const sent = await sendEmail(

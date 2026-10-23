@@ -92,7 +92,7 @@ export default async function BankTransactionsPage({ searchParams }: { searchPar
         description="Tiền chuyển khoản SePay báo về. Nội dung có mã đơn RB… thì tự ghi vào đơn và xác nhận; còn lại chờ nhân viên xử lý ở đây."
         actions={
           isOwner(ctx) ? (
-            <Link href="/admin/settings#chuyen-khoan" className="inline-flex items-center gap-1.5 text-sm underline underline-offset-4">
+            <Link href="/admin/settings?muc=chuyen-khoan" className="inline-flex items-center gap-1.5 text-sm underline underline-offset-4">
               <Settings2 className="size-4" aria-hidden />
               Cài đặt SePay
             </Link>

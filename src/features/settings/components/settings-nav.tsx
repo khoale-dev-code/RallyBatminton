@@ -1,39 +1,24 @@
 'use client';
 
-import { Bell, ClockCheck, Gauge, Landmark, Palette, Receipt, ShieldCheck } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
 import { cn } from '@/lib/cn';
 
-export const SETTINGS_SECTIONS = [
-  { id: 'thuong-hieu', label: 'Thương hiệu', icon: Palette },
-  { id: 'chuyen-khoan', label: 'Chuyển khoản SePay', icon: Landmark },
-  { id: 'thong-bao', label: 'Email cảnh báo', icon: Bell },
-  { id: 'thue', label: 'Thuế', icon: Receipt },
-  { id: 'phap-ly', label: 'Pháp lý & dữ liệu', icon: ShieldCheck },
-  { id: 'cham-cong', label: 'Chấm công', icon: ClockCheck },
-  { id: 'toc-do', label: 'Tốc độ máy chủ', icon: Gauge },
-] as const;
+import { isSettingsSection, SETTINGS_SECTIONS, type SettingsSectionId } from '../lib/sections';
 
 /**
- * Mục lục trang Cài đặt: máy tính — cột trái dính khi cuộn; điện thoại — hàng chip cuộn ngang dính dưới thanh trên.
- * Tô đậm mục đang xem (IntersectionObserver, không lắng nghe sự kiện cuộn → mượt).
+ * Mục lục trang Cài đặt — mỗi lần chỉ hiện một mục (trang ngắn, dễ dùng trên điện thoại).
+ * Máy tính: cột trái dính khi cuộn; điện thoại: hàng chip cuộn ngang dính dưới thanh trên.
  */
-export function SettingsNav() {
-  const [active, setActive] = useState<string>(SETTINGS_SECTIONS[0].id);
-
+export function SettingsNav({ active }: { active: SettingsSectionId }) {
+  const router = useRouter();
+  // Liên kết cũ dạng /admin/settings#thue → chuyển sang đúng mục.
   useEffect(() => {
-    const els = SETTINGS_SECTIONS.map((s) => document.getElementById(s.id)).filter((el): el is HTMLElement => el !== null);
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visible = entries.filter((e) => e.isIntersecting).sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
-        if (visible[0]) setActive(visible[0].target.id);
-      },
-      { rootMargin: '-20% 0px -65% 0px' },
-    );
-    for (const el of els) observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
+    const hash = window.location.hash.slice(1);
+    if (hash && hash !== active && isSettingsSection(hash)) router.replace(`/admin/settings?muc=${hash}`, { scroll: false });
+  }, [active, router]);
 
   return (
     <nav
@@ -45,10 +30,10 @@ export function SettingsNav() {
           const on = active === s.id;
           return (
             <li key={s.id} className="shrink-0">
-              <a
-                href={`#${s.id}`}
-                onClick={() => setActive(s.id)}
-                aria-current={on ? 'location' : undefined}
+              <Link
+                href={`/admin/settings?muc=${s.id}`}
+                scroll={false}
+                aria-current={on ? 'page' : undefined}
                 className={cn(
                   'flex min-h-10 items-center gap-2.5 rounded-full border px-3.5 text-sm whitespace-nowrap transition-colors xl:rounded-control xl:border-0 xl:px-3',
                   on
@@ -58,7 +43,7 @@ export function SettingsNav() {
               >
                 <s.icon className="size-4 shrink-0" aria-hidden />
                 {s.label}
-              </a>
+              </Link>
             </li>
           );
         })}

@@ -2,7 +2,8 @@
 -- 98_security_audit.sql — KIỂM TOÁN PHÂN QUYỀN (chỉ đọc, chạy bao nhiêu lần cũng được)
 -- Supabase → SQL Editor → dán toàn bộ → Run. Mọi dòng "WARN" cần xem lại; "INFO" để tham khảo.
 -- Kiểm: RLS từng bảng, quyền của anon / authenticated, policy mở cho anon, hàm SECURITY DEFINER thiếu
--- search_path, hàm anon gọi được, hàm service_* lộ cho người dùng, view vượt RLS, bucket công khai.
+-- search_path, hàm anon gọi được, hàm service_* lộ cho người dùng, view vượt RLS, bucket công khai,
+-- chủ sân đã bật xác thực 2 lớp chưa (23_security_hardening.sql).
 -- =============================================================================
 with
 public_tables as (
@@ -62,7 +63,7 @@ checks as (
   union all
   -- 6. Hàm khách chưa đăng nhập gọi được
   select 6, 'Hàm anon gọi được', p.proname::text,
-         case when p.proname in ('list_published_branches', 'get_branch_busy_slots', 'quote_booking', 'list_catalog', 'kiosk_issue_qr')
+         case when p.proname in ('list_published_branches', 'get_branch_busy_slots', 'quote_booking', 'list_catalog', 'kiosk_issue_qr', 'online_booking_status')
               then 'OK' else 'WARN' end,
          pg_get_function_identity_arguments(p.oid)
   from pg_proc p join pg_namespace n on n.oid = p.pronamespace
@@ -94,6 +95,19 @@ checks as (
   select 10, 'Số chủ sân đang hoạt động', 'staff_accounts', case when count(*) between 1 and 3 then 'OK' else 'WARN' end,
          count(*)::text || ' tài khoản owner — mỗi tài khoản có toàn quyền, giữ ít nhất có thể'
   from public.staff_accounts where role = 'owner' and is_active
+  union all
+  -- 11. Xác thực 2 lớp (23_security_hardening.sql): chủ sân nào chưa cài, đã bắt buộc chưa
+  select 11, 'Chủ sân có xác thực 2 lớp', coalesce(sa.display_name, sa.user_id::text),
+         case when exists (select 1 from auth.mfa_factors f where f.user_id = sa.user_id and f.status = 'verified')
+              then 'OK' else 'WARN' end,
+         'Quản trị → Bảo mật → Bật xác thực 2 lớp'
+  from public.staff_accounts sa where sa.role = 'owner' and sa.is_active
+  union all
+  select 12, 'Bắt buộc 2 lớp cho chủ sân', 'security_settings',
+         case when to_regclass('public.security_settings') is null then 'WARN'
+              when (select s.require_owner_mfa from public.security_settings s where s.id) then 'OK' else 'WARN' end,
+         case when to_regclass('public.security_settings') is null then 'chưa chạy 23_security_hardening.sql'
+              else 'Bật ở Quản trị → Bảo mật → Bắt buộc xác thực 2 lớp (sau khi chính bạn đã cài)' end
 )
 select n, check_name, object, status, detail
 from checks

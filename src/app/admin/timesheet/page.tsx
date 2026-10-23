@@ -85,7 +85,7 @@ export default async function TimesheetReviewPage() {
         title="Duyệt chấm công"
         description={`Giờ quét QR thật luôn được giữ để đối chiếu. Công chỉ tính trong khung ca (+ tăng ca đã đồng ý); phần ngoài khung cần chủ sân duyệt. Ân hạn đi trễ ${cfg.late_grace_minutes} phút.`}
         actions={
-          <Link href="/admin/settings#cham-cong" className="text-sm text-muted underline-offset-4 hover:text-primary hover:underline">
+          <Link href="/admin/settings?muc=cham-cong" className="text-sm text-muted underline-offset-4 hover:text-primary hover:underline">
             Đổi quy tắc chấm công
           </Link>
         }

@@ -18,6 +18,10 @@ const contextSchema = z.object({
   employee_id: z.string().nullable(),
   is_active: z.boolean(),
   must_change_password: z.boolean(),
+  // Chưa chạy 23_security_hardening.sql: không có các trường này → coi như không bắt buộc 2 lớp.
+  aal: z.enum(['aal1', 'aal2']).catch('aal1').default('aal1'),
+  mfa_required: z.boolean().catch(false).default(false),
+  mfa_enrolled: z.boolean().catch(false).default(false),
   branches: z.array(
     z.object({
       branch_id: z.string(),
@@ -49,6 +53,9 @@ export function parseStaffContext(raw: unknown): StaffContext | null {
     employeeId: c.employee_id,
     isActive: c.is_active,
     mustChangePassword: c.must_change_password,
+    aal: c.aal,
+    mfaRequired: c.mfa_required,
+    mfaEnrolled: c.mfa_enrolled,
     branches: c.branches.map((b) => ({
       branchId: b.branch_id,
       name: b.name,
