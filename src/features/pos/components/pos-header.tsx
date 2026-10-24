@@ -1,6 +1,7 @@
 import { ReceiptText } from 'lucide-react';
 import Link from 'next/link';
 
+import { DrawerButton } from '@/features/desktop/components/drawer-button';
 import { formatVnd } from '@/lib/format';
 
 interface PosHeaderProps {
@@ -32,6 +33,7 @@ export function PosHeader({ branchName, cashierName, dateLabel, todayCount, toda
             <dd className="font-display text-xl leading-tight whitespace-nowrap tabular">{formatVnd(todayRevenue)}</dd>
           </div>
         </dl>
+        <DrawerButton label="Ngăn kéo" className="border border-paper/25 hover:bg-paper/10" />
         <Link
           href="/admin/sales"
           aria-label="Xem đơn bán hôm nay"

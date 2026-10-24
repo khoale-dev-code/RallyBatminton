@@ -58,10 +58,36 @@ service worker (rally-sw.js) hiện thông báo → bấm → /admin/go → đú
 - Nội dung không có tên / số điện thoại khách. Trigger lỗi không làm hỏng giao dịch gốc.
 - Kiểm thử: SQL (người nhận theo quyền, lựa chọn, 410, gửi thử), trình duyệt (service worker hiện thông báo, đường dẫn lạ bị thay bằng /admin), dịch vụ đẩy giả lập giải mã đúng nội dung đã mã hóa.
 
-### 2b. Tùy nhu cầu (chưa làm)
+### 2b. Ứng dụng Windows — Tauri (đã làm, bản vá v23 — `desktop/`, `25_cash_drawer.sql`, README mục 26)
 
-- **Tauri (`RallyManager-Setup.exe`)**: chỉ khi PWA không đáp ứng (in hóa đơn trực tiếp ra máy in nhiệt, ngăn kéo tiền, đầu đọc mã vạch đặc biệt…). Cửa sổ Tauri tải giao diện từ máy chủ; chỉ mở đúng quyền Windows cần thiết cho đúng tên miền Rally (không cấp quyền hệ điều hành rộng cho nội dung web từ xa). Cần thêm: ký mã, kênh cập nhật ứng dụng, kiểm thử trên các phiên bản Windows.
+```
+Rally Manager.exe (Tauri 2, WebView2) ── mở https://<RALLY_URL>/admin (giao diện + dữ liệu vẫn từ máy chủ)
+   │  chỉ trang trên RALLY_URL gọi được 6 lệnh:
+   ├─ print_page        → WebView2 Print tới máy in đã chọn, không hộp thoại (mẫu @media print của trang)
+   ├─ open_cash_drawer  → ESC/POS "ESC p" qua Windows Print Spooler (RAW) tới máy in nối ngăn kéo
+   └─ list_printers / get / save_printer_settings / desktop_info
+web: thu tiền mặt xong → log_cash_drawer_open (database kiểm quyền, ghi nhật ký) → open_cash_drawer
+```
+
+| Thành phần | Làm gì | File |
+| --- | --- | --- |
+| Cửa sổ & điều hướng | Chỉ ở trong tên miền Rally (gắn lúc build), link ngoài mở bằng trình duyệt, giao thức lạ bị chặn; hóa đơn mở cửa sổ riêng | `desktop/src-tauri/src/{config,lib}.rs` |
+| Quyền | Tauri ACL "remote": cửa sổ chính 6 lệnh, cửa sổ hóa đơn chỉ in; không plugin / lệnh hệ thống nào | `desktop/src-tauri/src/lib.rs`, `build.rs` |
+| In / ngăn kéo | WebView2 `Print` (không hộp thoại), winspool RAW `ESC p` | `desktop/src-tauri/src/printing/` |
+| Cài đặt máy in | Lưu trên từng máy (`%APPDATA%\vn.rally.manager`) | `settings.rs`, `src/features/desktop/components/desktop-panel.tsx` |
+| Web | `printPage()` thay `window.print()` (nút In, phiếu POS, hóa đơn, phiếu thuê); tự mở ngăn kéo khi thu tiền mặt; nút *Ngăn kéo* ở quầy bán | `src/features/desktop/*`, `use-pos.ts`, `checkout-terminal.tsx`, `pos-header.tsx` |
+| Nhật ký | `cash_drawer_events` (chỉ thêm, hiện trong Nhật ký thay đổi) | `supabase/sql/25_cash_drawer.sql` |
+| Build | GitHub Actions (windows-latest) → bộ cài NSIS; hoặc build trên máy Windows | `.github/workflows/rally-manager-windows.yml` |
+
+Kiểm thử: Rust (điều hướng, cài đặt, lệnh ESC/POS) + chạy thật ứng dụng (bản Linux debug, máy in giả) — quyền theo cửa sổ / origin,
+chặn điều hướng lạ, lệnh plugin bị từ chối; build kiểm tra mã Windows (`cargo check --target x86_64-pc-windows-msvc`).
+**Chưa kiểm thử trên máy Windows thật với máy in nhiệt thật** — làm theo checklist dòng 18 trước khi dùng.
+
+### 2c. Tùy nhu cầu (chưa làm)
+
 - **Offline POS**: bán hàng khi mất mạng có hàng đợi đồng bộ, mã chống trùng, đối soát khi có mạng.
+- **Ký số bộ cài** (bỏ cảnh báo SmartScreen) và **tự cập nhật ứng dụng Windows** (Tauri updater) — giao diện đã tự cập nhật từ máy chủ, chỉ cần khi đổi phần vỏ (`desktop/`).
+- **Thông báo trong ứng dụng Windows** (thông báo hệ điều hành) — hiện dùng thông báo đẩy trên Chrome / Edge / điện thoại.
 
 ## Khi nào cần máy chủ riêng / nhiều chủ sân
 

@@ -7,6 +7,7 @@ import { useEffect, useEffectEvent, useState } from 'react';
 import { Button, buttonClass } from '@/components/ui/button';
 import { ActionForm, SubmitButton, TextField } from '@/components/ui/form';
 import { toast } from '@/components/ui/toast';
+import { openDrawerAfterPayment } from '@/features/desktop/print';
 import { CounterQr } from '@/features/payments/components/counter-qr';
 import { transferContent, type BankAccount } from '@/features/payments/lib/transfer';
 import { cn } from '@/lib/cn';
@@ -159,6 +160,7 @@ export function CheckoutTerminal({
           onSuccess={() => {
             setIdem(newIdempotencyKey());
             void load(false);
+            void openDrawerAfterPayment('cash', 'booking_payment', bookingCode);
           }}
         >
           <input type="hidden" name="booking_id" value={bookingId} />

@@ -12,7 +12,7 @@ with checks as (
                      'attendance_fix_requests', 'attendance_kiosks', 'legal_documents', 'privacy_consents',
                      'data_subject_requests', 'data_retention_policies', 'payment_webhook_events',
                      'security_settings', 'security_events', 'customer_hold_policies',
-                     'push_subscriptions', 'push_preferences']) t(name)
+                     'push_subscriptions', 'push_preferences', 'cash_drawer_events']) t(name)
                    where to_regclass('public.' || t.name) is not null) as ok,
          (select count(*)::text from pg_class c join pg_namespace s on s.oid = c.relnamespace
            where s.nspname = 'public' and c.relkind = 'r') as detail
@@ -38,9 +38,10 @@ with checks as (
                         and not exists (select 1 from unnest(coalesce(p.proconfig, '{}')) cfg where cfg like 'search_path=%')),
          'ok'
   union all
-  select 5, 'anon chỉ gọi được 4 RPC đọc công khai (+ kiosk_issue_qr sau 21)',
+  select 5, 'anon chỉ gọi được 4 RPC đọc công khai (+ kiosk_issue_qr sau 21, online_booking_status sau 23)',
          (select array_agg(p.proname order by p.proname) from pg_proc p join pg_namespace s on s.oid = p.pronamespace
-           where s.nspname = 'public' and p.prokind = 'f' and has_function_privilege('anon', p.oid, 'execute') and p.proname <> 'kiosk_issue_qr')
+           where s.nspname = 'public' and p.prokind = 'f' and has_function_privilege('anon', p.oid, 'execute')
+             and p.proname not in ('kiosk_issue_qr', 'online_booking_status'))
          = array['get_branch_busy_slots', 'list_catalog', 'list_published_branches', 'quote_booking']::name[],
          (select string_agg(p.proname, ', ') from pg_proc p join pg_namespace s on s.oid = p.pronamespace
            where s.nspname = 'public' and p.prokind = 'f' and has_function_privilege('anon', p.oid, 'execute'))
@@ -223,6 +224,15 @@ with checks as (
          and not has_function_privilege('anon', 'public.register_push_subscription(text,text,text,text)', 'execute')
          and not has_function_privilege('authenticated', 'public.service_claim_push(integer)', 'execute'),
          'thiết bị nhận thông báo + hàng đợi + chỉ gửi tới dịch vụ đẩy chính thức'
+  union all
+  select 31, 'Đã chạy 25_cash_drawer.sql (nhật ký mở ngăn kéo tiền — ứng dụng Windows)',
+         to_regclass('public.cash_drawer_events') is not null
+         and to_regprocedure('public.log_cash_drawer_open(uuid,text,text,text)') is not null
+         and exists (select 1 from pg_trigger where tgname = 'cash_drawer_events_append_only')
+         and exists (select 1 from pg_trigger where tgname = 'cash_drawer_events_audit')
+         and not has_function_privilege('anon', 'public.log_cash_drawer_open(uuid,text,text,text)', 'execute')
+         and not has_table_privilege('authenticated', 'public.cash_drawer_events', 'INSERT'),
+         'chỉ thêm + ghi Nhật ký thay đổi + kiểm quyền chi nhánh'
   union all
   select 12, 'pg_cron (tùy chọn)',
          true,

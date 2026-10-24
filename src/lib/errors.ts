@@ -18,6 +18,7 @@ const CODE_MESSAGES: Record<string, string> = {
   HOLDS_BUSY: 'Chi nhánh đang có nhiều lượt giữ chờ thanh toán. Vui lòng thử lại sau ít phút hoặc gọi chi nhánh để đặt.',
   PUSH_ENDPOINT_NOT_ALLOWED: 'Trình duyệt này dùng dịch vụ thông báo không được hỗ trợ. Hãy dùng Chrome, Edge, Firefox hoặc Safari.',
   PUSH_NOT_ENABLED: 'Chưa bật thông báo trên thiết bị nào của bạn.',
+  DRAWER_RATE_LIMIT: 'Đã mở ngăn kéo bằng tay quá nhiều lần trong 1 giờ. Liên hệ chủ sân nếu cần.',
   MFA_REQUIRED: 'Thao tác này cần phiên đã xác thực 2 lớp. Đăng xuất, đăng nhập lại và nhập mã trong ứng dụng xác thực.',
   OUTSIDE_OPENING_HOURS: 'Khung giờ nằm ngoài giờ mở cửa của chi nhánh.',
   NO_PRICE_RULE: 'Khung giờ này chưa có bảng giá. Vui lòng chọn giờ khác hoặc liên hệ chi nhánh.',

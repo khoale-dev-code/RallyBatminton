@@ -4,8 +4,12 @@ import { Printer } from 'lucide-react';
 import { useEffect } from 'react';
 
 import { Button, type ButtonVariant } from '@/components/ui/button';
+import { printPage } from '@/features/desktop/print';
 
-/** Nút in trang hiện tại; `auto` = mở hộp thoại in ngay khi trang tải (mở từ nút "In hóa đơn"). */
+/**
+ * Nút in trang hiện tại; `auto` = in ngay khi trang tải (mở từ nút "In hóa đơn").
+ * Trong Rally Manager cho Windows đã chọn máy in: in thẳng ra máy in hóa đơn, không hộp thoại.
+ */
 export function PrintButton({
   label = 'In',
   auto = false,
@@ -17,11 +21,11 @@ export function PrintButton({
 }) {
   useEffect(() => {
     if (!auto) return;
-    const id = window.setTimeout(() => window.print(), 400);
+    const id = window.setTimeout(() => void printPage(), 400);
     return () => window.clearTimeout(id);
   }, [auto]);
   return (
-    <Button onClick={() => window.print()} variant={variant} className="print-hide">
+    <Button onClick={() => void printPage()} variant={variant} className="print-hide">
       <Printer className="size-4" aria-hidden />
       {label}
     </Button>

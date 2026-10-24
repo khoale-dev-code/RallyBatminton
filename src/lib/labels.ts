@@ -111,3 +111,16 @@ export const PAY_TYPE: Record<Enums<'pay_type'>, string> = {
   hourly: 'Theo giờ',
   daily: 'Theo ngày công',
 };
+
+/** Lý do mở ngăn kéo tiền (Rally Manager cho Windows — 25_cash_drawer.sql). */
+export const CASH_DRAWER_TRIGGERS = ['sale', 'booking_payment', 'rental', 'manual'] as const;
+export type CashDrawerTrigger = (typeof CASH_DRAWER_TRIGGERS)[number];
+export function isCashDrawerTrigger(value: unknown): value is CashDrawerTrigger {
+  return typeof value === 'string' && (CASH_DRAWER_TRIGGERS as readonly string[]).includes(value);
+}
+export const CASH_DRAWER_TRIGGER: Record<CashDrawerTrigger, string> = {
+  sale: 'Thu tiền mặt bán hàng',
+  booking_payment: 'Thu tiền mặt tiền sân',
+  rental: 'Thu tiền mặt cho thuê',
+  manual: 'Mở bằng tay',
+};

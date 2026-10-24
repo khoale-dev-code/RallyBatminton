@@ -1,0 +1,15 @@
+{
+  "name": "rally-manager-desktop",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Rally Manager cho Windows (Tauri) — mở trang quản trị Rally, in hóa đơn, mở ngăn kéo tiền.",
+  "scripts": {
+    "tauri": "tauri",
+    "dev": "tauri dev",
+    "build": "tauri build",
+    "check": "cargo check --manifest-path src-tauri/Cargo.toml && cargo test --manifest-path src-tauri/Cargo.toml"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "2.12.4"
+  }
+}

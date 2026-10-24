@@ -45,7 +45,7 @@ function contentSecurityPolicy(): string {
     "style-src 'self' 'unsafe-inline'",
     `img-src 'self' data: blob: https: ${supabase}`.trim(),
     "font-src 'self' data:",
-    `connect-src 'self' ${supabase} ${supabaseWs} ${turnstile}${vercelLive}`.replace(/\s+/g, ' ').trim(),
+    `connect-src 'self' ${supabase} ${supabaseWs} ${turnstile}${vercelLive} ipc: http://ipc.localhost`.replace(/\s+/g, ' ').trim(),
     `frame-src ${turnstile} https://www.google.com https://maps.google.com${vercelLive}`,
     "worker-src 'self' blob:",
     "object-src 'none'",
@@ -85,6 +85,9 @@ const nextConfig: NextConfig = {
   },
   experimental: {
     serverActions: { bodySizeLimit: '2mb' },
+    // Số tiến trình build song song (thu thập dữ liệu trang). Mặc định Next dùng (số nhân CPU − 1) — máy nhiều nhân, ít RAM
+    // dễ hết bộ nhớ ("Zone Allocation failed"). Giới hạn 4; đổi bằng biến NEXT_BUILD_CPUS.
+    cpus: Math.max(1, Number(process.env.NEXT_BUILD_CPUS) || 4),
     // Bộ nhớ đệm phía trình duyệt khi chuyển trang:
     //  - dynamic 0: trang quản trị luôn lấy số liệu mới khi bấm vào (mặc định Next 16);
     //  - static 30: trang tải trước toàn bộ (rê chuột lên menu quản trị) chỉ dùng lại trong 30 giây thay vì 5 phút.

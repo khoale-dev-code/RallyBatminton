@@ -24,6 +24,7 @@ Ký hiệu: ✅ hệ thống đã làm sẵn · 👤 chủ sân phải tự làm
 | 15 | Chống giữ sân ảo | ✅ Giới hạn theo thiết bị / SĐT / sức chứa chi nhánh, tự trả sân hết hạn, cảnh báo email | 👤 Xem lại ngưỡng sau 1–2 tuần chạy thật; nhân viên biết cách đánh dấu khách *Tin cậy* khi bị chặn nhầm |
 | 16 | Vercel Firewall & khẩn cấp | ✅ Chặn đường dẫn dò lỗ hổng trong `proxy.ts` | 👤 Tạo quy tắc theo `docs/SECURITY-4-LOP.md` (Bypass webhook/cron trước, rồi Deny dò lỗ hổng, Rate limit POST, Bot Protection *Log* → *Challenge*); biết cách bật Attack Mode |
 | 17 | Rally Manager & thông báo đẩy | ✅ PWA không lưu dữ liệu trên máy; thông báo theo quyền, không có tên / SĐT khách | 👤 Chạy `24_push_notifications.sql`; `npm run push:keys` → thêm 3 biến vào Vercel; cài Rally Manager + bật thông báo trên máy quầy / điện thoại chủ sân, bấm *Gửi thử* |
+| 18 | Máy quầy Windows (in hóa đơn, ngăn kéo tiền) | ✅ Ứng dụng chỉ mở tên miền Rally; chỉ trang Rally gọi được lệnh in / ngăn kéo; mỗi lần mở ngăn kéo ghi nhật ký | 👤 Chạy `25_cash_drawer.sql`; tạo bộ cài (README mục 26); trên mỗi máy quầy chọn máy in → *In thử*, bật ngăn kéo → *Mở ngăn kéo thử*; thử bán hàng tiền mặt → ngăn kéo tự mở, có dòng trong *Nhật ký thay đổi* |
 
 ## Việc định kỳ
 

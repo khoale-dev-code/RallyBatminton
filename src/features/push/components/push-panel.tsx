@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 
 import { toast } from '@/components/ui/toast';
+import { isDesktopApp } from '@/features/desktop/bridge';
 import { isIos, isStandalone } from '@/features/manager/lib/live';
 import { publicEnv } from '@/lib/env';
 
@@ -13,7 +14,7 @@ import { deviceLabel, urlBase64ToUint8Array } from '../lib/push';
 
 type State =
   | { kind: 'loading' }
-  | { kind: 'unsupported'; reason: 'browser' | 'ios-not-installed' | 'no-sw' }
+  | { kind: 'unsupported'; reason: 'browser' | 'ios-not-installed' | 'no-sw' | 'desktop' }
   | { kind: 'not-configured' }
   | { kind: 'denied' }
   | { kind: 'off' }
@@ -31,6 +32,8 @@ export function PushPanel() {
   const [busy, setBusy] = useState(false);
 
   const detect = useCallback(async (): Promise<State> => {
+    // Ứng dụng Windows (WebView2) không có dịch vụ thông báo đẩy của trình duyệt.
+    if (isDesktopApp()) return { kind: 'unsupported', reason: 'desktop' };
     if (!('Notification' in window) || !('PushManager' in window)) {
       return { kind: 'unsupported', reason: isIos(navigator.userAgent) && !isStandalone() ? 'ios-not-installed' : 'browser' };
     }
@@ -123,11 +126,13 @@ export function PushPanel() {
       return (
         <p className="flex items-start gap-2 text-sm text-muted">
           <BellOff className="mt-0.5 size-4 shrink-0" aria-hidden />
-          {state.reason === 'ios-not-installed'
-            ? 'Trên iPhone / iPad (iOS 16.4 trở lên): cài Rally Manager vào màn hình chính ở mục trên, mở từ biểu tượng đó rồi quay lại đây để bật thông báo.'
-            : state.reason === 'no-sw'
-              ? 'Mở trang này trên bản đã triển khai (Vercel hoặc npm run build + start) để bật thông báo — bản chạy thử npm run dev không hỗ trợ.'
-              : 'Trình duyệt này không hỗ trợ thông báo đẩy. Dùng Chrome, Edge, Firefox hoặc Safari bản mới.'}
+          {state.reason === 'desktop'
+            ? 'Ứng dụng Windows chưa nhận thông báo đẩy. Bật thông báo trên Chrome / Edge của máy này (mở trang quản trị bằng trình duyệt) hoặc trên điện thoại.'
+            : state.reason === 'ios-not-installed'
+              ? 'Trên iPhone / iPad (iOS 16.4 trở lên): cài Rally Manager vào màn hình chính ở mục trên, mở từ biểu tượng đó rồi quay lại đây để bật thông báo.'
+              : state.reason === 'no-sw'
+                ? 'Mở trang này trên bản đã triển khai (Vercel hoặc npm run build + start) để bật thông báo — bản chạy thử npm run dev không hỗ trợ.'
+                : 'Trình duyệt này không hỗ trợ thông báo đẩy. Dùng Chrome, Edge, Firefox hoặc Safari bản mới.'}
         </p>
       );
     case 'not-configured':

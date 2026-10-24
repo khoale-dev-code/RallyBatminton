@@ -7,6 +7,7 @@ import { Button, buttonClass } from '@/components/ui/button';
 import { formatDateTime, formatPhone, formatVnd } from '@/lib/format';
 import { PAYMENT_METHOD } from '@/lib/labels';
 
+import { printPage } from '@/features/desktop/print';
 import { type BankAccount } from '@/features/payments/lib/transfer';
 
 import { type Receipt } from '../hooks/use-pos';
@@ -67,7 +68,7 @@ export function ReceiptView({ receipt, brand, branchName, cashierName, onNewOrde
             <Button onClick={onNewOrder} size="lg" autoFocus className="flex-1 sm:flex-none">
               Đơn mới
             </Button>
-            <Button onClick={() => window.print()} size="lg" variant="outline">
+            <Button onClick={() => void printPage()} size="lg" variant="outline">
               <Printer className="size-5" aria-hidden />
               In phiếu
             </Button>

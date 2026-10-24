@@ -3017,6 +3017,36 @@ export type Database = {
         }
         Relationships: []
       }
+      cash_drawer_events: {
+        Row: {
+          id: number
+          occurred_at: string
+          branch_id: string
+          user_id: string | null
+          trigger: string
+          ref_code: string | null
+          device_label: string | null
+        }
+        Insert: {
+          id?: never
+          occurred_at?: string
+          branch_id: string
+          user_id?: string | null
+          trigger: string
+          ref_code?: string | null
+          device_label?: string | null
+        }
+        Update: {
+          id?: never
+          occurred_at?: string
+          branch_id?: string
+          user_id?: string | null
+          trigger?: string
+          ref_code?: string | null
+          device_label?: string | null
+        }
+        Relationships: []
+      }
       push_preferences: {
         Row: {
           user_id: string
@@ -3147,6 +3177,10 @@ export type Database = {
         Returns: undefined
       }
       send_test_push: { Args: never; Returns: number }
+      log_cash_drawer_open: {
+        Args: { p_branch_id: string; p_trigger: string; p_ref_code?: string | null; p_device?: string | null }
+        Returns: number
+      }
       service_claim_push: { Args: { p_limit?: number }; Returns: Json }
       service_push_done: { Args: { p_outbox_ids: number[]; p_results: Json }; Returns: undefined }
       service_push_maintenance: { Args: never; Returns: Json }

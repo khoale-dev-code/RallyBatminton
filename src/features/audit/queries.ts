@@ -21,6 +21,7 @@ export const AUDIT_TABLES: Record<string, string> = {
   staff_accounts: 'Tài khoản',
   staff_branch_permissions: 'Phân quyền',
   payroll_adjustments: 'Điều chỉnh lương',
+  cash_drawer_events: 'Mở ngăn kéo tiền',
 };
 
 export const PAGE_SIZE = 50;

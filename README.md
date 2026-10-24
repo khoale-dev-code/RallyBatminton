@@ -62,6 +62,7 @@ Vào **Supabase Dashboard → SQL Editor**, mở từng file trong `supabase/sql
 | 23 | `22_privacy_security.sql` | **BẮT BUỘC** | Bảo vệ dữ liệu cá nhân (Luật 91/2025/QH15, NĐ 356/2025/NĐ-CP): văn bản pháp lý có phiên bản, bằng chứng xác nhận / đồng ý khi đặt sân và đăng ký, yêu cầu xem / tải / sửa / xóa dữ liệu kèm hạn xử lý, ẩn danh hóa khách, thời hạn lưu trữ, nhật ký webhook thanh toán, siết quyền bảng. Xem mục 22. Chạy sau 21 |
 | 24 | `23_security_hardening.sql` | **BẮT BUỘC** | Bảo vệ 4 lớp: chống giữ sân ảo (giới hạn theo thiết bị / SĐT / sức chứa chi nhánh), khóa đăng nhập sai nhiều lần, xác thực 2 lớp kiểm ở database, sự kiện an ninh + email, tạm dừng đặt sân online. Xem mục 23. Chạy sau 22 |
 | 25 | `24_push_notifications.sql` | Có | Thông báo đẩy cho Rally Manager: đơn online mới, đã nhận cọc, giao dịch cần xử lý, cảnh báo bảo mật — theo quyền chi nhánh, chỉ gửi qua dịch vụ đẩy chính thức. Xem mục 25. Chạy sau 23 |
+| 26 | `25_cash_drawer.sql` | Khi dùng ứng dụng Windows | Nhật ký mở ngăn kéo tiền của Rally Manager cho Windows (chỉ thêm, hiện trong Nhật ký thay đổi). Xem mục 26. Chạy sau 24 |
 
 **Đã cài Rally từ trước?** Chỉ cần chạy thêm `05_product_details.sql`, `06_product_tax.sql` rồi `07_units_options.sql` (không mất dữ liệu).
 
@@ -470,3 +471,21 @@ Lộ trình và chi tiết kỹ thuật: [`docs/RALLY-MANAGER.md`](docs/RALLY-MA
 - Máy chủ chỉ gửi tới dịch vụ đẩy chính thức (Google, Mozilla, Apple, Microsoft); thiết bị đã gỡ / tắt thông báo tự bị loại.
 - Gửi ngay sau khi có sự kiện (giữ sân online, webhook SePay, cảnh báo bảo mật) và khi Rally Manager đang mở thấy lịch sân đổi; lịch hằng đêm dọn hàng đợi cũ.
 
+## 26. Rally Manager cho Windows (Tauri) — in hóa đơn, ngăn kéo tiền (`desktop/`, `25_cash_drawer.sql`)
+
+Ứng dụng Windows **mở chính trang quản trị trên máy chủ** (giao diện luôn là bản mới nhất, không lưu dữ liệu khách / doanh thu trên máy), thêm:
+
+- **In hóa đơn không hộp thoại**: phiếu bán hàng, hóa đơn tiền sân, phiếu thuê in thẳng ra máy in nhiệt đã chọn (dùng đúng mẫu in 80mm của trang). Chưa chọn máy in → hộp thoại in như trình duyệt.
+- **Ngăn kéo tiền** (cắm cổng DK của máy in hóa đơn): tự mở sau khi thu **tiền mặt** (bán hàng, thu tiền sân); nút *Ngăn kéo* ở quầy bán để mở tay. **Mỗi lần mở đều ghi nhật ký** (ai, chi nhánh, mã đơn, máy) — mở tay mà không ghi được nhật ký thì không mở.
+- Link ngoài (Google Maps…) mở bằng trình duyệt; trang ngoài tên miền Rally không mở được trong ứng dụng và không điều khiển được máy in.
+
+**Cài đặt**
+
+1. Chạy `supabase/sql/25_cash_drawer.sql` (sau 24).
+2. Tạo bộ cài (chọn một):
+   - **GitHub** (khuyến nghị): đưa mã lên GitHub → *Actions → Rally Manager (Windows) → Run workflow* → tải `Rally Manager_1.0.0_x64-setup.exe` ở mục *Artifacts*. Đẩy tag `manager-v1.0.0` → tạo Release kèm bộ cài. Máy chủ khác `rally-eight-tau.vercel.app`: đặt biến repository `RALLY_URL`.
+   - **Máy Windows**: cài [Rust](https://rustup.rs) + *Visual Studio Build Tools* (Desktop development with C++), rồi `cd desktop`, `npm install`, `npm run build` → bộ cài ở `desktop\src-tauri\target\release\bundle\nsis\`. Đổi máy chủ: `$env:RALLY_URL="https://ten-mien-cua-ban"` trước khi build.
+3. (Tùy chọn) Điền link tải vào `NEXT_PUBLIC_DESKTOP_DOWNLOAD_URL` (Vercel) → trang *Ứng dụng & thông báo* hiện nút tải.
+4. Trên máy quầy: chạy bộ cài (không cần quyền quản trị Windows; chưa ký số nên Windows SmartScreen có thể hỏi → *More info → Run anyway*). Mở Rally Manager → đăng nhập → *Ứng dụng & thông báo → Máy in & ngăn kéo tiền*: chọn máy in, bật ngăn kéo nếu có → *Lưu* → *In thử* / *Mở ngăn kéo thử*.
+
+Máy in nhiệt cần driver Windows của hãng (Xprinter, Epson, Rongta…) và khổ giấy 80mm trong *Printing preferences*. Cài đặt máy in lưu **trên từng máy**, không lên máy chủ. Thông báo đẩy dùng trên Chrome / Edge / điện thoại (ứng dụng Windows chưa nhận thông báo đẩy). Chi tiết kỹ thuật: `desktop/README.md`.

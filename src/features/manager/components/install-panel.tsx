@@ -4,6 +4,7 @@ import { CheckCircle2, Download, MonitorSmartphone, Share, SquarePlus } from 'lu
 import { useState, useSyncExternalStore } from 'react';
 
 import { toast } from '@/components/ui/toast';
+import { isDesktopApp } from '@/features/desktop/bridge';
 
 import { getInstalled, getInstallPrompt, promptInstall, subscribeInstall } from '../lib/install-store';
 import { isIos, isStandalone } from '../lib/live';
@@ -20,15 +21,18 @@ export function InstallPanel() {
     () => isIos(navigator.userAgent),
     () => false,
   );
+  const desktop = useSyncExternalStore(noop, isDesktopApp, () => false);
   const [busy, setBusy] = useState(false);
 
-  if (standalone || installed) {
+  if (desktop || standalone || installed) {
     return (
       <p className="flex items-start gap-2 rounded-control bg-court-soft px-4 py-3 text-sm text-court-deep">
         <CheckCircle2 className="mt-0.5 size-4 shrink-0" aria-hidden />
-        {standalone
-          ? 'Bạn đang dùng Rally Manager dạng ứng dụng.'
-          : 'Đã cài Rally Manager. Mở từ biểu tượng trên màn hình nền / menu Start.'}
+        {desktop
+          ? 'Bạn đang dùng Rally Manager cho Windows — không cần cài thêm.'
+          : standalone
+            ? 'Bạn đang dùng Rally Manager dạng ứng dụng.'
+            : 'Đã cài Rally Manager. Mở từ biểu tượng trên màn hình nền / menu Start.'}
       </p>
     );
   }

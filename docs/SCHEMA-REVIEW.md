@@ -495,3 +495,9 @@ Căn cứ Luật 91/2025/QH15 (Điều 4 quyền chủ thể dữ liệu, Điề
 - `service_claim_push(limit)` (service_role; `for update skip locked`, khóa 2 phút) trả việc + thiết bị nhận; `service_push_done(ids, results)` ghi kết quả (404 / 410 → tắt, 5 lỗi liên tiếp → tắt); `service_push_maintenance` (cron: xóa hàng đợi > 3 ngày, thiết bị tắt > 30 ngày / không dùng > 180 ngày); `send_test_push` (gửi thử tới thiết bị của chính mình).
 - **Kiểm tra:** `99_verify_schema.sql` dòng 30 (dòng 1 thêm 2 bảng).
 
+## 28. Migration `25_cash_drawer.sql` — Nhật ký mở ngăn kéo tiền
+
+- **`cash_drawer_events`** (`branch_id`, `user_id`, `trigger` ∈ sale / booking_payment / rental / manual, `ref_code` ≤ 40, `device_label` ≤ 120): chỉ thêm — trigger `cash_drawer_events_append_only` chặn UPDATE / DELETE (kể cả service_role / chủ database); trigger `cash_drawer_events_audit` ghi vào `audit_events` (mục "Mở ngăn kéo tiền" trong Nhật ký thay đổi). RLS: chủ sân đọc tất cả, nhân viên đọc của mình; không ai INSERT trực tiếp.
+- **`log_cash_drawer_open(branch, trigger, ref, device)`** (authenticated): chủ sân, hoặc nhân viên có `sale.record` / `payment.record` / `rental.operate` ở chi nhánh; mở tay tối đa 30 lần / giờ / người (`DRAWER_RATE_LIMIT`).
+- Ứng dụng Windows (`desktop/`) gọi lệnh mở ngăn kéo **sau** khi web ghi nhật ký (mở tay: ghi lỗi → không mở). Đây là nhật ký răn đe / đối chiếu, không phải khóa phần cứng: ngăn kéo vẫn mở được bằng chìa.
+- **Kiểm tra:** `99_verify_schema.sql` dòng 31.

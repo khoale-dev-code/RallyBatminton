@@ -19,3 +19,7 @@ npm-debug.log*
 .vercel
 .rally-backups/
 coverage/
+
+# Rally Manager Windows (Tauri) — thư mục build
+desktop/src-tauri/target/
+desktop/src-tauri/gen/

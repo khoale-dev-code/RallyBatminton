@@ -9,6 +9,10 @@ export const publicEnv = {
   turnstileSiteKey: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? '',
   /** Khóa công khai VAPID — trình duyệt dùng để đăng ký nhận thông báo đẩy (rỗng = chưa bật). */
   vapidPublicKey: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? '',
+  /** Link tải bộ cài Rally Manager cho Windows (vd. GitHub Release). Rỗng = không hiện nút tải. */
+  desktopDownloadUrl: /^https:\/\//.test(process.env.NEXT_PUBLIC_DESKTOP_DOWNLOAD_URL ?? '')
+    ? (process.env.NEXT_PUBLIC_DESKTOP_DOWNLOAD_URL ?? '')
+    : '',
 } as const;
 
 export function isSupabaseConfigured(): boolean {

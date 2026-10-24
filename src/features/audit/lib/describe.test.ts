@@ -21,5 +21,10 @@ describe('diễn giải nhật ký', () => {
   it('tên bản ghi + link chi tiết (không link khi đã xóa)', () => {
     expect(recordTitle('bookings', 'id1', null, { code: 'RB-ABC' }, 'UPDATE')).toEqual({ title: 'RB-ABC', href: '/admin/bookings/id1' });
     expect(recordTitle('customers', 'id2', { full_name: 'An' }, null, 'DELETE')).toEqual({ title: 'An', href: null });
+    expect(recordTitle('cash_drawer_events', '7', null, { trigger: 'sale', ref_code: 'HD-0012' }, 'INSERT')).toEqual({
+      title: 'Thu tiền mặt bán hàng · HD-0012',
+      href: null,
+    });
+    expect(recordTitle('cash_drawer_events', '8', null, { trigger: 'manual' }, 'INSERT')).toEqual({ title: 'Mở bằng tay', href: null });
   });
 });

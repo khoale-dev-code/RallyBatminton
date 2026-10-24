@@ -1,5 +1,14 @@
 import { formatVnd } from '@/lib/format';
-import { ATTENDANCE_STATUS, BOOKING_STATUS, BRANCH_STATUS, COURT_STATUS, PAYMENT_STATUS, RENTAL_STATUS } from '@/lib/labels';
+import {
+  ATTENDANCE_STATUS,
+  BOOKING_STATUS,
+  BRANCH_STATUS,
+  CASH_DRAWER_TRIGGER,
+  COURT_STATUS,
+  PAYMENT_STATUS,
+  RENTAL_STATUS,
+  isCashDrawerTrigger,
+} from '@/lib/labels';
 
 /**
  * Diễn giải một dòng nhật ký cho chủ sân đọc: lý do kỹ thuật ("system: auto complete") → câu tiếng Việt,
@@ -77,6 +86,9 @@ const FIELD_LABEL: Record<string, string> = {
   closes_at: 'Giờ đóng cửa',
   effective_from: 'Áp dụng từ',
   pay_type: 'Kiểu lương',
+  trigger: 'Lý do mở',
+  ref_code: 'Mã đơn',
+  device_label: 'Máy',
 };
 
 export function fieldLabel(key: string): string {
@@ -154,6 +166,11 @@ export function recordTitle(
   action: string,
 ): { title: string | null; href: string | null } {
   const data = isRecord(newData) ? newData : isRecord(oldData) ? oldData : {};
+  if (table === 'cash_drawer_events') {
+    const label = isCashDrawerTrigger(data.trigger) ? CASH_DRAWER_TRIGGER[data.trigger] : 'Mở ngăn kéo';
+    const ref = str(data.ref_code);
+    return { title: ref ? `${label} · ${ref}` : label, href: null };
+  }
   const amount =
     typeof data.amount === 'number' && (table === 'payments' || table === 'payroll_adjustments') ? formatVnd(data.amount) : null;
   const title =

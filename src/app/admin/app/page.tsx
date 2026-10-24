@@ -1,8 +1,9 @@
-import { BellRing, CloudCog, LogOut, RefreshCw, WifiOff } from 'lucide-react';
+import { BellRing, CloudCog, LogOut, Printer, RefreshCw, WifiOff } from 'lucide-react';
 import { type ReactNode } from 'react';
 
 import { ActionForm, CheckboxField, SubmitButton } from '@/components/ui/form';
 import { Badge, PageHeader, Panel } from '@/components/ui/primitives';
+import { DesktopPanel } from '@/features/desktop/components/desktop-panel';
 import { InstallPanel } from '@/features/manager/components/install-panel';
 import { savePushPrefsAction } from '@/features/push/actions';
 import { PushPanel } from '@/features/push/components/push-panel';
@@ -41,6 +42,13 @@ export default async function ManagerAppPage() {
         <div className="flex min-w-0 flex-col gap-6">
           <Panel title="Cài trên thiết bị này">
             <InstallPanel />
+          </Panel>
+          <Panel
+            id="may-in"
+            title="Máy in & ngăn kéo tiền"
+            description="Ứng dụng Rally Manager cho Windows trên máy tính quầy: in hóa đơn không cần hộp thoại, mở ngăn kéo tiền khi thu tiền mặt."
+          >
+            <DesktopPanel />
           </Panel>
           <Panel
             id="thong-bao"
@@ -100,6 +108,10 @@ export default async function ManagerAppPage() {
             <Fact icon={<BellRing className="size-5" />} title="Thông báo đẩy">
               Đơn online mới, đã nhận cọc, giao dịch cần xử lý, cảnh báo bảo mật — hiện trên điện thoại / máy quầy kể cả khi đang không mở
               ứng dụng. Bấm vào thông báo mở đúng trang, đúng chi nhánh.
+            </Fact>
+            <Fact icon={<Printer className="size-5" />} title="Ứng dụng Windows cho máy quầy">
+              Cùng trang quản trị, thêm in hóa đơn thẳng ra máy in nhiệt và mở ngăn kéo tiền. Chỉ trang Rally điều khiển được máy in; mỗi
+              lần mở ngăn kéo đều được ghi nhật ký.
             </Fact>
             <Fact icon={<LogOut className="size-5" />} title="Máy dùng chung">
               Ứng dụng không lưu dữ liệu khách / doanh thu trên máy. Hết ca bấm Đăng xuất (thiết bị cũng ngừng nhận thông báo của bạn);

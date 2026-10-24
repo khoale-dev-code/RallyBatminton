@@ -5,6 +5,7 @@ import { useMemo, useReducer, useRef, useState, useTransition } from 'react';
 import { recordSaleAction, type SaleInput } from '../actions';
 import { cartReducer, maxQuantity, summarizeCart, type PosItem } from '../lib/cart';
 import { toast } from '@/components/ui/toast';
+import { openDrawerAfterPayment } from '@/features/desktop/print';
 import { formatVnd } from '@/lib/format';
 
 export interface CheckoutDetails {
@@ -96,6 +97,8 @@ export function usePos(items: PosItem[]) {
           soldAt: new Date().toISOString(),
           snapshot,
         });
+        // Rally Manager cho Windows: thu tiền mặt xong → mở ngăn kéo (đơn ghi lại lần hai thì không mở).
+        if (!res.transferCode && !res.replayed) void openDrawerAfterPayment(details.paymentMethod, 'sale', res.code);
       } catch {
         setError('Mất kết nối khi gửi đơn. Bấm thanh toán lại — đơn sẽ không bị ghi trùng.');
       }
@@ -120,7 +123,8 @@ export function usePos(items: PosItem[]) {
     receipt,
     dismissReceipt: () => setReceipt(null),
     /** Tiền chuyển khoản đã về / khách đổi sang tiền mặt: đổi phiếu sang "đã thu". */
-    markPaid: (method?: CheckoutDetails['paymentMethod']) =>
+    markPaid: (method?: CheckoutDetails['paymentMethod']) => {
+      if (method === 'cash' && receipt) void openDrawerAfterPayment('cash', 'sale', receipt.code);
       setReceipt((r) =>
         r
           ? {
@@ -129,6 +133,7 @@ export function usePos(items: PosItem[]) {
               snapshot: method ? { ...r.snapshot, paymentMethod: method, tendered: null, change: null } : r.snapshot,
             }
           : r,
-      ),
+      );
+    },
   };
 }
