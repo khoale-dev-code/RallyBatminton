@@ -1,2 +1,4 @@
-# Ứng dụng Windows (Tauri) build riêng — không đưa lên Vercel.
-desktop
+# Chi bo qua ung dung Tauri o thu muc goc.
+# Giu lai src/features/desktop/ cho Next.js.
+
+/desktop/
