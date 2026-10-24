@@ -5,7 +5,7 @@ export function SetupNotice() {
   return (
     <Notice tone="warning" title="Chưa kết nối Supabase">
       Sao chép <code>.env.example</code> thành <code>.env.local</code>, điền <code>NEXT_PUBLIC_SUPABASE_URL</code> và khóa, chạy các file
-      trong <code>supabase/sql</code> rồi khởi động lại <code>npm run dev</code>. Xem README.md.
+      trong <code>supabase/sql</code> rồi khởi động lại <code>npm run dev</code>. Xem docs/HUONG-DAN-KY-THUAT.md.
     </Notice>
   );
 }

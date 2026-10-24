@@ -23,7 +23,8 @@ export type NavIcon =
   | 'review'
   | 'privacy'
   | 'security'
-  | 'app';
+  | 'app'
+  | 'chart';
 
 export interface NavItem {
   href: string;
@@ -59,6 +60,7 @@ export function buildNav(
       title: 'Vận hành',
       items: [
         { href: '/admin', label: 'Tổng quan', icon: 'dashboard' as const },
+        ...(owner ? [{ href: '/admin/reports', label: 'Báo cáo', icon: 'chart' as const }] : []),
         ...(can('booking.view') ? [{ href: '/admin/bookings', label: 'Lịch đặt sân', icon: 'calendar' as const }] : []),
         ...(can('payment.record') ? [{ href: '/admin/checkout', label: 'Thu tiền sân', icon: 'cash' as const }] : []),
         ...(can('booking.view') ? [{ href: '/admin/customers', label: 'Khách hàng', icon: 'users' as const }] : []),

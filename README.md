@@ -1,92 +1,126 @@
-![Rally Badminton](public/brand/rally-logo.png)
+<p align="center">
+  <img src="public/brand/rally-logo.png" alt="Rally Badminton" height="72" />
+</p>
 
-# Rally Badminton
+<h1 align="center">Rally Badminton</h1>
 
-**Đặt sân thuận tiện. Quản lý tập trung. Trải nghiệm liền mạch.**
+<p align="center">
+  <strong>Đặt sân cầu lông trực tuyến và quản lý chuỗi sân trên cùng một hệ thống</strong><br />
+  Khách xem giờ trống, đặt sân và đặt cọc trong vài thao tác. Chủ sân quản lý lịch, thu tiền, bán hàng, nhân sự và báo cáo ở cùng một nơi.
+</p>
 
-Rally Badminton kết nối trải nghiệm đặt sân của người chơi với hoạt động vận hành tại sân. Từ tìm sân, xem giá, đặt lịch, thanh toán đến quản lý khách hàng, bán hàng, kho và nhân sự, mọi công việc được tổ chức trong một hệ thống thống nhất.
+<p align="center">
+  <a href="https://rally-eight-tau.vercel.app"><strong>Xem website →</strong></a>
+</p>
 
-Sản phẩm gồm **website dành cho người chơi** và **Rally Manager dành cho chủ sân, quản lý, nhân viên**. Hệ thống được thiết kế cho hoạt động của một thương hiệu sân cầu lông có thể có nhiều chi nhánh.
-
-[**Khám phá website Rally**](https://rally-eight-tau.vercel.app/) · [**Rally Manager cho Windows**](https://github.com/khoale-dev-code/RallyBatminton/releases/latest)
+<p align="center">
+  <img src="docs/images/home.webp" alt="Trang chủ Rally Badminton" width="900" />
+</p>
 
 ---
+
+## Rally là gì?
+
+Rally là phần mềm cho **một thương hiệu sân cầu lông có nhiều chi nhánh**. Hệ thống gồm hai phần dùng chung một nguồn dữ liệu:
+
+- **Website cho người chơi:** tìm chi nhánh, xem bảng giá và giờ trống, đặt sân không cần tạo tài khoản, đặt cọc bằng chuyển khoản, mua vật phẩm, thuê vợt và giày.
+- **Trang quản trị cho chủ sân và nhân viên:** lịch đặt sân theo thời gian thực, thu tiền tại quầy, bán hàng, tồn kho, cho thuê, lịch ca, chấm công, bảng lương và báo cáo kinh doanh.
+
+Khách vừa đặt online là lịch ở quầy cập nhật ngay. Tiền chuyển khoản về là đơn tự xác nhận. Cuối ngày chủ sân xem được doanh thu và tiền trong két của từng ca.
 
 ## Dành cho người chơi
 
-**Tìm sân và đặt lịch đơn giản hơn, ngay trên điện thoại.**
+<p align="center">
+  <img src="docs/images/booking.webp" alt="Đặt sân trực tuyến" width="860" />
+</p>
 
-- **Khám phá chi nhánh:** xem địa điểm, hình ảnh, tiện ích và thông tin liên hệ.
-- **Xem lịch và bảng giá:** chọn ngày, sân, khung giờ phù hợp trước khi đặt.
-- **Đặt sân không cần tài khoản:** chỉ cần cung cấp thông tin đặt lịch cần thiết.
-- **Đặt cọc thuận tiện:** nhận hướng dẫn chuyển khoản bằng mã QR; trạng thái đơn được cập nhật khi giao dịch được xác nhận.
-- **Tra cứu đơn:** xem lịch đã đặt, chi tiết thanh toán và thực hiện những thao tác được cho phép.
-- **Tài khoản thành viên:** theo dõi lịch sử đặt sân, thông tin cá nhân, điểm tích lũy và hạng thành viên.
-- **Sản phẩm và dịch vụ:** tìm hiểu đồ uống, phụ kiện, vật phẩm và dịch vụ cho thuê dụng cụ.
-- **Cẩm nang cầu lông:** tham khảo luật chơi, kỹ thuật cơ bản và hướng dẫn cho người mới.
+- **Đặt sân trong 3 bước:** chọn chi nhánh, chọn sân và giờ, giữ chỗ. Thấy giá trước khi đặt, không cần tài khoản.
+- **Đặt cọc tự xác nhận:** quét mã QR chuyển khoản, tiền về là đơn tự xác nhận, không phải chờ nhân viên gọi lại.
+- **Tra cứu đơn** bằng mã đơn hoặc số điện thoại. Hủy online trong thời hạn cho phép.
+- **Tài khoản thành viên** (không bắt buộc): lưu lịch sử đặt sân, tích điểm, đăng nhập bằng Google.
+- **Vật phẩm và cho thuê:** cầu, vợt, giày, nước uống, phụ kiện. Xem tồn ở từng chi nhánh, thuê dụng cụ ngay tại sân.
+- **Cẩm nang cầu lông:** luật chơi, kỹ thuật, cách chọn vợt và giày cho người mới.
+- **Dùng tốt trên điện thoại:** giao diện thiết kế cho màn hình nhỏ trước.
 
-![Không gian sân cầu lông Rally](public/images/hero-court.webp)
+<p align="center">
+  <img src="docs/images/mobile.webp" alt="Rally trên điện thoại" width="560" />
+</p>
 
-## Dành cho chủ sân và người quản lý
+<p align="center">
+  <img src="docs/images/products.webp" alt="Vật phẩm" width="860" />
+</p>
 
-### Rally Manager: một nơi để theo dõi hoạt động hằng ngày
+## Dành cho chủ sân và nhân viên
 
-| Nhóm chức năng | Những việc có thể thực hiện |
+<p align="center">
+  <img src="docs/images/admin-dashboard.webp" alt="Tổng quan quản trị" width="860" />
+</p>
+
+| Chức năng | Làm được gì |
 | --- | --- |
-| **Tổng quan kinh doanh** | Theo dõi thu tiền, lịch sân, hoạt động trong ngày và những việc cần xử lý. |
-| **Lịch đặt sân** | Tiếp nhận, xác nhận, điều chỉnh, hủy và quản lý các lượt đặt sân tại quầy hoặc trực tuyến. |
-| **Thu ngân** | Thu tiền sân, quản lý tiền cọc, các khoản còn phải thu, giao dịch chuyển khoản và in hóa đơn. |
-| **Khách hàng & thành viên** | Tra cứu hồ sơ, lịch sử sử dụng dịch vụ và chương trình tích điểm. |
-| **Sản phẩm & tồn kho** | Quản lý hàng hóa, số lượng tồn, nhập xuất, kiểm kê và lịch sử biến động kho. |
-| **Bán hàng & cho thuê** | Bán sản phẩm tại quầy, theo dõi đơn bán, giao nhận dụng cụ và các khoản phí liên quan. |
-| **Nhân sự** | Sắp lịch ca, chấm công bằng QR, quản lý tăng ca, duyệt điều chỉnh công và bảng lương. |
-| **Chi nhánh & sân** | Quản lý thông tin sân, lịch hoạt động, bảng giá và quyền nhân viên theo chi nhánh. |
-| **Bảo mật & quyền riêng tư** | Phân quyền, xác thực hai lớp, nhật ký thay đổi và xử lý yêu cầu về dữ liệu cá nhân. |
+| **Tổng quan** | Thực thu hôm nay và 30 ngày, dòng tiền theo ngày, đơn chờ cọc, tiền còn phải thu, việc cần xử lý trong ngày |
+| **Lịch đặt sân** | Lịch theo sân và giờ, cập nhật ngay khi khách đặt online. Tạo đơn tại quầy, đổi sân, gia hạn giờ chơi, nhận sân, đặt định kỳ |
+| **Thu tiền** | Tiền mặt (tự tính tiền thối) hoặc mã QR chuyển khoản tự xác nhận. In hóa đơn khổ 80mm |
+| **Bán hàng tại quầy** | Chọn món hoặc quét mã vạch, bán theo đơn vị (chai, lốc, thùng), giảm giá, thuế. **Vẫn bán được khi mất mạng** |
+| **Kho và cho thuê** | Tồn kho theo chi nhánh, cảnh báo sắp hết, sổ nhập xuất, cho thuê và nhận trả, phí trễ hạn |
+| **Nhân sự** | Lịch ca, tăng ca, chấm công bằng mã QR, duyệt chấm công, bảng lương theo tháng |
+| **Phân quyền** | Mỗi nhân viên chỉ thấy và thao tác ở chi nhánh, chức năng được giao |
+| **Báo cáo** | Doanh thu, tỷ lệ lấp sân theo thứ và giờ, khách mới và khách quay lại, món bán chạy, hàng tồn, tiền mặt theo ca và thu ngân. Xuất Excel |
 
-### Công việc tại quầy diễn ra như thế nào?
+<p align="center">
+  <img src="docs/images/admin-bookings.webp" alt="Lịch đặt sân" width="860" />
+</p>
 
-**Khách đặt sân → nhân viên tiếp nhận → xác nhận tiền cọc → đón khách → thu tiền còn lại → hoàn tất đơn.**
+<p align="center">
+  <img src="docs/images/admin-pos.webp" alt="Bán hàng tại quầy" width="860" />
+</p>
 
-Khi người chơi cần thêm giờ, thuê dụng cụ hoặc mua đồ uống, nhân viên có thể xử lý trên các khu vực nghiệp vụ tương ứng. Chủ sân theo dõi toàn bộ hoạt động qua trang quản trị, thay vì phải tổng hợp thủ công từ nhiều nguồn.
+### Báo cáo kinh doanh
 
-## Rally Manager trên Windows
+<p align="center">
+  <img src="docs/images/admin-reports.webp" alt="Báo cáo doanh thu" width="860" />
+</p>
 
-Rally Manager có phiên bản dành cho **máy tính Windows 10/11**, phục vụ hoạt động tại quầy thu ngân.
+<p align="center">
+  <img src="docs/images/admin-occupancy.webp" alt="Báo cáo lấp sân theo thứ và giờ" width="860" />
+</p>
 
-- Mở giao diện quản trị trong cửa sổ ứng dụng riêng.
-- Hỗ trợ chọn máy in nhiệt và in phiếu bán hàng, hóa đơn tiền sân, phiếu thuê trên khổ giấy phù hợp.
-- Hỗ trợ ngăn kéo tiền kết nối qua máy in tương thích, với chức năng ghi nhận lịch sử mở ngăn kéo.
-- Sử dụng cùng dữ liệu nghiệp vụ với website, giúp hạn chế nhập thông tin lặp lại.
+- Biết **khung giờ vắng** để giảm giá và **khung giờ kín** để tăng giá giờ cao điểm.
+- So sánh doanh thu giữa các chi nhánh, giữa các sân, theo từng nguồn thu và hình thức thanh toán.
+- Đối chiếu **tiền mặt theo ca**, xem ai mở ngăn kéo tiền bằng tay và vào lúc nào.
 
-[**Xem và tải phiên bản Rally Manager mới nhất**](https://github.com/khoale-dev-code/RallyBatminton/releases/latest)
+## Rally Manager: ứng dụng cho quầy và điện thoại
 
-> Một số chức năng như in nhiệt, mở ngăn kéo tiền và nhận thông báo cần thiết bị, quyền truy cập hoặc cấu hình phù hợp. Khả năng hoạt động thực tế phụ thuộc vào môi trường triển khai.
+- **Cài như một ứng dụng** trên máy tính quầy, điện thoại và máy tính bảng. Có biểu tượng riêng, mở thành cửa sổ riêng, tự cập nhật khi có bản mới.
+- **Thông báo đẩy:** đơn online mới, đã nhận cọc, giao dịch cần xử lý, cảnh báo bảo mật. Bấm vào thông báo là mở đúng trang.
+- **Ứng dụng Windows cho máy quầy:** in hóa đơn thẳng ra máy in nhiệt không cần hộp thoại, tự mở ngăn kéo tiền khi thu tiền mặt. Mỗi lần mở ngăn kéo đều được ghi nhật ký.
+- **Mất Internet vẫn bán được:** đơn tiền mặt lưu trên máy, có mạng lại thì tự gửi lên đúng giờ bán, không bị ghi trùng.
 
-## Quản lý linh hoạt trên nhiều thiết bị
+## An toàn và riêng tư
 
-Website và khu vực quản trị được thiết kế để sử dụng trên máy tính, máy tính bảng và điện thoại. Chủ sân có thể mở Rally Manager bằng trình duyệt hoặc cài website như một ứng dụng trên thiết bị tương thích.
+- **Phân quyền kiểm ở database**, không chỉ ẩn nút trên giao diện. Nhân viên không đọc được dữ liệu ngoài phạm vi được giao.
+- **Xác thực 2 lớp** cho chủ sân và nhân viên. Khóa đăng nhập khi nhập sai nhiều lần.
+- **Chống giữ sân ảo:** giới hạn lượt giữ chỗ theo thiết bị, số điện thoại và sức chứa chi nhánh. Giữ chỗ quá hạn thì tự trả sân.
+- **Dữ liệu cá nhân** theo Luật Bảo vệ dữ liệu cá nhân 2025: văn bản pháp lý có phiên bản, lưu bằng chứng đồng ý, xử lý yêu cầu xem, sửa, xóa dữ liệu, ẩn danh hóa khách.
+- **Không xóa cứng lịch sử:** đơn đặt sân, giao dịch, đơn bán chỉ hủy hoặc đánh dấu, mọi thay đổi đều có nhật ký.
+- Thông báo trên màn hình khóa không chứa tên hay số điện thoại khách. Thiết bị dùng chung không lưu dữ liệu khách.
 
-Khi có kết nối mạng, các màn hình sử dụng dữ liệu chung để theo dõi tình trạng đặt sân và các giao dịch. Nếu mất kết nối, hệ thống thông báo để người dùng tránh thao tác dựa trên dữ liệu chưa được cập nhật.
+## Công nghệ
 
-## Tôn trọng dữ liệu và quyền truy cập
+| Phần | Công nghệ |
+| --- | --- |
+| Giao diện và máy chủ | Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS 4 |
+| Dữ liệu | Supabase: PostgreSQL với Row Level Security, Auth, Storage, Realtime |
+| Thanh toán | Chuyển khoản qua mã QR, tự xác nhận bằng SePay |
+| Ứng dụng | PWA (Rally Manager), Web Push, Tauri 2 (ứng dụng Windows) |
+| Triển khai | Vercel |
 
-Rally chú trọng bảo vệ thông tin trong quá trình đặt sân và vận hành:
+## Trạng thái dự án
 
-- Tài khoản chủ sân và nhân viên có phạm vi quyền khác nhau.
-- Các thao tác quan trọng có lịch sử để phục vụ kiểm tra, đối chiếu.
-- Có tùy chọn xác thực hai lớp và những biện pháp hạn chế hành vi đặt sân bất thường.
-- Khách hàng có thể tiếp cận thông tin chính sách và các chức năng yêu cầu liên quan đến dữ liệu cá nhân.
+Rally đã chạy đầy đủ chức năng trên bản thử nghiệm: [rally-eight-tau.vercel.app](https://rally-eight-tau.vercel.app). Dữ liệu trên bản thử nghiệm và trong ảnh chụp là dữ liệu mẫu.
 
-Các chính sách và quy trình thực tế cần được đơn vị vận hành rà soát, cấu hình phù hợp trước khi sử dụng chính thức.
-
-## Trải nghiệm Rally
-
-**Bạn là người chơi?** Hãy khám phá chi nhánh, xem lịch và đặt sân trực tuyến.
-
-**Bạn là chủ sân hoặc nhân viên?** Rally Manager tập trung những công việc quan trọng của quầy sân và hoạt động quản lý mỗi ngày.
-
-**[Truy cập Rally Badminton](https://rally-eight-tau.vercel.app/)** · **[Tải Rally Manager cho Windows](https://github.com/khoale-dev-code/RallyBatminton/releases/latest)**
+Dự án đang tìm **sân cầu lông muốn dùng thử thực tế**. Nếu bạn quản lý sân và quan tâm, hãy liên hệ qua website.
 
 ---
 
-*Rally Badminton hiện được giới thiệu như một hệ thống phục vụ một thương hiệu sân cầu lông nhiều chi nhánh. Nội dung trên mô tả các nhóm chức năng của sản phẩm, không phải thông báo phát hành dịch vụ SaaS cho nhiều chủ sân độc lập hay ứng dụng iOS/Android riêng trên cửa hàng ứng dụng.*
+<sub>Tài liệu kỹ thuật cho người phát triển: [docs/HUONG-DAN-KY-THUAT.md](docs/HUONG-DAN-KY-THUAT.md)</sub>

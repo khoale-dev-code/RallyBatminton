@@ -6,15 +6,19 @@ import { useEffect, useRef, useState } from 'react';
 
 import { toast } from '@/components/ui/toast';
 import { registerPushAction } from '@/features/push/actions';
+import { syncOfflineSales } from '@/features/pos/offline/sync';
+import { getOfflineSalesSnapshot, refreshOfflineSales } from '@/features/pos/offline/store';
 import { deviceLabel } from '@/features/push/lib/push';
 import { getBrowserClient } from '@/lib/supabase/browser';
 
+import { setOffline } from '../lib/connectivity';
 import { markInstalled, setInstallPrompt, type BeforeInstallPromptEvent } from '../lib/install-store';
 import { hasNewVersion, isLivePath, STALE_AFTER_HIDDEN_MS } from '../lib/live';
 
 const CURRENT_BUILD = process.env.NEXT_PUBLIC_RALLY_BUILD;
 const VERSION_CHECK_MS = 5 * 60_000;
 const OFFLINE_POLL_MS = 10_000;
+const OFFLINE_SALES_RETRY_MS = 30_000;
 
 /** Hỏi máy chủ (không qua bộ nhớ đệm). null = không tới được máy chủ. */
 async function pingServer(): Promise<unknown> {
@@ -32,17 +36,19 @@ async function pingServer(): Promise<unknown> {
  *  - báo mất kết nối, chặn gửi thao tác mới khi mất mạng (không tự gửi lại — tránh thu tiền / đặt sân hai lần);
  *  - có mạng lại / quay lại sau khi để máy lâu → tải dữ liệu mới từ máy chủ;
  *  - lịch sân của chi nhánh đổi (khách đặt online, SePay xác nhận cọc) → làm mới trang vận hành;
- *  - máy chủ có phiên bản mới → mời tải lại.
+ *  - máy chủ có phiên bản mới → mời tải lại;
+ *  - đơn bán lúc mất mạng (quầy bán): có mạng lại → tự gửi lên; đăng xuất khi còn đơn chưa gửi → hỏi lại.
  */
-export function ManagerRuntime({ activeBranchId }: { activeBranchId: string | null }) {
+export function ManagerRuntime({ activeBranchId, userId }: { activeBranchId: string | null; userId: string }) {
   const router = useRouter();
   const pathname = usePathname();
   const pathRef = useRef(pathname);
-  const [offline, setOffline] = useState(false);
+  const [offline, setOfflineBanner] = useState(false);
   const [updateReady, setUpdateReady] = useState(false);
   const [updateDismissed, setUpdateDismissed] = useState(false);
   const offlineRef = useRef(false);
   const registrationRef = useRef<ServiceWorkerRegistration | null>(null);
+  const onPos = pathname.startsWith('/admin/pos');
 
   useEffect(() => {
     pathRef.current = pathname;
@@ -88,10 +94,20 @@ export function ManagerRuntime({ activeBranchId }: { activeBranchId: string | nu
       void registrationRef.current?.update().catch(() => undefined);
     };
 
+    const sendOfflineSales = async () => {
+      // Quầy bán tự gửi và báo kết quả; trang khác gửi ngầm, chỉ báo khi gửi được.
+      const report = await syncOfflineSales(userId).catch(() => null);
+      if (report && report.sent > 0 && !pathRef.current.startsWith('/admin/pos')) {
+        toast.success(`Đã gửi ${report.sent} đơn bán lúc mất mạng lên máy chủ.`);
+      }
+    };
+
     const backOnline = () => {
       if (!offlineRef.current) return;
       offlineRef.current = false;
+      setOfflineBanner(false);
       setOffline(false);
+      void sendOfflineSales();
       window.clearInterval(pollTimer);
       pollTimer = undefined;
       router.refresh();
@@ -106,6 +122,7 @@ export function ManagerRuntime({ activeBranchId }: { activeBranchId: string | nu
     function goOffline() {
       if (offlineRef.current) return;
       offlineRef.current = true;
+      setOfflineBanner(true);
       setOffline(true);
       window.clearInterval(pollTimer);
       pollTimer = window.setInterval(() => void poll(), OFFLINE_POLL_MS);
@@ -129,6 +146,10 @@ export function ManagerRuntime({ activeBranchId }: { activeBranchId: string | nu
     };
 
     if (!navigator.onLine) goOffline();
+    else
+      void refreshOfflineSales().then((sales) => {
+        if (sales.some((s) => s.userId === userId && s.status === 'pending')) void sendOfflineSales();
+      });
     window.addEventListener('offline', onOffline);
     window.addEventListener('online', onOnline);
     document.addEventListener('visibilitychange', onVisibility);
@@ -142,12 +163,14 @@ export function ManagerRuntime({ activeBranchId }: { activeBranchId: string | nu
       window.clearInterval(versionTimer);
       window.clearInterval(pollTimer);
     };
-  }, [router]);
+  }, [router, userId]);
 
   // 3. Mất mạng: chặn gửi form (thu tiền, đặt sân…) ngay từ đầu — không để thao tác treo rồi tự gửi lại sau.
   useEffect(() => {
     if (!offline) return;
     const onSubmit = (event: SubmitEvent) => {
+      // Quầy bán: bán tiền mặt, lưu đơn trên máy (không gửi lên máy chủ lúc này).
+      if (event.target instanceof HTMLFormElement && event.target.hasAttribute('data-offline-ok')) return;
       event.preventDefault();
       event.stopImmediatePropagation();
       toast.error('Đang mất kết nối — thao tác CHƯA được gửi. Thử lại khi có mạng.');
@@ -230,6 +253,41 @@ export function ManagerRuntime({ activeBranchId }: { activeBranchId: string | nu
     };
   }, [pathname]);
 
+  // 6a. Còn đơn bán lúc mất mạng chưa gửi (lần trước gửi lỗi mạng / hết phiên…) → thử lại mỗi 30 giây khi có mạng.
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      if (offlineRef.current || document.visibilityState !== 'visible') return;
+      if (!getOfflineSalesSnapshot().some((s) => s.userId === userId && s.status === 'pending')) return;
+      void syncOfflineSales(userId).then(
+        (report) => {
+          if (report.sent > 0) toast.success(`Đã gửi ${report.sent} đơn bán lúc mất mạng lên máy chủ.`);
+        },
+        () => undefined,
+      );
+    }, OFFLINE_SALES_RETRY_MS);
+    return () => window.clearInterval(timer);
+  }, [userId]);
+
+  // 6. Đăng xuất khi còn đơn bán lúc mất mạng chưa gửi (của tài khoản này) → hỏi lại. Đơn vẫn nằm trên máy và được gửi
+  //    khi tài khoản này đăng nhập lại trên máy này.
+  useEffect(() => {
+    const onSubmit = (event: SubmitEvent) => {
+      const form = event.target;
+      if (!(form instanceof HTMLFormElement) || !form.querySelector('input[name="push_endpoint"]')) return;
+      const pending = getOfflineSalesSnapshot().filter((s) => s.userId === userId).length;
+      if (pending === 0) return;
+      const ok = window.confirm(
+        `Còn ${pending} đơn bán lúc mất mạng CHƯA gửi lên máy chủ.\n\nĐơn vẫn lưu trên máy này và chỉ gửi được khi bạn đăng nhập lại trên máy này. Vẫn đăng xuất?`,
+      );
+      if (!ok) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+      }
+    };
+    document.addEventListener('submit', onSubmit, true);
+    return () => document.removeEventListener('submit', onSubmit, true);
+  }, [userId]);
+
   const reload = () => {
     const waiting = registrationRef.current?.waiting;
     if (waiting) waiting.postMessage({ type: 'SKIP_WAITING' });
@@ -245,7 +303,11 @@ export function ManagerRuntime({ activeBranchId }: { activeBranchId: string | nu
           className="fixed inset-x-0 bottom-0 z-[70] flex items-start justify-center gap-2 bg-shuttle-deep px-4 py-2.5 pb-[max(0.625rem,env(safe-area-inset-bottom))] text-center text-sm font-medium text-paper shadow-lg"
         >
           <WifiOff className="mt-0.5 size-4 shrink-0" aria-hidden />
-          <span>Mất kết nối Internet — dữ liệu trên màn hình có thể chưa cập nhật. Thao tác mới chưa gửi được cho tới khi có mạng.</span>
+          <span>
+            {onPos
+              ? 'Mất kết nối Internet — quầy bán vẫn bán được bằng tiền mặt: đơn lưu trên máy, tự gửi khi có mạng.'
+              : 'Mất kết nối Internet — dữ liệu trên màn hình có thể chưa cập nhật. Thao tác mới chưa gửi được cho tới khi có mạng.'}
+          </span>
         </div>
       )}
       {updateReady && !updateDismissed && !offline && (

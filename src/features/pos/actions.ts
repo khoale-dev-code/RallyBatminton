@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 
 import { invalidatePublic } from '@/lib/public-cache';
+import { getStaffContext } from '@/lib/auth/context';
 import { requireBranchPermission } from '@/lib/auth/guards';
 import { isOwner } from '@/lib/auth/permissions';
 import { errorCode, toUserMessage } from '@/lib/errors';
@@ -138,4 +139,68 @@ export async function cancelPendingSaleAction(saleId: string, reason: string): P
   revalidatePath('/admin/inventory');
   invalidatePublic('catalog');
   return { ok: true };
+}
+
+// ---- Bán hàng khi mất mạng (26_offline_pos.sql) ------------------------------------------------------------
+
+const offlineSaleInputSchema = z.object({
+  idempotencyKey: zIdempotencyKey(),
+  sellerId: z.uuid(),
+  branchId: z.uuid(),
+  soldAt: z.iso.datetime({ offset: true }),
+  lines: z
+    .array(z.object({ variantId: z.uuid(), unitId: z.uuid().nullable(), quantity: z.number().int().min(1).max(1000) }))
+    .min(1)
+    .max(30),
+  discount: z.number().int().min(0).max(100_000_000),
+  expectedTotal: z.number().int().min(0),
+  note: z.string().max(250).nullable(),
+  acceptServerTotal: z.boolean(),
+});
+
+export type OfflineSaleResult =
+  | { ok: true; saleId: string; code: string; total: number; replayed: boolean }
+  | { ok: false; error: string; code?: string; serverTotal?: number };
+
+/**
+ * Gửi một đơn bán lúc mất mạng lên máy chủ. Người gửi phải đúng là người đã bán (đơn ghi tên thu ngân);
+ * giá, kho, quyền, chống trùng do database kiểm như bán thường.
+ */
+export async function recordOfflineSaleAction(input: unknown): Promise<OfflineSaleResult> {
+  const parsed = offlineSaleInputSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: 'Dữ liệu đơn bán khi mất mạng không hợp lệ.', code: 'INVALID_INPUT' };
+  const v = parsed.data;
+  const ctx = await getStaffContext();
+  if (!ctx) return { ok: false, error: 'Phiên đăng nhập đã hết. Vui lòng đăng nhập lại.', code: 'AUTH_REQUIRED' };
+  if (ctx.userId !== v.sellerId)
+    return { ok: false, error: toUserMessage({ message: 'OFFLINE_SELLER_MISMATCH' }), code: 'OFFLINE_SELLER_MISMATCH' };
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc('record_offline_sale', {
+    p_branch_id: v.branchId,
+    p_lines: v.lines.map((l) => ({ variant_id: l.variantId, unit_id: l.unitId, quantity: l.quantity })),
+    p_discount_amount: v.discount,
+    p_sold_at: v.soldAt,
+    p_expected_total: v.expectedTotal,
+    p_idempotency_key: v.idempotencyKey,
+    p_note: v.note,
+    p_accept_server_total: v.acceptServerTotal,
+  });
+  if (error) {
+    const code = errorCode(error) ?? undefined;
+    const serverTotal = code === 'OFFLINE_PRICE_CHANGED' ? Number(error.details) : NaN;
+    return {
+      ok: false,
+      error: toUserMessage(error),
+      code,
+      ...(Number.isFinite(serverTotal) ? { serverTotal } : {}),
+    };
+  }
+  const res = rpcResult.safeParse(data);
+  if (!res.success) return { ok: false, error: 'Không đọc được kết quả đơn bán.' };
+  revalidatePath('/admin/sales');
+  revalidatePath('/admin/inventory');
+  revalidatePath('/admin');
+  invalidatePublic('catalog');
+  return { ok: true, saleId: res.data.sale_id, code: res.data.code, total: res.data.total_amount, replayed: res.data.replayed ?? false };
 }

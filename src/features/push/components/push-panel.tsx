@@ -139,7 +139,8 @@ export function PushPanel() {
       return (
         <p className="flex items-start gap-2 text-sm text-muted">
           <BellOff className="mt-0.5 size-4 shrink-0" aria-hidden />
-          Máy chủ chưa có khóa thông báo. Chủ sân chạy <code>npm run push:keys</code> rồi thêm 3 biến vào Vercel (README mục 25).
+          Máy chủ chưa có khóa thông báo. Chủ sân chạy <code>npm run push:keys</code> rồi thêm 3 biến vào Vercel (docs/HUONG-DAN-KY-THUAT.md
+          mục 25).
         </p>
       );
     case 'denied':

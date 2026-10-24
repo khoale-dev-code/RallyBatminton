@@ -33,6 +33,8 @@ export default async function PosPage() {
   const day = describeDateKey(dateKey);
   return (
     <PosTerminal
+      userId={ctx.userId}
+      branchId={branch.branchId}
       branchName={branch.name}
       cashierName={ctx.displayName}
       dateLabel={`${day.weekdayLong}, ${day.dayMonth}`}

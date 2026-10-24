@@ -56,6 +56,8 @@ interface CartPanelProps {
   onSubmit: () => void;
   isPending: boolean;
   error: string | null;
+  /** Đang mất mạng: chỉ tiền mặt, đơn lưu trên máy. */
+  offline?: boolean;
   /** Điện thoại: hiện dạng trang phủ, có nút đóng. */
   sheetOpen: boolean;
   onCloseSheet: () => void;
@@ -228,6 +230,7 @@ export function CartPanel(props: CartPanelProps) {
 
       {/* Tổng tiền & thanh toán */}
       <form
+        data-offline-ok
         className="flex flex-col gap-3 border-t border-line bg-hall/50 px-4 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))]"
         onSubmit={(e) => {
           e.preventDefault();
@@ -298,12 +301,14 @@ export function CartPanel(props: CartPanelProps) {
           <div className="grid grid-cols-4 gap-1.5">
             {MANUAL_PAYMENT_METHODS.map((m) => {
               const Icon = METHOD_ICON[m];
+              const locked = Boolean(props.offline) && m !== 'cash';
               return (
                 <label
                   key={m}
                   className={cn(
                     'flex min-h-12 cursor-pointer flex-col items-center justify-center gap-0.5 rounded-control border px-1 text-center text-xs leading-tight has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ink/30',
                     form.method === m ? 'border-ink bg-ink text-paper' : 'border-line bg-paper hover:border-ink',
+                    locked && 'cursor-not-allowed opacity-40',
                   )}
                 >
                   <input
@@ -311,6 +316,7 @@ export function CartPanel(props: CartPanelProps) {
                     name="pos-method"
                     value={m}
                     checked={form.method === m}
+                    disabled={locked}
                     onChange={() => onForm({ method: m })}
                     className="sr-only"
                   />
@@ -393,9 +399,11 @@ export function CartPanel(props: CartPanelProps) {
             ? 'Đang ghi đơn…'
             : empty
               ? 'Chưa có món'
-              : form.method === 'bank_transfer' && !form.reference.trim()
-                ? `Hiện mã QR ${formatVnd(total)}`
-                : `Thu ${formatVnd(total)}`}
+              : props.offline
+                ? `Thu ${formatVnd(total)} · lưu trên máy`
+                : form.method === 'bank_transfer' && !form.reference.trim()
+                  ? `Hiện mã QR ${formatVnd(total)}`
+                  : `Thu ${formatVnd(total)}`}
         </button>
         <p className="hidden text-center text-xs text-muted [@media(pointer:fine)]:block">Ctrl + Enter để thu tiền. Phím / để tìm món.</p>
       </form>

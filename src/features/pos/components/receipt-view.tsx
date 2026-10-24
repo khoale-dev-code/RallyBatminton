@@ -1,6 +1,6 @@
 'use client';
 
-import { CircleCheck, Printer } from 'lucide-react';
+import { CircleCheck, CloudOff, Printer } from 'lucide-react';
 import Link from 'next/link';
 
 import { Button, buttonClass } from '@/components/ui/button';
@@ -47,10 +47,17 @@ export function ReceiptView({ receipt, brand, branchName, cashierName, onNewOrde
         />
       ) : (
         <section aria-live="polite" className="flex flex-col items-start gap-5 rounded-panel border border-line bg-paper p-6 sm:p-8">
-          <span className="inline-flex items-center gap-2 rounded-full bg-court-soft px-3 py-1 text-sm font-medium text-court-deep">
-            <CircleCheck className="size-4" aria-hidden />
-            {receipt.replayed ? 'Đơn đã được ghi trước đó' : 'Đã ghi đơn'}
-          </span>
+          {receipt.offline ? (
+            <span className="inline-flex items-center gap-2 rounded-full bg-amber-soft px-3 py-1 text-sm font-medium text-amber-deep">
+              <CloudOff className="size-4" aria-hidden />
+              Mất mạng — đã lưu đơn trên máy, tự gửi khi có mạng
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-2 rounded-full bg-court-soft px-3 py-1 text-sm font-medium text-court-deep">
+              <CircleCheck className="size-4" aria-hidden />
+              {receipt.replayed ? 'Đơn đã được ghi trước đó' : 'Đã ghi đơn'}
+            </span>
+          )}
           <div>
             <p className="text-sm text-muted">Đã thu ({PAYMENT_METHOD[s.paymentMethod]})</p>
             <p className="font-display text-5xl leading-none tabular sm:text-6xl">{formatVnd(receipt.total)}</p>
@@ -72,9 +79,11 @@ export function ReceiptView({ receipt, brand, branchName, cashierName, onNewOrde
               <Printer className="size-5" aria-hidden />
               In phiếu
             </Button>
-            <Link href={`/admin/sales/${receipt.saleId}`} className={buttonClass('ghost', 'lg')}>
-              Xem đơn
-            </Link>
+            {!receipt.offline && (
+              <Link href={`/admin/sales/${receipt.saleId}`} className={buttonClass('ghost', 'lg')}>
+                Xem đơn
+              </Link>
+            )}
           </div>
         </section>
       )}
@@ -90,7 +99,7 @@ export function ReceiptView({ receipt, brand, branchName, cashierName, onNewOrde
           {brand.addressLine && <p className="text-muted">{brand.addressLine}</p>}
           {brand.hotline && <p className="text-muted">Hotline {brand.hotline}</p>}
           {brand.taxCode && <p className="text-muted">MST {brand.taxCode}</p>}
-          <p className="mt-3 font-medium">Phiếu thanh toán</p>
+          <p className="mt-3 font-medium">{receipt.offline ? 'Phiếu thanh toán (tạm — mất mạng)' : 'Phiếu thanh toán'}</p>
           <p className="tabular">
             {receipt.code}, {formatDateTime(receipt.soldAt)}
           </p>
@@ -154,6 +163,7 @@ export function ReceiptView({ receipt, brand, branchName, cashierName, onNewOrde
           )}
         </dl>
         <p className="mt-4 border-t border-dashed border-ink/40 pt-2 text-center text-muted">
+          {receipt.offline && <span className="block">Mã tạm, mã đơn chính thức có khi máy gửi đơn lên.</span>}
           Cảm ơn quý khách. Phiếu này không thay cho hóa đơn GTGT.
         </p>
       </article>

@@ -102,5 +102,5 @@ Write-RallyStep '  1. Supabase SQL Editor: chạy supabase\sql\00 → 01 → 02 
 Write-RallyStep "  2. Authentication > Add user cho chủ sân, rồi: select private.bootstrap_first_owner('email', 'Tên');"
 Write-RallyStep '  3. Điền .env.local (URL, publishable key, secret key, site URL, Turnstile).'
 Write-RallyStep "  4. cd `"$root`"; npm run dev  →  http://localhost:3000"
-Write-RallyStep '  Chi tiết: README.md' 'DarkGray'
+Write-RallyStep '  Chi tiết: docs/HUONG-DAN-KY-THUAT.md' 'DarkGray'
 exit 0

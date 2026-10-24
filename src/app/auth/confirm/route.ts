@@ -8,7 +8,7 @@ const TYPES: readonly EmailOtpType[] = ['signup', 'invite', 'magiclink', 'recove
 
 /**
  * Liên kết trong email dạng {{ .SiteURL }}/auth/confirm?token_hash=…&type=… (mở được trên thiết bị khác
- * với thiết bị đã đăng ký — khác luồng ?code=). Xem README mục "Email của Supabase".
+ * với thiết bị đã đăng ký — khác luồng ?code=). Xem docs/HUONG-DAN-KY-THUAT.md mục "Email của Supabase".
  */
 export async function GET(request: NextRequest) {
   const params = request.nextUrl.searchParams;

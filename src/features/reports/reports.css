@@ -1,0 +1,23 @@
+/*
+ * Báo cáo chủ sân — màu biểu đồ (bảng màu đã kiểm tra mù màu: 3 màu đầu của bảng tham chiếu, đạt cả khi so mọi cặp).
+ * Chữ, số, chú thích luôn dùng màu chữ của giao diện; màu chỉ nằm trên vạch / cột.
+ */
+.rally-report {
+  --viz-booking: #2a78d6;
+  --viz-sale: #eb6834;
+  --viz-rental: #1baf7a;
+  /* Bản đồ nhiệt: một sắc xanh, nhạt → đậm (mức 1–5). */
+  --viz-heat-0: #f3f4f6;
+  --viz-heat-1: #dbe8f8;
+  --viz-heat-2: #b0cdef;
+  --viz-heat-3: #78a9e3;
+  --viz-heat-4: #3f81d4;
+  --viz-heat-5: #1d5aa6;
+}
+
+@media print {
+  .rally-report .report-filters,
+  .rally-report .report-tabs {
+    display: none !important;
+  }
+}

@@ -28,7 +28,7 @@ export function ReconcileBar({ run, tokenReady }: { run: ReconcileRun | null; to
                 ? `Lần gần nhất ${formatDateTime(run.started_at)} (${SOURCE[run.source] ?? run.source}): ${
                     run.error ? `lỗi — ${run.error}` : `kiểm tra ${run.fetched} giao dịch, ghi bù ${run.new_count}.`
                   }`
-                : 'Chưa chạy lần nào. Website tự hỏi SePay mỗi 15 phút khi đã bật lịch chạy (README mục 16).'}
+                : 'Chưa chạy lần nào. Website tự hỏi SePay mỗi 15 phút khi đã bật lịch chạy (docs/HUONG-DAN-KY-THUAT.md mục 16).'}
           </p>
         </div>
       </div>

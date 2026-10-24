@@ -234,6 +234,24 @@ with checks as (
          and not has_table_privilege('authenticated', 'public.cash_drawer_events', 'INSERT'),
          'chỉ thêm + ghi Nhật ký thay đổi + kiểm quyền chi nhánh'
   union all
+  select 32, 'Đã chạy 26_offline_pos.sql (bán hàng khi mất mạng)',
+         exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'sales' and column_name = 'recorded_offline')
+         and to_regprocedure('public.record_offline_sale(uuid,jsonb,bigint,timestamptz,bigint,text,text,boolean)') is not null
+         and exists (select 1 from pg_trigger where tgname = 'sales_offline_stamp')
+         and exists (select 1 from pg_trigger where tgname = 'payments_offline_stamp')
+         and not has_function_privilege('anon', 'public.record_offline_sale(uuid,jsonb,bigint,timestamptz,bigint,text,text,boolean)', 'execute'),
+         'giờ bán thật + chống trùng + báo giá đổi'
+  union all
+  select 33, 'Đã chạy 27_owner_reports.sql (báo cáo cho chủ sân)',
+         to_regprocedure('public.report_revenue(date,date,uuid)') is not null
+         and to_regprocedure('public.report_occupancy(date,date,uuid)') is not null
+         and to_regprocedure('public.report_customers(date,date,uuid)') is not null
+         and to_regprocedure('public.report_products(date,date,uuid)') is not null
+         and to_regprocedure('public.report_cash(date,date,uuid)') is not null
+         and pg_get_functiondef('private.report_window(date,date,uuid)'::regprocedure) like '%require_owner%'
+         and not has_function_privilege('anon', 'public.report_cash(date,date,uuid)', 'execute'),
+         'chỉ chủ sân + chỉ đọc'
+  union all
   select 12, 'pg_cron (tùy chọn)',
          true,
          case when exists (select 1 from pg_extension where extname = 'pg_cron')

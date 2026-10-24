@@ -4,18 +4,25 @@ import { ShoppingBag } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
+import { useOffline } from '@/features/manager/lib/connectivity';
 import { formatVnd } from '@/lib/format';
 
 import { usePos } from '../hooks/use-pos';
+import { applyPendingStock } from '../offline/lib';
+import { useOfflineSales } from '../offline/store';
 import { cartTax, changeDue, filterItems, type PosItem } from '../lib/cart';
 
 import { CartPanel, EMPTY_FORM, moneyInput, type CheckoutForm } from './cart-panel';
+import { OfflineQueuePanel } from './offline-queue-panel';
 import { PosHeader } from './pos-header';
 import { CatalogToolbar, ProductGrid } from './product-grid';
 import { ReceiptView, type ReceiptBrand } from './receipt-view';
 import { type BankAccount } from '@/features/payments/lib/transfer';
 
 interface PosTerminalProps {
+  /** Tài khoản thu ngân + chi nhánh: để lưu đơn trên máy khi mất mạng. */
+  userId: string;
+  branchId: string;
   branchName: string;
   cashierName: string;
   dateLabel: string;
@@ -34,18 +41,28 @@ function isTypingTarget(el: EventTarget | null): boolean {
 
 /** Màn bán hàng tại quầy: chọn món bên trái, đơn hiện tại bên phải (điện thoại: mở dạng trang phủ). */
 export function PosTerminal({
+  userId,
+  branchId,
   branchName,
   cashierName,
   dateLabel,
   today,
   brand,
-  items,
+  items: serverItems,
   categories,
   canDiscount,
   bankAccount,
 }: PosTerminalProps) {
   const router = useRouter();
-  const pos = usePos(items);
+  const offline = useOffline();
+  // Tồn trên máy = tồn máy chủ trừ các đơn bán lúc mất mạng chưa gửi (không bán vượt số hàng còn).
+  const offlineSales = useOfflineSales();
+  const items = useMemo(() => applyPendingStock(serverItems, offlineSales, branchId), [serverItems, offlineSales, branchId]);
+  const pos = usePos(items, { userId, cashierName, branchId, branchName });
+  // Mất mạng: không tải lại dữ liệu trang (tải lại sẽ rời khỏi quầy bán).
+  const refresh = () => {
+    if (!offline) router.refresh();
+  };
   const searchRef = useRef<HTMLInputElement>(null);
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState<string | null>(null);
@@ -111,6 +128,12 @@ export function PosTerminal({
     );
   }
 
+  // Có mạng: nhờ service worker lưu bản quầy bán mới nhất (giá, tồn) — lỡ tải lại / mở lại ứng dụng lúc mất mạng vẫn bán được.
+  useEffect(() => {
+    if (offline || !('serviceWorker' in navigator)) return;
+    navigator.serviceWorker.controller?.postMessage({ type: 'CACHE_OFFLINE_PAGE', path: '/admin/pos' });
+  }, [offline, serverItems]);
+
   // Phím tắt: "/" tìm món, Ctrl/⌘ + Enter thu tiền, Esc đóng đơn (điện thoại).
   const submitRef = useRef(submit);
   useEffect(() => {
@@ -168,13 +191,13 @@ export function PosTerminal({
           account={bankAccount}
           onPaid={(method) => {
             pos.markPaid(method);
-            router.refresh();
+            refresh();
           }}
           onNewOrder={() => {
             pos.dismissReceipt();
             setForm(EMPTY_FORM);
             setSheetOpen(false);
-            router.refresh();
+            refresh();
             window.setTimeout(() => searchRef.current?.focus(), 50);
           }}
         />
@@ -193,6 +216,7 @@ export function PosTerminal({
             todayCount={today.count}
             todayRevenue={today.revenue}
           />
+          <OfflineQueuePanel userId={userId} />
           <CatalogToolbar
             ref={searchRef}
             query={query}
@@ -233,6 +257,7 @@ export function PosTerminal({
           onSubmit={submit}
           isPending={pos.isPending}
           error={pos.error}
+          offline={offline}
           sheetOpen={sheetOpen}
           onCloseSheet={() => setSheetOpen(false)}
         />

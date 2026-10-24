@@ -2212,6 +2212,8 @@ export type Database = {
           voided_at: string | null
           voided_by: string | null
           void_reason: string | null
+          recorded_offline: boolean
+          offline_synced_at: string | null
         }
         Insert: {
           id?: string
@@ -2229,6 +2231,8 @@ export type Database = {
           voided_at?: string | null
           voided_by?: string | null
           void_reason?: string | null
+          recorded_offline?: boolean
+          offline_synced_at?: string | null
         }
         Update: {
           id?: string
@@ -2246,6 +2250,8 @@ export type Database = {
           voided_at?: string | null
           voided_by?: string | null
           void_reason?: string | null
+          recorded_offline?: boolean
+          offline_synced_at?: string | null
         }
         Relationships: [
           {
@@ -3177,6 +3183,11 @@ export type Database = {
         Returns: undefined
       }
       send_test_push: { Args: never; Returns: number }
+      report_revenue: { Args: { p_from: string; p_to: string; p_branch_id?: string | null }; Returns: Json }
+      report_occupancy: { Args: { p_from: string; p_to: string; p_branch_id?: string | null }; Returns: Json }
+      report_customers: { Args: { p_from: string; p_to: string; p_branch_id?: string | null }; Returns: Json }
+      report_products: { Args: { p_from: string; p_to: string; p_branch_id?: string | null }; Returns: Json }
+      report_cash: { Args: { p_from: string; p_to: string; p_branch_id?: string | null }; Returns: Json }
       log_cash_drawer_open: {
         Args: { p_branch_id: string; p_trigger: string; p_ref_code?: string | null; p_device?: string | null }
         Returns: number
@@ -3800,6 +3811,19 @@ export type Database = {
           p_customer_name?: string
           p_note?: string
           p_idempotency_key?: string
+        }
+        Returns: Json
+      }
+      record_offline_sale: {
+        Args: {
+          p_branch_id: string
+          p_lines: Json
+          p_discount_amount: number
+          p_sold_at: string
+          p_expected_total: number
+          p_idempotency_key: string
+          p_note?: string | null
+          p_accept_server_total?: boolean
         }
         Returns: Json
       }

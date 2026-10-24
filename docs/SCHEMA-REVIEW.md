@@ -501,3 +501,18 @@ Căn cứ Luật 91/2025/QH15 (Điều 4 quyền chủ thể dữ liệu, Điề
 - **`log_cash_drawer_open(branch, trigger, ref, device)`** (authenticated): chủ sân, hoặc nhân viên có `sale.record` / `payment.record` / `rental.operate` ở chi nhánh; mở tay tối đa 30 lần / giờ / người (`DRAWER_RATE_LIMIT`).
 - Ứng dụng Windows (`desktop/`) gọi lệnh mở ngăn kéo **sau** khi web ghi nhật ký (mở tay: ghi lỗi → không mở). Đây là nhật ký răn đe / đối chiếu, không phải khóa phần cứng: ngăn kéo vẫn mở được bằng chìa.
 - **Kiểm tra:** `99_verify_schema.sql` dòng 31.
+
+## 29. Migration `26_offline_pos.sql` — Bán hàng khi mất mạng
+
+- `sales.recorded_offline` (bool), `sales.offline_synced_at`. Trigger `sales_offline_stamp` / `payments_offline_stamp` (before insert): khi biến giao dịch `rally.offline_sold_at` có giá trị → `sold_at` / `received_at` = giờ bán thật, đánh dấu offline; ngoài ra luôn `recorded_offline = false` (client không tự đánh dấu được).
+- **`record_offline_sale(branch, lines, discount, sold_at, expected_total, idem, note, accept_server_total)`** (authenticated): `sold_at` trong [now − 72h, now + 5 phút] (`OFFLINE_SALE_TOO_OLD`); gọi đúng `record_sale` (quyền `sale.record`, giảm giá chỉ chủ sân, giá / kho / chống trùng như bán thường, tiền mặt, không khách) rồi so tổng: khác `expected_total` → `OFFLINE_PRICE_CHANGED` (detail = tổng mới, cả đơn bị hủy trong cùng giao dịch) trừ khi `accept_server_total` (ghi chú lưu số đã thu). Gửi lại cùng mã → trả đơn cũ (`replayed`), không kiểm lại giá.
+- Không cho tồn âm (giữ `inventory_on_hand_non_negative`): đơn hết hàng nằm lại trên máy chờ xử lý.
+- Server action kiểm thêm: người gửi = người bán (`OFFLINE_SELLER_MISMATCH`). Kiểm thử: `offline.sql` (O1–O16), Playwright (mất mạng, tải lại khi mất mạng, giá đổi, mất phản hồi, đăng xuất khi còn đơn).
+- **Kiểm tra:** `99_verify_schema.sql` dòng 32.
+
+## 30. Migration `27_owner_reports.sql` — Báo cáo cho chủ sân
+
+- Không tạo bảng. `private.report_window(from, to, branch)` → khoảng giờ VN `[from 00:00, to+1 00:00)`, ≤ 366 ngày (`INVALID_RANGE`), chi nhánh tồn tại (`BRANCH_NOT_FOUND`), **`private.require_owner()`** (kèm MFA nếu bật).
+- `report_revenue` (payments succeeded, charge − refund; theo nguồn / hình thức / ngày / chi nhánh / sân; kỳ trước cùng độ dài), `report_occupancy` (đơn customer confirmed / checked_in / completed / no_show cắt theo giờ địa phương; sức chứa = phút mở cửa × sân active × số ngày theo thứ), `report_customers` (theo giờ chơi; khách mới = chưa có lượt nào trước kỳ; top 15, bỏ khách đã ẩn danh), `report_products` (sales completed; lãi gộp ước tính theo `cost_price` hiện tại; hàng tồn không bán trong kỳ; cho thuê), `report_cash` (tiền mặt theo ngày / thu ngân / ca — khớp `recorded_by` ↔ `staff_accounts.employee_id` trong giờ chấm công; `cash_drawer_events` theo lý do; mở tay mới nhất 50).
+- `stable security definer`, grant `authenticated` (anon không gọi được). Kiểm thử: `reports.sql` (R1–R9, gồm thực thu khớp `admin_dashboard`, tổng theo chi nhánh = tổng, nhân viên → `OWNER_REQUIRED`).
+- **Kiểm tra:** `99_verify_schema.sql` dòng 33.

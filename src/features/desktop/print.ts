@@ -34,19 +34,24 @@ export async function printPage(): Promise<void> {
 
 /**
  * Mở ngăn kéo tiền (chỉ trong Rally Manager cho Windows, máy đã bật ngăn kéo). Luôn ghi nhật ký lên máy chủ trước;
- * mở bằng tay mà không ghi được nhật ký thì KHÔNG mở.
+ * mở bằng tay mà không ghi được nhật ký thì KHÔNG mở. `deferLog`: đơn bán lúc mất mạng — nhật ký ghi khi đơn được gửi lên.
  */
-export async function openCashDrawer(trigger: CashDrawerTrigger, refCode?: string): Promise<boolean> {
+export async function openCashDrawer(trigger: CashDrawerTrigger, refCode?: string, options: { deferLog?: boolean } = {}): Promise<boolean> {
   const state = await loadDesktopState();
   if (state.status !== 'desktop') return false;
   if (!state.settings?.drawerEnabled) {
     if (trigger === 'manual') toast.error(desktopErrorText({ code: 'NO_DRAWER', message: '' }));
     return false;
   }
-  const log = await logCashDrawerAction({ trigger, refCode, device: desktopDeviceLabel(state.info) });
-  if (!log.ok) {
-    toast.error(log.error);
-    if (trigger === 'manual') return false;
+  if (!options.deferLog || trigger === 'manual') {
+    const log = await logCashDrawerAction({ trigger, refCode, device: desktopDeviceLabel(state.info) }).catch(() => ({
+      ok: false as const,
+      error: 'Không ghi được nhật ký mở ngăn kéo (mất mạng?).',
+    }));
+    if (!log.ok) {
+      toast.error(log.error);
+      if (trigger === 'manual') return false;
+    }
   }
   const res = await callDesktop('open_cash_drawer', done);
   if (!res.ok) {
@@ -56,10 +61,18 @@ export async function openCashDrawer(trigger: CashDrawerTrigger, refCode?: strin
   return true;
 }
 
-/** Sau khi thu tiền: tự mở ngăn kéo nếu là tiền mặt và máy đã bật tự mở. Không làm gì trên trình duyệt thường. */
-export async function openDrawerAfterPayment(paymentMethod: string, trigger: CashDrawerTrigger, refCode?: string): Promise<void> {
-  if (!isDesktopApp()) return;
+/**
+ * Sau khi thu tiền: tự mở ngăn kéo nếu là tiền mặt và máy đã bật tự mở. Không làm gì trên trình duyệt thường.
+ * Trả về true nếu ngăn kéo đã mở.
+ */
+export async function openDrawerAfterPayment(
+  paymentMethod: string,
+  trigger: CashDrawerTrigger,
+  refCode?: string,
+  options: { deferLog?: boolean } = {},
+): Promise<boolean> {
+  if (!isDesktopApp()) return false;
   const state = await loadDesktopState();
-  if (state.status !== 'desktop' || !shouldAutoOpenDrawer(state.settings, paymentMethod)) return;
-  await openCashDrawer(trigger, refCode);
+  if (state.status !== 'desktop' || !shouldAutoOpenDrawer(state.settings, paymentMethod)) return false;
+  return openCashDrawer(trigger, refCode, options);
 }

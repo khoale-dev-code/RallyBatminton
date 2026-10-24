@@ -77,7 +77,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
       >
         {children}
       </AdminShell>
-      <ManagerRuntime activeBranchId={active?.branchId ?? null} />
+      <ManagerRuntime activeBranchId={active?.branchId ?? null} userId={ctx.userId} />
     </ToastProvider>
   );
 }

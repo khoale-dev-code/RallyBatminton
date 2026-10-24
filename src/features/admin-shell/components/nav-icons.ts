@@ -23,6 +23,7 @@ import {
   ShieldCheck,
   LockKeyhole,
   AppWindow,
+  ChartColumn,
 } from 'lucide-react';
 
 import { type NavIcon } from '../nav';
@@ -51,4 +52,5 @@ export const NAV_ICONS: Record<NavIcon, LucideIcon> = {
   privacy: ShieldCheck,
   security: LockKeyhole,
   app: AppWindow,
+  chart: ChartColumn,
 };

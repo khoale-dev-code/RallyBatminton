@@ -15,7 +15,7 @@ Rally Manager trên điện thoại ─┘                               SePay w
 | --- | --- | --- |
 | Web App Manifest | Tên "Rally Manager", biểu tượng, mở `/admin` dạng cửa sổ riêng, lối tắt Lịch đặt sân / Thu tiền / Bán hàng. **Chỉ khu quản trị khai báo** — khách trên website không thấy lời mời cài | `public/manager.webmanifest`, `src/app/admin/layout.tsx`, `src/app/(admin-auth)/layout.tsx` |
 | Biểu tượng | 192, 512, maskable 512, Apple 180, lối tắt 96 | `public/icons/manager-*.png` |
-| Service Worker | Chỉ lưu tài nguyên tĩnh có mã băm (`/_next/static/`) và trang "Mất kết nối". **Không lưu trang, dữ liệu trang (RSC), API, Server Action** → không có dữ liệu khách / doanh thu trên máy. Mở trang luôn lấy từ máy chủ | `public/rally-sw.js` |
+| Service Worker | Chỉ lưu tài nguyên tĩnh có mã băm (`/_next/static/`) và trang "Mất kết nối". **Không lưu trang, dữ liệu trang (RSC), API, Server Action** → không có dữ liệu khách / doanh thu trên máy. Mở trang luôn lấy từ máy chủ (ngoại lệ duy nhất: trang Quầy bán để bán khi mất mạng — mục 2c) | `public/rally-sw.js` |
 | Trang mất kết nối | Hiện khi mở ứng dụng lúc không có mạng; tự tải lại khi có mạng | `public/offline.html` |
 | Trạng thái kết nối | Thanh đỏ "Mất kết nối Internet…"; **chặn gửi form** khi mất mạng (không để thao tác treo rồi tự gửi lại → không thu tiền / đặt sân hai lần); có mạng lại → tải dữ liệu mới | `src/features/manager/components/manager-runtime.tsx` |
 | Đồng bộ | Nghe sự kiện realtime `branch:<id>:availability` (đã có sẵn, không chứa dữ liệu cá nhân) → làm mới Tổng quan / Lịch đặt sân / Thu tiền sân khi khách đặt online, SePay xác nhận cọc, nhân viên khác thao tác. Để máy lâu (> 2 phút) rồi quay lại → tải mới. Database vẫn là nơi quyết định (khóa trùng giờ, chống ghi trùng) | như trên |
@@ -42,7 +42,7 @@ Chưa làm bán hàng / đặt sân offline hoàn toàn: cần đồng bộ và 
 
 ## Giai đoạn 2
 
-### 2a. Thông báo đẩy (đã làm, bản vá v22 — `24_push_notifications.sql`, README mục 25)
+### 2a. Thông báo đẩy (đã làm, bản vá v22 — `24_push_notifications.sql`, docs/HUONG-DAN-KY-THUAT.md mục 25)
 
 ```
 bookings / bank_transactions / security_events ─trigger→ private.push_outbox (hàng đợi)
@@ -58,7 +58,7 @@ service worker (rally-sw.js) hiện thông báo → bấm → /admin/go → đú
 - Nội dung không có tên / số điện thoại khách. Trigger lỗi không làm hỏng giao dịch gốc.
 - Kiểm thử: SQL (người nhận theo quyền, lựa chọn, 410, gửi thử), trình duyệt (service worker hiện thông báo, đường dẫn lạ bị thay bằng /admin), dịch vụ đẩy giả lập giải mã đúng nội dung đã mã hóa.
 
-### 2b. Ứng dụng Windows — Tauri (đã làm, bản vá v23 — `desktop/`, `25_cash_drawer.sql`, README mục 26)
+### 2b. Ứng dụng Windows — Tauri (đã làm, bản vá v23 — `desktop/`, `25_cash_drawer.sql`, docs/HUONG-DAN-KY-THUAT.md mục 26)
 
 ```
 Rally Manager.exe (Tauri 2, WebView2) ── mở https://<RALLY_URL>/admin (giao diện + dữ liệu vẫn từ máy chủ)
@@ -83,9 +83,25 @@ Kiểm thử: Rust (điều hướng, cài đặt, lệnh ESC/POS) + chạy th�
 chặn điều hướng lạ, lệnh plugin bị từ chối; build kiểm tra mã Windows (`cargo check --target x86_64-pc-windows-msvc`).
 **Chưa kiểm thử trên máy Windows thật với máy in nhiệt thật** — làm theo checklist dòng 18 trước khi dùng.
 
+### 2c. Bán hàng khi mất mạng (đã làm, bản vá v24 — `26_offline_pos.sql`, docs/HUONG-DAN-KY-THUAT.md mục 27)
+
+```
+mất mạng ─ quầy bán: tiền mặt, không thông tin khách → IndexedDB "rally-offline-pos" (mã chống trùng = mã đơn, giờ bán thật)
+           phiếu in mã tạm TAM-…, ngăn kéo vẫn mở (nhật ký ghi khi gửi được), tồn trên màn hình trừ đơn chờ
+có mạng ─ ManagerRuntime / quầy bán gửi theo thứ tự giờ bán (Web Locks: một tab gửi) → record_offline_sale
+           ok → xóa khỏi máy; mất mạng / treo 15s → giữ lại; giá đổi / hết hàng / quá 72h → "cần xử lý"
+```
+
+| Thành phần | File |
+| --- | --- |
+| Hàng đợi trên máy, đồng bộ, kiểm tra | `src/features/pos/offline/{lib,store,sync}.ts`, `lib.test.ts` |
+| Trạng thái kết nối dùng chung | `src/features/manager/lib/connectivity.ts`, `manager-runtime.tsx` (cho form `data-offline-ok`, hỏi khi đăng xuất) |
+| Giao diện | `offline-queue-panel.tsx`, `cart-panel.tsx` (khóa hình thức khác tiền mặt), `receipt-view.tsx` (phiếu tạm), `use-pos.ts` |
+| Mở lại khi mất mạng | `public/rally-sw.js` — ngoại lệ duy nhất: lưu trang `/admin/pos` (mạng trước, bản lưu khi mất mạng; đăng xuất xóa) |
+| Máy chủ | `record_offline_sale`, `recordOfflineSaleAction` (người gửi = người bán) |
+
 ### 2c. Tùy nhu cầu (chưa làm)
 
-- **Offline POS**: bán hàng khi mất mạng có hàng đợi đồng bộ, mã chống trùng, đối soát khi có mạng.
 - **Ký số bộ cài** (bỏ cảnh báo SmartScreen) và **tự cập nhật ứng dụng Windows** (Tauri updater) — giao diện đã tự cập nhật từ máy chủ, chỉ cần khi đổi phần vỏ (`desktop/`).
 - **Thông báo trong ứng dụng Windows** (thông báo hệ điều hành) — hiện dùng thông báo đẩy trên Chrome / Edge / điện thoại.
 

@@ -77,7 +77,8 @@ function BrowserView() {
       ) : (
         <p className="flex items-start gap-2 text-muted">
           <MonitorDown className="mt-0.5 size-4 shrink-0" aria-hidden />
-          Chủ sân tạo bộ cài theo README mục 26 rồi điền link tải vào NEXT_PUBLIC_DESKTOP_DOWNLOAD_URL để hiện nút tải ở đây.
+          Chủ sân tạo bộ cài theo docs/HUONG-DAN-KY-THUAT.md mục 26 rồi điền link tải vào NEXT_PUBLIC_DESKTOP_DOWNLOAD_URL để hiện nút tải ở
+          đây.
         </p>
       )}
       <p className="text-muted">Windows 10 / 11. Cài xong, mở Rally Manager, đăng nhập rồi quay lại trang này để chọn máy in.</p>
