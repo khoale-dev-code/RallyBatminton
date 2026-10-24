@@ -1,4 +1,4 @@
-import { type Metadata } from 'next';
+import { type Metadata, type Viewport } from 'next';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { type ReactNode } from 'react';
@@ -7,6 +7,7 @@ import { ToastProvider } from '@/components/ui/toast';
 import { AdminShell } from '@/features/admin-shell/components/admin-shell';
 import { parseClosedGroups } from '@/features/admin-shell/lib/ui-prefs';
 import { buildNav, NAV_CLOSED_COOKIE, SIDEBAR_COOKIE } from '@/features/admin-shell/nav';
+import { ManagerRuntime } from '@/features/manager/components/manager-runtime';
 import { getReviewCount } from '@/features/attendance/queries';
 import { getDataRequestCounts } from '@/features/privacy/queries';
 import { countOpenSecurityEvents } from '@/features/security/queries';
@@ -17,7 +18,14 @@ import { createClient } from '@/lib/supabase/server';
 export const metadata: Metadata = {
   title: { default: 'Quản trị', template: '%s | Rally quản trị' },
   robots: { index: false, follow: false },
+  // Rally Manager: cài trang quản trị thành ứng dụng (chỉ khu quản trị mới khai báo, trang khách thì không).
+  manifest: '/manager.webmanifest',
+  applicationName: 'Rally Manager',
+  appleWebApp: { capable: true, title: 'Rally Manager', statusBarStyle: 'default' },
+  icons: { apple: '/icons/manager-apple-180.png' },
 };
+
+export const viewport: Viewport = { themeColor: '#004b93' };
 
 /** Đề nghị tăng ca đang chờ chính nhân viên này trả lời (RLS: chỉ thấy của mình). Lỗi / chưa chạy SQL 18 → 0. */
 async function countPendingOvertime(employeeId: string | null): Promise<number> {
@@ -69,6 +77,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
       >
         {children}
       </AdminShell>
+      <ManagerRuntime activeBranchId={active?.branchId ?? null} />
     </ToastProvider>
   );
 }

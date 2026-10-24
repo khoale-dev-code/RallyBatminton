@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import { SetupNotice } from '@/components/layout/setup-notice';
 import { Notice } from '@/components/ui/notice';
 import { LoginForm } from '@/features/auth/components/login-form';
+import { SignedOutCleanup } from '@/features/manager/components/signed-out-cleanup';
 import { getStaffContext } from '@/lib/auth/context';
 import { isSupabaseConfigured } from '@/lib/env';
 
@@ -20,6 +21,7 @@ export default async function AdminLoginPage({ searchParams }: { searchParams: P
         <p className="mt-1 text-sm text-muted">Dùng email hoặc số điện thoại được chủ sân cấp.</p>
       </div>
       {error === 'inactive' && <Notice tone="error">Tài khoản đã bị khóa. Liên hệ chủ sân để mở lại.</Notice>}
+      <SignedOutCleanup />
       {isSupabaseConfigured() ? <LoginForm next={typeof next === 'string' ? next : undefined} /> : <SetupNotice />}
       <p className="text-sm text-muted">Quên mật khẩu? Liên hệ chủ sân để được cấp mật khẩu tạm.</p>
     </div>

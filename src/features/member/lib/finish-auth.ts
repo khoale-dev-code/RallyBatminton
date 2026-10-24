@@ -18,7 +18,7 @@ export async function finishMemberAuth(request: NextRequest, supabase: AppSupaba
   const next = recovery ? '/reset-password' : safeMemberNext(url.searchParams.get('next'));
   const { data, error } = await supabase.rpc('ensure_member_profile');
   if (error) {
-    await supabase.auth.signOut();
+    await supabase.auth.signOut({ scope: 'local' });
     const code = errorCode(error);
     const reason = code === 'STAFF_ACCOUNT' ? 'staff' : code === 'MEMBER_LOCKED' ? 'locked' : 'callback';
     return NextResponse.redirect(new URL(`/login?error=${reason}`, url.origin));

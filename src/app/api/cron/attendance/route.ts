@@ -30,13 +30,15 @@ async function handle(request: NextRequest) {
   }
   try {
     const supabase = createSecretClient();
-    const [shifts, retention, security] = await Promise.all([
+    const [shifts, retention, security, push] = await Promise.all([
       supabase.rpc('service_close_forgotten_shifts'),
       // Cùng lịch hằng đêm: dọn dữ liệu cá nhân hết thời hạn lưu trữ (loại chủ sân bật "Tự động").
       supabase.rpc('service_apply_retention'),
       supabase.rpc('service_security_maintenance'),
+      supabase.rpc('service_push_maintenance'),
     ]);
     if (security.error && security.error.code !== 'PGRST202') console.error('[cron] Bảo trì bảo mật lỗi:', security.error.message);
+    if (push.error && push.error.code !== 'PGRST202') console.error('[cron] Dọn thông báo đẩy lỗi:', push.error.message);
     await sendSecurityAlertsSafely();
     if (shifts.error) return NextResponse.json({ ok: false, message: shifts.error.message }, { status: 502 });
     if (retention.error) console.error('[cron] Chưa dọn được dữ liệu hết hạn (đã chạy 22_privacy_security.sql?):', retention.error.message);

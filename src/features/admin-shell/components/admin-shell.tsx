@@ -168,6 +168,8 @@ export function AdminShell({
             Đổi mật khẩu
           </Link>
           <form action={signOutAction}>
+            {/* Rally Manager điền địa chỉ thông báo của thiết bị → đăng xuất thì thiết bị ngừng nhận thông báo của tài khoản này. */}
+            <input type="hidden" name="push_endpoint" defaultValue="" />
             <button type="submit" className="inline-flex min-h-10 items-center gap-1 text-shuttle-deep hover:underline">
               <LogOut className="size-4" aria-hidden />
               Đăng xuất
@@ -229,6 +231,7 @@ export function AdminShell({
           <KeyRound className="size-4" aria-hidden />
         </Link>
         <form action={signOutAction}>
+          <input type="hidden" name="push_endpoint" defaultValue="" />
           <button
             type="submit"
             aria-label="Đăng xuất"

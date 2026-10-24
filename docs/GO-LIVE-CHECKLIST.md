@@ -23,6 +23,7 @@ Ký hiệu: ✅ hệ thống đã làm sẵn · 👤 chủ sân phải tự làm
 | 14 | Xác thực 2 lớp cho quản trị | ✅ MFA (TOTP) kiểm ở database; khóa đăng nhập sai nhiều lần | 👤 Chạy `23_security_hardening.sql`; bật 2 lớp cho mình → bật *Bắt buộc* cho chủ sân, rồi nhân viên (*Quản trị → Bảo mật*). Bật 2 lớp cho tài khoản Vercel, Supabase, GitHub, email |
 | 15 | Chống giữ sân ảo | ✅ Giới hạn theo thiết bị / SĐT / sức chứa chi nhánh, tự trả sân hết hạn, cảnh báo email | 👤 Xem lại ngưỡng sau 1–2 tuần chạy thật; nhân viên biết cách đánh dấu khách *Tin cậy* khi bị chặn nhầm |
 | 16 | Vercel Firewall & khẩn cấp | ✅ Chặn đường dẫn dò lỗ hổng trong `proxy.ts` | 👤 Tạo quy tắc theo `docs/SECURITY-4-LOP.md` (Bypass webhook/cron trước, rồi Deny dò lỗ hổng, Rate limit POST, Bot Protection *Log* → *Challenge*); biết cách bật Attack Mode |
+| 17 | Rally Manager & thông báo đẩy | ✅ PWA không lưu dữ liệu trên máy; thông báo theo quyền, không có tên / SĐT khách | 👤 Chạy `24_push_notifications.sql`; `npm run push:keys` → thêm 3 biến vào Vercel; cài Rally Manager + bật thông báo trên máy quầy / điện thoại chủ sân, bấm *Gửi thử* |
 
 ## Việc định kỳ
 

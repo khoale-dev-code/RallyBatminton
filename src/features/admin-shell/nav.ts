@@ -22,7 +22,8 @@ export type NavIcon =
   | 'cash'
   | 'review'
   | 'privacy'
-  | 'security';
+  | 'security'
+  | 'app';
 
 export interface NavItem {
   href: string;
@@ -102,8 +103,12 @@ export function buildNav(
             { href: '/admin/privacy', label: 'Dữ liệu cá nhân', icon: 'privacy' as const, badge: counts.privacyRequests ?? 0 },
             { href: '/admin/security', label: 'Bảo mật', icon: 'security' as const, badge: counts.securityEvents ?? 0 },
             { href: '/admin/settings', label: 'Cài đặt thương hiệu', icon: 'settings' as const },
+            { href: '/admin/app', label: 'Ứng dụng & thông báo', icon: 'app' as const },
           ]
-        : [{ href: '/admin/security', label: 'Xác thực 2 lớp', icon: 'security' as const }],
+        : [
+            { href: '/admin/security', label: 'Xác thực 2 lớp', icon: 'security' as const },
+            { href: '/admin/app', label: 'Ứng dụng & thông báo', icon: 'app' as const },
+          ],
     },
   ];
   return groups.filter((g) => g.items.length > 0);

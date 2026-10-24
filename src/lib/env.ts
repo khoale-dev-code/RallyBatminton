@@ -7,6 +7,8 @@ export const publicEnv = {
   supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '',
   siteUrl: (process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000').replace(/\/$/, ''),
   turnstileSiteKey: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? '',
+  /** Khóa công khai VAPID — trình duyệt dùng để đăng ký nhận thông báo đẩy (rỗng = chưa bật). */
+  vapidPublicKey: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? '',
 } as const;
 
 export function isSupabaseConfigured(): boolean {

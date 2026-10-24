@@ -22,6 +22,7 @@ import {
   ClipboardCheck,
   ShieldCheck,
   LockKeyhole,
+  AppWindow,
 } from 'lucide-react';
 
 import { type NavIcon } from '../nav';
@@ -49,4 +50,5 @@ export const NAV_ICONS: Record<NavIcon, LucideIcon> = {
   review: ClipboardCheck,
   privacy: ShieldCheck,
   security: LockKeyhole,
+  app: AppWindow,
 };

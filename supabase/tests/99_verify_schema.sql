@@ -11,7 +11,8 @@ with checks as (
                      'notification_settings', 'reconcile_runs', 'shift_overtime', 'attendance_settings',
                      'attendance_fix_requests', 'attendance_kiosks', 'legal_documents', 'privacy_consents',
                      'data_subject_requests', 'data_retention_policies', 'payment_webhook_events',
-                     'security_settings', 'security_events', 'customer_hold_policies']) t(name)
+                     'security_settings', 'security_events', 'customer_hold_policies',
+                     'push_subscriptions', 'push_preferences']) t(name)
                    where to_regclass('public.' || t.name) is not null) as ok,
          (select count(*)::text from pg_class c join pg_namespace s on s.oid = c.relnamespace
            where s.nspname = 'public' and c.relkind = 'r') as detail
@@ -210,6 +211,18 @@ with checks as (
          and not has_table_privilege('anon', 'public.security_settings', 'SELECT')
          and not has_function_privilege('anon', 'public.service_login_record(text,text,text,boolean)', 'execute'),
          'ngưỡng chống lạm dụng + sự kiện an ninh + khóa đăng nhập + MFA kiểm ở is_owner / permitted_branch_ids'
+  union all
+  select 30, 'Đã chạy 24_push_notifications.sql (thông báo đẩy Rally Manager)',
+         to_regclass('public.push_subscriptions') is not null
+         and to_regclass('public.push_preferences') is not null
+         and to_regclass('private.push_outbox') is not null
+         and to_regprocedure('public.service_claim_push(integer)') is not null
+         and exists (select 1 from pg_trigger where tgname = 'bookings_push')
+         and exists (select 1 from pg_trigger where tgname = 'bank_transactions_push')
+         and not private.push_endpoint_allowed('https://evil.example.com/x')
+         and not has_function_privilege('anon', 'public.register_push_subscription(text,text,text,text)', 'execute')
+         and not has_function_privilege('authenticated', 'public.service_claim_push(integer)', 'execute'),
+         'thiết bị nhận thông báo + hàng đợi + chỉ gửi tới dịch vụ đẩy chính thức'
   union all
   select 12, 'pg_cron (tùy chọn)',
          true,

@@ -1,10 +1,19 @@
 import { ShieldCheck } from 'lucide-react';
-import { type Metadata } from 'next';
+import { type Metadata, type Viewport } from 'next';
 import { type ReactNode } from 'react';
 
 import { Wordmark } from '@/components/brand/logo';
 
-export const metadata: Metadata = { robots: { index: false, follow: false } };
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+  // Cài được Rally Manager ngay từ trang đăng nhập quản trị.
+  manifest: '/manager.webmanifest',
+  applicationName: 'Rally Manager',
+  appleWebApp: { capable: true, title: 'Rally Manager', statusBarStyle: 'default' },
+  icons: { apple: '/icons/manager-apple-180.png' },
+};
+
+export const viewport: Viewport = { themeColor: '#004b93' };
 
 /** Khung trang đăng nhập NỘI BỘ (chủ sân, nhân viên) — tách hẳn khỏi đăng nhập của khách. */
 export default function AdminAuthLayout({ children }: { children: ReactNode }) {

@@ -4,6 +4,8 @@ import { emailConfigured, sendEmail } from '@/lib/email';
 import { configuredSiteUrl } from '@/lib/site-origin';
 import { createSecretClient } from '@/lib/supabase/secret';
 
+import { dispatchPushSafely } from '@/features/push/send';
+
 import { pendingSecurityAlertsSchema, securityAlertHtml, securityAlertSubject, securityAlertText } from './lib/events';
 
 /**
@@ -38,4 +40,6 @@ export async function sendSecurityAlertsSafely(): Promise<void> {
   } catch (error) {
     console.error('[security-alerts] Lỗi không mong muốn:', error instanceof Error ? error.message : error);
   }
+  // Cùng lúc: thông báo đẩy "Cảnh báo bảo mật" tới Rally Manager của chủ sân.
+  await dispatchPushSafely();
 }

@@ -1,0 +1,74 @@
+{
+  "id": "/admin",
+  "name": "Rally Manager",
+  "short_name": "Rally Manager",
+  "description": "Phần mềm quản lý sân cầu lông Rally — lịch sân, thu tiền, bán hàng, nhân sự.",
+  "lang": "vi",
+  "dir": "ltr",
+  "start_url": "/admin",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#ffffff",
+  "theme_color": "#004b93",
+  "categories": [
+    "business",
+    "productivity",
+    "sports"
+  ],
+  "icons": [
+    {
+      "src": "/icons/manager-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/manager-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/manager-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Lịch đặt sân",
+      "url": "/admin/bookings",
+      "icons": [
+        {
+          "src": "/icons/manager-96.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Thu tiền sân",
+      "url": "/admin/checkout",
+      "icons": [
+        {
+          "src": "/icons/manager-96.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Bán hàng",
+      "url": "/admin/pos",
+      "icons": [
+        {
+          "src": "/icons/manager-96.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    }
+  ]
+}

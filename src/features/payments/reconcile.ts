@@ -6,6 +6,8 @@ import { getSepayApiConfig } from '@/lib/env.server';
 import { createSecretClient } from '@/lib/supabase/secret';
 import { type Json } from '@/lib/supabase/database.types';
 
+import { dispatchPushSafely } from '@/features/push/send';
+
 import { sendPendingAlertsSafely } from './alerts';
 import { apiTransactionToPayload, sepayApiListSchema, sepayApiTransactionSchema, sepayDateTime } from './lib/sepay-api';
 
@@ -96,5 +98,6 @@ export async function runSepayReconcile(source: ReconcileSource): Promise<Reconc
   await finish(fetched, created, null);
   if (created > 0) console.warn(`[reconcile] Ghi bù ${created} giao dịch webhook bị lọt.`);
   await sendPendingAlertsSafely();
+  if (created > 0) await dispatchPushSafely();
   return { ok: true, accounts: list.length, fetched, created };
 }

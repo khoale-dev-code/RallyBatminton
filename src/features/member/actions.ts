@@ -192,7 +192,7 @@ export async function memberSignInAction(_prev: FormState, formData: FormData): 
   // Tạo hồ sơ nếu thiếu; tài khoản nhân sự / bị khóa không dùng trang khách.
   const { data: profile, error: profileError } = await supabase.rpc('ensure_member_profile');
   if (profileError) {
-    await supabase.auth.signOut();
+    await supabase.auth.signOut({ scope: 'local' });
     const code = errorCode(profileError);
     return formError(code === 'STAFF_ACCOUNT' || code === 'MEMBER_LOCKED' ? toUserMessage(profileError) : GENERIC_LOGIN_ERROR);
   }
@@ -219,7 +219,7 @@ export async function googleSignInAction(_prev: FormState, formData: FormData): 
 
 export async function memberSignOutAction(): Promise<void> {
   const supabase = await createClient();
-  await supabase.auth.signOut();
+  await supabase.auth.signOut({ scope: 'local' });
   redirect('/');
 }
 

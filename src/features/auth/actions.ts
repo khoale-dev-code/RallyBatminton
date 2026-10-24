@@ -62,7 +62,7 @@ export async function signInAction(_prev: FormState, formData: FormData): Promis
   const { data: staff } = await supabase.rpc('my_staff_context');
   const ctx = staff ? parseStaffContext(staff) : null;
   if (!ctx) {
-    await supabase.auth.signOut();
+    await supabase.auth.signOut({ scope: 'local' });
     await recordLoginResult('staff', login, false);
     return formError(GENERIC_LOGIN_ERROR);
   }
@@ -78,10 +78,19 @@ export async function signInAction(_prev: FormState, formData: FormData): Promis
   redirect(destination);
 }
 
-export async function signOutAction(): Promise<void> {
+/**
+ * Đăng xuất CHỈ thiết bị này (scope 'local'). Mặc định của Supabase là đăng xuất mọi thiết bị — nhân viên bấm Đăng xuất ở
+ * máy quầy sẽ làm Rally Manager trên điện thoại của cùng tài khoản bị văng ra (lỗi "Refresh Token Not Found").
+ */
+export async function signOutAction(formData?: FormData): Promise<void> {
   clearStaffContextCache();
   const supabase = await createClient();
-  await supabase.auth.signOut();
+  // Thiết bị đang nhận thông báo đẩy của tài khoản này (máy dùng chung) → ngừng trước khi đăng xuất.
+  const endpoint = formData?.get('push_endpoint');
+  if (typeof endpoint === 'string' && endpoint.startsWith('https://') && endpoint.length <= 1000) {
+    await supabase.rpc('unregister_push_subscription', { p_endpoint: endpoint });
+  }
+  await supabase.auth.signOut({ scope: 'local' });
   redirect('/admin-login');
 }
 

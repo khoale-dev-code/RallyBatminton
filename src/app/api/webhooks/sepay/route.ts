@@ -4,6 +4,7 @@ import { after, NextResponse, type NextRequest } from 'next/server';
 import { z } from 'zod';
 
 import { sendPendingAlertsSafely } from '@/features/payments/alerts';
+import { dispatchPushSafely } from '@/features/push/send';
 import { sendSecurityAlertsSafely } from '@/features/security/alerts';
 import { isAllowedIp, verifySepayRequestDetailed } from '@/features/payments/lib/sepay';
 import { errorCode } from '@/lib/errors';
@@ -161,6 +162,8 @@ export async function POST(request: NextRequest) {
   if (outcome.success && outcome.data.replayed !== true && (outcome.data.status === 'review' || outcome.data.status === 'unmatched')) {
     after(sendPendingAlertsSafely);
   }
+  // Thông báo đẩy: "Đã nhận cọc" / "Giao dịch cần xử lý" tới Rally Manager (24_push_notifications.sql).
+  if (outcome.success && outcome.data.replayed !== true) after(dispatchPushSafely);
   logEvent({
     ...okLog,
     txnId,

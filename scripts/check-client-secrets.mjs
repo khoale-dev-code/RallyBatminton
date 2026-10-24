@@ -20,6 +20,7 @@ const SECRET_NAMES = [
   'SEPAY_API_TOKEN',
   'RESEND_API_KEY',
   'CRON_SECRET',
+  'VAPID_PRIVATE_KEY',
 ];
 
 function readEnvFile(file) {

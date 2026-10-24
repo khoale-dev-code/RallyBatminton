@@ -2972,6 +2972,78 @@ export type Database = {
           },
         ]
       }
+      push_subscriptions: {
+        Row: {
+          id: string
+          user_id: string
+          endpoint: string
+          p256dh: string
+          auth_secret: string
+          device_label: string | null
+          created_at: string
+          last_seen_at: string
+          last_sent_at: string | null
+          failed_count: number
+          last_error: string | null
+          disabled_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          endpoint: string
+          p256dh: string
+          auth_secret: string
+          device_label?: string | null
+          created_at?: string
+          last_seen_at?: string
+          last_sent_at?: string | null
+          failed_count?: number
+          last_error?: string | null
+          disabled_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          endpoint?: string
+          p256dh?: string
+          auth_secret?: string
+          device_label?: string | null
+          created_at?: string
+          last_seen_at?: string
+          last_sent_at?: string | null
+          failed_count?: number
+          last_error?: string | null
+          disabled_at?: string | null
+        }
+        Relationships: []
+      }
+      push_preferences: {
+        Row: {
+          user_id: string
+          booking_new: boolean
+          deposit_paid: boolean
+          payment_review: boolean
+          security: boolean
+          updated_at: string
+        }
+        Insert: {
+          user_id: string
+          booking_new?: boolean
+          deposit_paid?: boolean
+          payment_review?: boolean
+          security?: boolean
+          updated_at?: string
+        }
+        Update: {
+          user_id?: string
+          booking_new?: boolean
+          deposit_paid?: boolean
+          payment_review?: boolean
+          security?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       customer_hold_policies: {
         Row: {
           customer_id: string
@@ -3065,6 +3137,19 @@ export type Database = {
         }
         Returns: undefined
       }
+      register_push_subscription: {
+        Args: { p_auth: string; p_endpoint: string; p_label?: string | null; p_p256dh: string }
+        Returns: string
+      }
+      unregister_push_subscription: { Args: { p_endpoint: string }; Returns: undefined }
+      save_push_preferences: {
+        Args: { p_booking_new: boolean; p_deposit_paid: boolean; p_payment_review: boolean; p_security: boolean }
+        Returns: undefined
+      }
+      send_test_push: { Args: never; Returns: number }
+      service_claim_push: { Args: { p_limit?: number }; Returns: Json }
+      service_push_done: { Args: { p_outbox_ids: number[]; p_results: Json }; Returns: undefined }
+      service_push_maintenance: { Args: never; Returns: Json }
       acknowledge_security_event: { Args: { p_event_id: string }; Returns: undefined }
       acknowledge_all_security_events: { Args: never; Returns: number }
       service_record_security_event: {

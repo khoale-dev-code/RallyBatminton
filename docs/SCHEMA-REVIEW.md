@@ -486,3 +486,12 @@ Căn cứ Luật 91/2025/QH15 (Điều 4 quyền chủ thể dữ liệu, Điề
 - Quyền: ba bảng mới chỉ SELECT cho authenticated (RLS lọc); hàm private không cấp cho ai; service_* chỉ service_role.
 - **Kiểm tra:** `99_verify_schema.sql` dòng 29 (dòng 1 thêm 3 bảng); `98_security_audit.sql` dòng 11–12.
 
+## 27. Migration `24_push_notifications.sql` — Thông báo đẩy Rally Manager
+
+- **`push_subscriptions`** (`user_id`, `endpoint` unique — chỉ https của FCM / Mozilla / Apple / WNS qua `private.push_endpoint_allowed`, `p256dh`, `auth_secret`, `device_label`, `last_sent_at`, `failed_count`, `last_error`, `disabled_at`): RLS chỉ đọc của mình. `register_push_subscription` (tài khoản quản trị đang hoạt động; trùng endpoint → chuyển sang người đang đăng nhập — máy dùng chung), `unregister_push_subscription`.
+- **`push_preferences`** (`booking_new`, `deposit_paid`, `payment_review`, `security`): RLS đọc của mình; `save_push_preferences`.
+- **`private.push_outbox`** (`kind`, `branch_id`, `target_user` cho gửi thử, `title`, `body`, `url`, `tag`, `claimed_at`, `sent_at`): trigger `bookings_push` (online: held mới → booking_new; held → confirmed → deposit_paid), `bank_transactions_push` (tiền vào review / unmatched → payment_review), `security_events_push` (warning / critical, nâng lên critical → security). `private.push_enqueue` nuốt lỗi (không làm hỏng giao dịch gốc), bỏ qua khi chưa có thiết bị nào.
+- Người nhận: `private.push_user_allowed(user, kind, branch)` — chủ sân mọi chi nhánh; nhân viên active (đã đổi mật khẩu, hồ sơ active) có `booking.view` (đơn) / `payment.record` (giao dịch) ở chi nhánh; security chỉ chủ sân.
+- `service_claim_push(limit)` (service_role; `for update skip locked`, khóa 2 phút) trả việc + thiết bị nhận; `service_push_done(ids, results)` ghi kết quả (404 / 410 → tắt, 5 lỗi liên tiếp → tắt); `service_push_maintenance` (cron: xóa hàng đợi > 3 ngày, thiết bị tắt > 30 ngày / không dùng > 180 ngày); `send_test_push` (gửi thử tới thiết bị của chính mình).
+- **Kiểm tra:** `99_verify_schema.sql` dòng 30 (dòng 1 thêm 2 bảng).
+

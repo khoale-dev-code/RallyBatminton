@@ -58,3 +58,14 @@ export function getSepayAllowedIps(): string[] {
     .map((s) => s.trim())
     .filter(Boolean);
 }
+
+/** Khóa VAPID gửi thông báo đẩy (npm run push:keys). null = chưa cấu hình → không gửi. */
+export function getPushConfig(): { publicKey: string; privateKey: string; subject: string } | null {
+  const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY?.trim();
+  const privateKey = process.env.VAPID_PRIVATE_KEY?.trim();
+  if (!publicKey || !privateKey) return null;
+  const raw = process.env.VAPID_SUBJECT?.trim();
+  const subject = raw && /^(mailto:|https:)/.test(raw) ? raw : 'mailto:admin@rally.invalid';
+  return { publicKey, privateKey, subject };
+}
+

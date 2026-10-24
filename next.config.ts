@@ -68,8 +68,15 @@ const securityHeaders = [
   ...(process.env.NODE_ENV === 'production' ? [{ key: 'Strict-Transport-Security', value: 'max-age=31536000' }] : []),
 ];
 
+/**
+ * Mã phiên bản của lần build: Rally Manager (ứng dụng cài trên máy quầy) so với máy chủ để biết đã có bản mới.
+ * Vercel: mã deployment / commit; máy khác: thời điểm build.
+ */
+const buildId = process.env.VERCEL_DEPLOYMENT_ID ?? process.env.VERCEL_GIT_COMMIT_SHA ?? `local-${Date.now()}`;
+
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  env: { NEXT_PUBLIC_RALLY_BUILD: buildId },
   images: {
     remotePatterns: storage.patterns,
     // Supabase chạy cục bộ (127.0.0.1) bị next/image chặn theo mặc định → phục vụ ảnh gốc.
@@ -84,7 +91,24 @@ const nextConfig: NextConfig = {
     staleTimes: { dynamic: 0, static: 30 },
   },
   async headers() {
-    return [{ source: '/:path*', headers: securityHeaders }];
+    return [
+      { source: '/:path*', headers: securityHeaders },
+      // Service worker của Rally Manager: luôn kiểm tra bản mới (không lưu đệm file này).
+      {
+        source: '/rally-sw.js',
+        headers: [
+          { key: 'Content-Type', value: 'application/javascript; charset=utf-8' },
+          { key: 'Cache-Control', value: 'no-cache, no-store, must-revalidate' },
+        ],
+      },
+      {
+        source: '/manager.webmanifest',
+        headers: [
+          { key: 'Content-Type', value: 'application/manifest+json; charset=utf-8' },
+          { key: 'Cache-Control', value: 'public, max-age=3600' },
+        ],
+      },
+    ];
   },
 };
 

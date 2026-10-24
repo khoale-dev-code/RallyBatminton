@@ -61,6 +61,7 @@ Vào **Supabase Dashboard → SQL Editor**, mở từng file trong `supabase/sql
 | 22 | `21_attendance_rules.sql` | **BẮT BUỘC** | Quy tắc chấm công: công chỉ tính trong khung ca (+ tăng ca đã đồng ý), quên quét thì nhân viên gửi yêu cầu sửa giờ để chủ sân duyệt, tự đóng ca quên quét ra, trang *Duyệt chấm công*, máy quầy hiện mã QR không cần đăng nhập. Xem mục 20. Chạy sau 20 |
 | 23 | `22_privacy_security.sql` | **BẮT BUỘC** | Bảo vệ dữ liệu cá nhân (Luật 91/2025/QH15, NĐ 356/2025/NĐ-CP): văn bản pháp lý có phiên bản, bằng chứng xác nhận / đồng ý khi đặt sân và đăng ký, yêu cầu xem / tải / sửa / xóa dữ liệu kèm hạn xử lý, ẩn danh hóa khách, thời hạn lưu trữ, nhật ký webhook thanh toán, siết quyền bảng. Xem mục 22. Chạy sau 21 |
 | 24 | `23_security_hardening.sql` | **BẮT BUỘC** | Bảo vệ 4 lớp: chống giữ sân ảo (giới hạn theo thiết bị / SĐT / sức chứa chi nhánh), khóa đăng nhập sai nhiều lần, xác thực 2 lớp kiểm ở database, sự kiện an ninh + email, tạm dừng đặt sân online. Xem mục 23. Chạy sau 22 |
+| 25 | `24_push_notifications.sql` | Có | Thông báo đẩy cho Rally Manager: đơn online mới, đã nhận cọc, giao dịch cần xử lý, cảnh báo bảo mật — theo quyền chi nhánh, chỉ gửi qua dịch vụ đẩy chính thức. Xem mục 25. Chạy sau 23 |
 
 **Đã cài Rally từ trước?** Chỉ cần chạy thêm `05_product_details.sql`, `06_product_tax.sql` rồi `07_units_options.sql` (không mất dữ liệu).
 
@@ -437,4 +438,35 @@ Hướng dẫn đầy đủ (cấu hình Vercel Firewall, sao lưu, kịch bản
 - **Sự kiện an ninh + email** (cần `RESEND_API_KEY`): giữ sân bất thường, khóa đăng nhập, dò mật khẩu hàng loạt, webhook thanh toán sai khóa, gỡ 2 lớp, tạm dừng đặt sân. Gộp theo giờ; lịch hằng đêm (`/api/cron/attendance`) gửi bù và dọn dấu vết cũ.
 - **Chặn dò lỗ hổng**: `/.env`, `/wp-admin`, `*.php`… trả 404 ngay ở `src/proxy.ts`.
 - Kiểm tra: `99_verify_schema.sql` dòng 29; `98_security_audit.sql` thêm dòng 11–12 (chủ sân đã bật / bắt buộc 2 lớp chưa).
+
+
+## 24. Rally Manager — cài trang quản trị thành ứng dụng (PWA)
+
+Lộ trình và chi tiết kỹ thuật: [`docs/RALLY-MANAGER.md`](docs/RALLY-MANAGER.md). Không có SQL mới.
+
+- **Cài**: *Quản trị → Cài Rally Manager* (hoặc biểu tượng cài trên thanh địa chỉ Chrome / Edge ở trang `/admin-login`). iPhone: Safari → Chia sẻ → Thêm vào MH chính. Ứng dụng mở thẳng `/admin` trong cửa sổ riêng, có lối tắt Lịch đặt sân / Thu tiền sân / Bán hàng.
+- **Dùng chung dữ liệu với website**: không có database riêng; khách đặt online, SePay xác nhận cọc → Tổng quan / Lịch đặt sân / Thu tiền sân tự làm mới (sự kiện realtime của chi nhánh đang chọn).
+- **Mất Internet**: thanh đỏ cảnh báo, form không gửi được (không tự gửi lại → không ghi trùng); có mạng lại tự tải dữ liệu mới. Mở ứng dụng lúc không có mạng → trang "Không có kết nối Internet".
+- **Không lưu dữ liệu trên máy**: service worker (`public/rally-sw.js`) chỉ lưu tài nguyên tĩnh và trang mất kết nối; đăng xuất xóa luôn bộ nhớ đệm.
+- **Cập nhật**: deploy bản mới → ứng dụng đang mở báo "Đã có phiên bản mới — Tải lại".
+- Biểu tượng: `public/icons/manager-*.png` (thay bằng biểu tượng riêng cùng kích thước nếu muốn).
+
+## 25. Thông báo đẩy Rally Manager (`24_push_notifications.sql`)
+
+1. Chạy `supabase/sql/24_push_notifications.sql` trong SQL Editor (sau 23).
+2. Tạo khóa **một lần**: `npm run push:keys` → dán 3 dòng in ra (`NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`) vào `.env.local` và **Vercel → Settings → Environment Variables**, rồi Redeploy. Không commit `VAPID_PRIVATE_KEY`; đổi khóa thì mọi thiết bị phải bật thông báo lại.
+3. Trên từng máy quầy / điện thoại: *Quản trị → Ứng dụng & thông báo → Bật thông báo trên thiết bị này* → *Gửi thử*. iPhone / iPad (iOS 16.4+): phải cài Rally Manager vào màn hình chính và mở từ biểu tượng đó trước.
+
+| Thông báo | Khi nào | Ai nhận |
+| --- | --- | --- |
+| Đơn online mới | Khách giữ sân trên website | Chủ sân; nhân viên có quyền *xem booking* ở chi nhánh đó |
+| Đã nhận cọc | Đơn online chuyển sang đã xác nhận (SePay hoặc nhân viên) | như trên |
+| Giao dịch cần xử lý | Tiền vào cần kiểm tra / không khớp đơn | Chủ sân; nhân viên có quyền *ghi nhận tiền* ở chi nhánh đó |
+| Cảnh báo bảo mật | Sự kiện an ninh "Cần chú ý" / "Nghiêm trọng" | Chỉ chủ sân |
+
+- Mỗi người chọn loại muốn nhận (áp dụng cho mọi thiết bị của mình). Bấm thông báo → mở đúng trang, tự chuyển sang đúng chi nhánh.
+- Nội dung chỉ có sân, giờ, mã đơn, số tiền — **không có tên / số điện thoại khách** (thông báo hiện trên màn hình khóa).
+- Máy dùng chung: Đăng xuất → thiết bị ngừng nhận thông báo của tài khoản đó; người sau đăng nhập → thiết bị tự chuyển sang tài khoản mới.
+- Máy chủ chỉ gửi tới dịch vụ đẩy chính thức (Google, Mozilla, Apple, Microsoft); thiết bị đã gỡ / tắt thông báo tự bị loại.
+- Gửi ngay sau khi có sự kiện (giữ sân online, webhook SePay, cảnh báo bảo mật) và khi Rally Manager đang mở thấy lịch sân đổi; lịch hằng đêm dọn hàng đợi cũ.
 

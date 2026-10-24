@@ -24,6 +24,7 @@ import {
 import { verifyTurnstile } from './turnstile';
 import { CONSENT_TEXT } from '@/features/privacy/consent-text';
 import { requestMeta } from '@/features/privacy/request-meta';
+import { dispatchPushSafely } from '@/features/push/send';
 import { sendSecurityAlertsSafely } from '@/features/security/alerts';
 
 /** Mã lỗi giữ sân cho thấy dấu hiệu giữ sân ảo (23_security_hardening.sql). */
@@ -105,6 +106,8 @@ export async function createGuestHoldAction(input: GuestHoldInput): Promise<Gues
     });
     savedToAccount = attached === true;
   }
+  // Báo "Đơn online mới" tới Rally Manager của chủ sân / nhân viên chi nhánh (sau khi đã trả lời khách).
+  after(dispatchPushSafely);
   return { ok: true, booking: booking.data, savedToAccount };
 }
 
